@@ -5,7 +5,7 @@ import std.exception;
 const string PROJECT_NAME = "dfile";
 const string PROJECT_VERSION = "0.0.0";
 
-static bool _debug;
+static bool _debug, _through;
 
 /*
 https://en.wikipedia.org/wiki/List_of_file_signatures
@@ -32,6 +32,11 @@ static int main(string[] args)
             case "--debug":
                 _debug = true;
                 writeln("Debugging mode turned on");
+                break;
+
+            case "-t":
+            case "--through":
+                _through = true;
                 break;
 
             case "-h":
@@ -764,7 +769,7 @@ static void scan_file(File file)
                         break;
 
                     case [0x4D, 0x5A]:
-                        report(file, "DOS Executable");
+                        scan_pe(file);
                         break;
 
                     case [0xFF, 0xFE]:
@@ -840,9 +845,320 @@ static void report_unknown(File file)
  * Binary scanners
  */
 
+enum PE_MACHINE_TYPE : ushort
+{
+    IMAGE_FILE_MACHINE_UNKNOWN = 0x0,
+    IMAGE_FILE_MACHINE_AM33 = 0x1d3,
+    IMAGE_FILE_MACHINE_AMD64 = 0x8664,
+    IMAGE_FILE_MACHINE_ARM = 0x1c0,
+    IMAGE_FILE_MACHINE_ARMNT = 0x1c4,
+    IMAGE_FILE_MACHINE_ARM64 = 0xaa64,
+    IMAGE_FILE_MACHINE_EBC = 0xebc,
+    IMAGE_FILE_MACHINE_I386 = 0x14c,
+    IMAGE_FILE_MACHINE_IA64 = 0x200,
+    IMAGE_FILE_MACHINE_M32R = 0x9041,
+    IMAGE_FILE_MACHINE_MIPS16 = 0x266,
+    IMAGE_FILE_MACHINE_MIPSFPU = 0x366,
+    IMAGE_FILE_MACHINE_MIPSFPU16 = 0x466,
+    IMAGE_FILE_MACHINE_POWERPC = 0x1f0,
+    IMAGE_FILE_MACHINE_POWERPCFP = 0x1f1,
+    IMAGE_FILE_MACHINE_R4000 = 0x166,
+    IMAGE_FILE_MACHINE_SH3 = 0x1a2,
+    IMAGE_FILE_MACHINE_SH3DSP = 0x1a3,
+    IMAGE_FILE_MACHINE_SH4 = 0x1a6,
+    IMAGE_FILE_MACHINE_SH5 = 0x1a8,
+    IMAGE_FILE_MACHINE_THUMB = 0x1c2,
+    IMAGE_FILE_MACHINE_WCEMIPSV2 = 0x169
+}
+
+enum PE_CHARACTERISTIC_TYPE : ushort
+{
+    IMAGE_FILE_RELOCS_STRIPPED = 0x0001,
+    IMAGE_FILE_EXECUTABLE_IMAGE = 0x0002,
+    IMAGE_FILE_LINE_NUMS_STRIPPED = 0x0004,
+    IMAGE_FILE_LOCAL_SYMS_STRIPPED = 0x0008,
+    IMAGE_FILE_AGGRESSIVE_WS_TRIM = 0x0010,
+    IMAGE_FILE_LARGE_ADDRESS_AWARE = 0x0020,
+    IMAGE_FILE_16BIT_MACHINE = 0x0040,
+    IMAGE_FILE_BYTES_REVERSED_LO = 0x0080,
+    IMAGE_FILE_32BIT_MACHINE = 0x0100,
+    IMAGE_FILE_DEBUG_STRIPPED = 0x0200,
+    IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP = 0x0400,
+    IMAGE_FILE_SYSTEM = 0x1000,
+    IMAGE_FILE_DLL = 0x2000,
+    IMAGE_FILE_UP_SYSTEM_ONLY = 0x4000,
+    IMAGE_FILE_BYTES_REVERSED_HI = 0x8000
+}
+
+enum PE_FORMAT
+{
+    PE32  = 0x010B,
+    PE32P = 0x020B
+}
+
+enum WIN_SUBSYSTEM : ushort
+{
+    IMAGE_SUBSYSTEM_UNKNOWN,
+    IMAGE_SUBSYSTEM_NATIVE,
+    IMAGE_SUBSYSTEM_WINDOWS_GUI,
+    IMAGE_SUBSYSTEM_WINDOWS_CUI,
+    IMAGE_SUBSYSTEM_POSIX_CUI,
+    IMAGE_SUBSYSTEM_WINDOWS_CE_GUI,
+    IMAGE_SUBSYSTEM_EFI_APPLICATION,
+    IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER,
+    IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER
+}
+
+struct PE_HEADER
+{
+    public PE_MACHINE_TYPE Machine;
+    public ushort NumberOfSections;
+    public uint TimeDateStamp;
+    public uint PointerToSymbolTable;
+    public uint NumberOfSymbols;
+    public ushort SizeOfOptionalHeader;
+    public PE_CHARACTERISTIC_TYPE Characteristics;
+}
+
+struct PE_OPTIONAL_HEADER
+{
+    public PE_FORMAT Format;
+    public WIN_SUBSYSTEM Subsystem;
+}
+
 static void scan_pe(File file)
 {
-    throw new Exception("TODO: scan_pe");
+    if (_debug)
+        writefln("L%04d: Started scanning PE file", __LINE__);
+
+    uint peheader_offset;
+
+    {
+        int[1] b;
+        file.seek(0x3c, 0);
+        file.rawRead(b);
+        peheader_offset = b[0];
+
+        if (_debug)
+            writefln("L%04d: PE Header Offset: %X", __LINE__, peheader_offset);
+
+        file.seek(peheader_offset, 0);
+        byte[4] pesig;
+        file.rawRead(pesig);
+
+        if (cast(string)pesig != "PE\0\0")
+        {
+            report(file, "MZ Executable (MS-DOS)");
+            return;
+        }
+    }
+
+    PE_HEADER peh;
+    PE_OPTIONAL_HEADER peoh;
+
+    {
+        file.seek(peheader_offset + 4, 0);
+
+        ushort[10] b;
+        file.rawRead(b);
+        if (_debug)
+            writefln("L%04d: Casting PE Header...", __LINE__);
+        peh.Machine = cast(PE_MACHINE_TYPE)b[0];
+        peh.NumberOfSections = b[1];
+        peh.TimeDateStamp = b[2] | (b[3] << 16);
+        peh.PointerToSymbolTable = b[4] | (b[5] << 16);
+        peh.NumberOfSymbols = b[6] | (b[7] << 16);
+        peh.SizeOfOptionalHeader = b[8];
+        peh.Characteristics = cast(PE_CHARACTERISTIC_TYPE)b[9];
+
+        if (peh.SizeOfOptionalHeader > 0)
+        {
+            ushort[1] mg;
+            file.rawRead(mg);
+            if (_debug) writefln("L%03d: mg: %04X", __LINE__, mg[0]);
+            peoh.Format = cast(PE_FORMAT)mg[0];
+
+            file.seek(66);
+            file.rawRead(mg);
+            if (_debug) writefln("L%03d: mg: %04X", __LINE__, mg[0]);
+            peoh.Subsystem = cast(WIN_SUBSYSTEM)mg[0];
+        }
+
+        /*if (_debug)
+        {
+            writef("L%04d Buffer : ", __LINE__);
+            foreach (i; b)
+                writef("%04X ", i);
+            writeln();
+        }*/
+    }
+
+    if (_through || _debug)
+    {
+        writefln("Machine type : %s", peh.Machine);
+        writefln("Number of sections : %s", peh.NumberOfSymbols);
+        writefln("Time stamp : %s", peh.TimeDateStamp);
+        writefln("Pointer to Symbol Table : %s", peh.PointerToSymbolTable);
+        writefln("Number of symbols : %s", peh.NumberOfSymbols);
+        writefln("Size of Optional Header : %s", peh.SizeOfOptionalHeader);
+        writefln("Characteristics : %s", peh.Characteristics);
+
+        if (peh.SizeOfOptionalHeader > 0)
+        {
+            writefln("Format : %s", peoh.Format);
+            writefln("Subsystem : %s", peoh.Subsystem);
+        }
+    }
+    
+    writef("%s: PE32", file.name);
+    
+    if (peoh.Format == PE_FORMAT.PE32P)
+        write("+");
+
+    write(" ");
+
+    switch (peoh.Subsystem)
+    {
+        default:
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_UNKNOWN:
+            write("(Unknown)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_NATIVE:
+            write("(Native)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_GUI:
+            write("(GUI)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_CUI:
+            write("(CUI)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_POSIX_CUI:
+            write("(POSIX CUI)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:
+            write("(CE GUI)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_APPLICATION :
+            write("(EFI)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER :
+            write("(EFI Boot Service Driver)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
+            write("(EFI Runtime driver)");
+            break;
+    }
+
+    write(" Windows ");
+
+    if ((peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_DLL) != 0)
+        write("Library (DLL)");
+    else
+        write("Executable (EXE)");
+
+    write(" for ");
+
+    switch (peh.Machine)
+    {
+        default:
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_UNKNOWN:
+            write("Unknown");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AM33:
+            write("Matsushita AM33");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AMD64:
+            write("AMD64");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM:
+            write("ARM (Little endian)");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARMNT:
+            write("ARMv7+ (Thumb mode)");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM64:
+            write("ARMv8 (64-bit)");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_EBC:
+            write("EFI (Byte Code)");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_I386:
+            write("i386");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_IA64:
+            write("IA64");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_M32R:
+            write("Mitsubishi M32R (Little endian)");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPS16:
+            write("MIPS16");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU:
+            write("MIPS (w/FPU)");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU16:
+            write("MIPS16 (w/FPU)");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPC:
+            write("PowerPC");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPCFP:
+            write("PowerPC (w/FPU)");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_R4000:
+            write("MIPS (Little endian)");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3:
+            write("Hitachi SH3");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3DSP:
+            write("Hitachi SH3 DSP");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH4:
+            write("Hitachi SH4");
+            break;
+
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH5:
+            write("Hitachi SH5");
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_THUMB:
+            write(`ARM or Thumb ("interworking")`);
+            break;
+            
+        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_WCEMIPSV2:
+            write("MIPS WCE v2 (Little endian)");
+            break;
+    }
+
+    write(" systems ");
 }
 
 static void scan_elf(File file)
@@ -852,6 +1168,7 @@ static void scan_elf(File file)
 
 static void scan_unknown(File file)
 {
-    // Scan for readable characters for X(1MB?) bytes and at least Y(3?) characters
+    // Scan for readable characters for X(64KB?) bytes and at least
+    // Y(3?) readable characters
     throw new Exception("TODO: scan_unknown");
 }
