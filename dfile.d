@@ -14,7 +14,7 @@ https://mimesniff.spec.whatwg.org
 
 static int main(string[] args)
 {
-    int arglen = args.length - 1;
+    size_t arglen = args.length - 1;
 
     if (arglen == 0)
     {
@@ -63,7 +63,6 @@ static int main(string[] args)
             if (isDir(filename))
             {
                 writefln("%s: Directory", filename);
-                return 0;
             }
             else
             {
@@ -82,7 +81,7 @@ static int main(string[] args)
         }
         else
         {
-            writeln("File does not exist");
+            writefln("File does not exist: %s", filename);
             return 1;
         }
     }
@@ -110,7 +109,7 @@ static void print_version()
     writeln("dfile - v%s", PROJECT_VERSION);
     writeln("Copyright (c) 2016 dd86k");
     writeln("License: MIT");
-    writeln("Project page: ..");
+    writeln("Project page: <https://github.com/dd86k/dfile>");
 }
 
 static void scan_file(File file)
@@ -362,7 +361,7 @@ static void scan_file(File file)
             break;
 
         case [0x7F, 'E', 'L', 'F']:
-            report(file, "Executable and Linkable Format binary (ELF)");
+            scan_elf(file);
             break;
 
         case [0x89, 'P', 'N', 'G']:
@@ -693,11 +692,11 @@ static void scan_file(File file)
 
         case "AT&T":
             {
-                byte[4] b;
+                char[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
-                switch (s)
+                switch (b)
                 {
                     case "FORM":
                         {
@@ -842,7 +841,7 @@ static void report_unknown(File file)
 }
 
 /**
- * Binary scanners
+ * PE32 File Scanner
  */
 
 enum PE_MACHINE_TYPE : ushort
@@ -975,18 +974,18 @@ static void scan_pe(File file)
         {
             ushort[1] mg;
             file.rawRead(mg);
-            if (_debug) writefln("L%03d: mg: %04X", __LINE__, mg[0]);
+            if (_debug) writefln("L%04d: mg: %04X", __LINE__, mg[0]);
             peoh.Format = cast(PE_FORMAT)mg[0];
 
             file.seek(66);
             file.rawRead(mg);
-            if (_debug) writefln("L%03d: mg: %04X", __LINE__, mg[0]);
+            if (_debug) writefln("L%04d: mg: %04X", __LINE__, mg[0]);
             peoh.Subsystem = cast(WIN_SUBSYSTEM)mg[0];
         }
 
         /*if (_debug)
         {
-            writef("L%04d Buffer : ", __LINE__);
+            writef("L%04d: Buffer : ", __LINE__);
             foreach (i; b)
                 writef("%04X ", i);
             writeln();
@@ -1158,12 +1157,171 @@ static void scan_pe(File file)
             break;
     }
 
-    write(" systems ");
+    writeln(" systems");
+}
+
+/**
+ * ELF File Scanner
+ */
+
+const size_t EI_NIDENT = 16;
+
+struct Elf32_Ehdr
+{
+    public char[EI_NIDENT] e_ident;
+    public ELF_e_type e_type;
+    public ELF_e_machine e_machine;
+    public ELF_e_version e_version;
+    public uint e_entry;
+    public uint e_phoff;
+    public uint e_shoff;
+    public uint e_flags;
+    public ushort e_ehsize;
+    public ushort e_phentsize;
+    public ushort e_phnum;
+    public ushort e_shentsize;
+    public ushort e_shnum;
+    public ushort e_shstrndx;
+}
+
+enum ELF_e_type : ushort
+{
+    ET_NONE = 0,        // No file type
+    ET_REL = 1,         // Relocatable file
+    ET_EXEC = 2,        // Executable file
+    ET_DYN = 3,         // Shared object file
+    ET_CORE = 4,        // Core file
+    ET_LOPROC = 0xFF00, // Processor-specific
+    ET_HIPROC = 0xFFFF  // Processor-specific
+}
+
+enum ELF_e_machine : ushort
+{
+    EM_NONE = 0,  // No machine
+    EM_M32 = 1,   // AT&T WE 32100
+    EM_SPARC = 2, // SPARC
+    EM_386 = 3,   // Intel 80386
+    EM_68K = 4,   // Motorola 68000
+    EM_88K = 5,   // Motorola 88000
+    EM_860 = 7,   // Intel 80860
+    EM_MIPS = 8,  // MIPS RS3000
+}
+
+enum ELF_e_version : uint
+{
+    EV_NONE = 0,
+    EV_CURRENT = 1
 }
 
 static void scan_elf(File file)
 {
-    throw new Exception("TODO: scan_elf");
+    if (_debug)
+        writefln("L%04d: Started scanning ELF file", __LINE__);
+
+    Elf32_Ehdr header;
+
+    {
+        byte[Elf32_Ehdr.sizeof] buf;
+        file.rewind();
+        file.rawRead(buf);
+
+        byte* pbuf = cast(byte*)&buf,
+              pheader = cast(byte*)&header;
+
+        for (size_t i = 0; i < Elf32_Ehdr.sizeof; ++i)
+            *(pheader + i) = *(pbuf + i);
+    }
+
+    if (_debug)
+        writefln("e_machine: %s", header.e_machine);
+
+    writef("%s: ELF", file.name);
+
+    switch (header.e_ident[4])
+    {
+        default:
+        case 0: // Invalid class
+            write(" (Invalid) ");
+            break;
+        case 1: // 32-bit objects
+            write("32 ");
+            break;
+        case 2: // 64-bit objects
+            write("64 ");
+            break;
+    }
+
+    switch (header.e_type)
+    {
+        default:
+        case ELF_e_type.ET_NONE:
+            write("(No file type)");
+            break;
+
+        case ELF_e_type.ET_REL:
+            write("Relocatable file");
+            break;
+
+        case ELF_e_type.ET_EXEC:
+            write("Executable file");
+            break;
+
+        case ELF_e_type.ET_DYN:
+            write("Shared object file");
+            break;
+
+        case ELF_e_type.ET_CORE:
+            write("Core file");
+            break;
+
+        case ELF_e_type.ET_LOPROC:
+        case ELF_e_type.ET_HIPROC:
+            write("Professor-specific file");
+            break;
+    }
+
+    write(" for ");
+
+    switch (header.e_machine)
+    {
+        case ELF_e_machine.EM_NONE:
+            write("no");
+            break;
+            
+        case ELF_e_machine.EM_M32:
+            write("AT&T WE 32100");
+            break;
+            
+        case ELF_e_machine.EM_SPARC:
+            write("SPARC");
+            break;
+        
+        case ELF_e_machine.EM_386:
+            write("Intel 80386");
+            break;
+            
+        case ELF_e_machine.EM_68K:
+            write("Motorola 68000");
+            break;
+            
+        case ELF_e_machine.EM_88K:
+            write("Motorola 88000");
+            break;
+            
+        case ELF_e_machine.EM_860:
+            write("Intel 80860");
+            break;
+            
+        case ELF_e_machine.EM_MIPS:
+            write("MIPS RS3000");
+            break;
+
+        default:
+            write("Unknown");
+            break;
+    }
+
+    writeln(" systems");
 }
 
 static void scan_unknown(File file)
