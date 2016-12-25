@@ -522,7 +522,7 @@ static void scan_file(File file)
             break;
 
         case "MThd":
-            report(file, "MIDI sound file");
+            report(file, "MIDI file");
             break;
 
         case [0xD0, 0xCF, 0x11, 0xE0]:
@@ -1288,19 +1288,23 @@ static void scan_elf(File file)
         foreach (c; header.e_ident)
             writef("%02X ", c);
         writeln();
-        writefln("e_type: %s", header.e_type);
-        writefln("e_machine: %s", header.e_machine);
-        writefln("e_version: %s", header.e_version);
-        writefln("e_entry: %s", header.e_entry);
-        writefln("e_phoff: %s", header.e_phoff);
-        writefln("e_shoff: %s", header.e_shoff);
-        writefln("e_flags: %s", header.e_flags);
-        writefln("e_ehsize: %s", header.e_ehsize);
-        writefln("e_phentsize: %s", header.e_phentsize);
-        writefln("e_phnum: %s", header.e_phnum);
-        writefln("e_shentsize: %s", header.e_shentsize);
-        writefln("e_shnum: %s", header.e_shnum);
-        writefln("e_shstrndx: %s", header.e_shstrndx);
+    }
+
+    if (_debug || _through)
+    {
+        writefln("type: %s", header.e_type);
+        writefln("machine: %s", header.e_machine);
+        writefln("version: %s", header.e_version);
+        writefln("entry: %s", header.e_entry);
+        writefln("phoff: %s", header.e_phoff);
+        writefln("shoff: %s", header.e_shoff);
+        writefln("flags: %s", header.e_flags);
+        writefln("ehsize: %s", header.e_ehsize);
+        writefln("phentsize: %s", header.e_phentsize);
+        writefln("phnum: %s", header.e_phnum);
+        writefln("shentsize: %s", header.e_shentsize);
+        writefln("shnum: %s", header.e_shnum);
+        writefln("shstrndx: %s", header.e_shstrndx);
     }
 
     writef("%s: ELF", file.name);
