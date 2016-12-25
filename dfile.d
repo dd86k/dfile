@@ -120,7 +120,7 @@ static void scan_file(File file)
         return;
     }
 
-    byte[4] magic;
+    ubyte[4] magic;
     if (_debug)
         writefln("L%04d: Reading file..", __LINE__);
     file.rawRead(magic);
@@ -159,7 +159,7 @@ static void scan_file(File file)
 
         case "ftyp":
             {
-                byte[2] b;
+                ubyte[2] b;
                 file.rawRead(b);
 
                 const string s = cast(string)b;
@@ -207,7 +207,7 @@ static void scan_file(File file)
 
         case "GIF8":
             {
-                byte[2] b;
+                ubyte[2] b;
                 file.rawRead(b);
 
                 string s = cast(string)b;
@@ -228,7 +228,7 @@ static void scan_file(File file)
 
         case ['I', 'I', '*', 0x00]:
             {
-                byte[6] b;
+                ubyte[6] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -279,7 +279,7 @@ static void scan_file(File file)
             
         case "FORM":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.seek(8, 0);
                 file.rawRead(b);
                 string s = cast(string)b;
@@ -343,7 +343,7 @@ static void scan_file(File file)
 
         case "Rar!":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
 
                 string s = cast(string)b;
@@ -366,7 +366,7 @@ static void scan_file(File file)
 
         case [0x89, 'P', 'N', 'G']:
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
 
                 string s = cast(string)b;
@@ -417,7 +417,7 @@ static void scan_file(File file)
 
         case [0x30, 0x26, 0xB2, 0x75]:
             {
-                byte[12] b;
+                ubyte[12] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -435,7 +435,7 @@ static void scan_file(File file)
 
         case "$SDI":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -461,7 +461,7 @@ static void scan_file(File file)
 
         case "RIFF":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.seek(8);
                 file.rawRead(b);
                 string s = cast(string)b;
@@ -483,7 +483,7 @@ static void scan_file(File file)
 
         /*case "CD00": // Offset: 0x8001, 0x8801, 0x9001
             {
-                byte[1] b;
+                ubyte[1] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -501,7 +501,7 @@ static void scan_file(File file)
 
         case "SIMP":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -527,7 +527,7 @@ static void scan_file(File file)
 
         case [0xD0, 0xCF, 0x11, 0xE0]:
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -545,7 +545,7 @@ static void scan_file(File file)
 
         case ['d', 'e', 'x', 0x0A]:
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -571,7 +571,7 @@ static void scan_file(File file)
 
         case [0x05, 0x07, 0x00, 0x00]:
             {
-                byte[6] b;
+                ubyte[6] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -604,7 +604,7 @@ static void scan_file(File file)
 
         case "PMOC":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -636,7 +636,7 @@ static void scan_file(File file)
 
         case "DCM\0":
             {
-                byte[4] b;
+                ubyte[4] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -654,7 +654,7 @@ static void scan_file(File file)
 
         case [0x37, 0x7A, 0xBC, 0xAF, 0x27]:
             {
-                byte[1] b;
+                ubyte[1] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -735,7 +735,7 @@ static void scan_file(File file)
 
         case "<?xm":
             {
-                byte[1] b;
+                ubyte[1] b;
                 file.rawRead(b);
                 string s = cast(string)b;
 
@@ -767,7 +767,7 @@ static void scan_file(File file)
                         report(file, "LZH compressed file (RAR/ZIP)");
                         break;
 
-                    case [0x4D, 0x5A]:
+                    case "MZ":
                         scan_pe(file);
                         break;
 
@@ -810,7 +810,7 @@ static void scan_file(File file)
                                 report(file, "VMware Disk K virtual disk file (VMDK)");
                                 break;
 
-                            case "NES\xA1":
+                            case "NES":
                                 report(file, "Nintendo Entertainment System ROM file (nes)");
                                 break;
 
@@ -824,7 +824,6 @@ static void scan_file(File file)
                         }
                         break;
                 }
-
             }
             break;
     }
@@ -969,7 +968,7 @@ static void scan_pe(File file)
             writefln("L%04d: PE Header Offset: %X", __LINE__, peheader_offset);
 
         file.seek(peheader_offset, 0);
-        byte[4] pesig;
+        ubyte[4] pesig;
         file.rawRead(pesig);
 
         if (cast(string)pesig != "PE\0\0")
@@ -985,7 +984,7 @@ static void scan_pe(File file)
     { // PE Header
         file.seek(peheader_offset + 4, 0); // Skip magic
 
-        byte[PE_HEADER.sizeof] buf;
+        ubyte[PE_HEADER.sizeof] buf;
         file.rawRead(buf);
         
         byte* pbuf = cast(byte*)&buf, ppeh = cast(byte*)&peh;
@@ -995,7 +994,7 @@ static void scan_pe(File file)
 
         if (peh.SizeOfOptionalHeader > 0)
         { // PE Optional Header
-            byte[PE_OPTIONAL_HEADER.sizeof] obuf;
+            ubyte[PE_OPTIONAL_HEADER.sizeof] obuf;
             file.rawRead(obuf);
             
             byte* pobuf = cast(byte*)&obuf, ppeoh = cast(byte*)&peoh;
@@ -1272,7 +1271,7 @@ static void scan_elf(File file)
     Elf32_Ehdr header;
 
     {
-        byte[Elf32_Ehdr.sizeof] buf;
+        ubyte[Elf32_Ehdr.sizeof] buf;
         file.rewind();
         file.rawRead(buf);
 
@@ -1439,6 +1438,8 @@ static void scan_elf(File file)
 /**
  * Etc.
  */
+
+const size_t BYTE_LIMIT = 1024 * 64;
 
 static void scan_unknown(File file)
 {
