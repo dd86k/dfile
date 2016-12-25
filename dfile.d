@@ -844,6 +844,47 @@ static void report_unknown(File file)
  * PE32 File Scanner
  */
 
+struct PE_HEADER
+{
+    // Skipping magic
+    public PE_MACHINE_TYPE Machine;
+    public ushort NumberOfSections;
+    public uint TimeDateStamp;
+    public uint PointerToSymbolTable;
+    public uint NumberOfSymbols;
+    public ushort SizeOfOptionalHeader;
+    public PE_CHARACTERISTIC_TYPE Characteristics;
+}
+
+struct PE_OPTIONAL_HEADER
+{
+    public PE_FORMAT Format;
+    public byte MajorLinkerVersion;
+    public byte MinorLinkerVersion;
+    public uint SizeOfCode;
+    public uint SizeOfInitializedData;
+    public uint SizeOfUninitializedData;
+    public uint AddressOfEntryPoint;
+    public uint BaseOfCode;
+    public union {
+        public uint BaseOfData;
+        public uint ImageBase; // ??
+    }
+    public uint SectionAlignment;
+    public uint FileAlignment;
+    public ushort MajorOperatingSystemVersion;
+    public ushort MinorOperatingSystemVersion;
+    public ushort MajorImageVersion;
+    public ushort MinorImageVersion;
+    public ushort MajorSubsystemVersion;
+    public ushort MinorSubsystemVersion;
+    public uint Win32VersionValue;
+    public uint SizeOfImage;
+    public uint SizeOfHeaders;
+    public uint CheckSum;
+    public WIN_SUBSYSTEM Subsystem;
+}
+
 enum PE_MACHINE_TYPE : ushort
 {
     IMAGE_FILE_MACHINE_UNKNOWN = 0x0,
@@ -891,6 +932,7 @@ enum PE_CHARACTERISTIC_TYPE : ushort
 
 enum PE_FORMAT
 {
+    ROM   = 0x0107,
     PE32  = 0x010B,
     PE32P = 0x020B
 }
@@ -905,24 +947,9 @@ enum WIN_SUBSYSTEM : ushort
     IMAGE_SUBSYSTEM_WINDOWS_CE_GUI,
     IMAGE_SUBSYSTEM_EFI_APPLICATION,
     IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER,
-    IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER
-}
-
-struct PE_HEADER
-{
-    public PE_MACHINE_TYPE Machine;
-    public ushort NumberOfSections;
-    public uint TimeDateStamp;
-    public uint PointerToSymbolTable;
-    public uint NumberOfSymbols;
-    public ushort SizeOfOptionalHeader;
-    public PE_CHARACTERISTIC_TYPE Characteristics;
-}
-
-struct PE_OPTIONAL_HEADER
-{
-    public PE_FORMAT Format;
-    public WIN_SUBSYSTEM Subsystem;
+    IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER,
+    IMAGE_SUBSYSTEM_EFI_ROM,
+    IMAGE_SUBSYSTEM_XBOX,
 }
 
 static void scan_pe(File file)
@@ -955,32 +982,29 @@ static void scan_pe(File file)
     PE_HEADER peh;
     PE_OPTIONAL_HEADER peoh;
 
-    {
-        file.seek(peheader_offset + 4, 0);
+    { // PE Header
+        file.seek(peheader_offset + 4, 0); // Skip magic
 
-        ushort[10] b;
-        file.rawRead(b);
-        if (_debug)
-            writefln("L%04d: Casting PE Header...", __LINE__);
-        peh.Machine = cast(PE_MACHINE_TYPE)b[0];
-        peh.NumberOfSections = b[1];
-        peh.TimeDateStamp = b[2] | (b[3] << 16);
-        peh.PointerToSymbolTable = b[4] | (b[5] << 16);
-        peh.NumberOfSymbols = b[6] | (b[7] << 16);
-        peh.SizeOfOptionalHeader = b[8];
-        peh.Characteristics = cast(PE_CHARACTERISTIC_TYPE)b[9];
+        byte[PE_HEADER.sizeof] buf;
+        file.rawRead(buf);
+        
+        byte* pbuf = cast(byte*)&buf, ppeh = cast(byte*)&peh;
+
+        for (size_t i = 0; i < PE_HEADER.sizeof; ++i)
+            *(ppeh + i) = *(pbuf + i);
 
         if (peh.SizeOfOptionalHeader > 0)
-        {
-            ushort[1] mg;
-            file.rawRead(mg);
-            if (_debug) writefln("L%04d: mg: %04X", __LINE__, mg[0]);
-            peoh.Format = cast(PE_FORMAT)mg[0];
+        { // PE Optional Header
+            byte[PE_OPTIONAL_HEADER.sizeof] obuf;
+            file.rawRead(obuf);
+            
+            byte* pobuf = cast(byte*)&obuf, ppeoh = cast(byte*)&peoh;
 
-            file.seek(66);
-            file.rawRead(mg);
-            if (_debug) writefln("L%04d: mg: %04X", __LINE__, mg[0]);
-            peoh.Subsystem = cast(WIN_SUBSYSTEM)mg[0];
+            for (size_t i = 0; i < PE_OPTIONAL_HEADER.sizeof; ++i)
+                *(ppeoh + i) = *(pobuf + i);
+            
+            // ???
+            peoh.Format = cast(PE_FORMAT)(obuf[0] | (obuf[1] << 8));
         }
 
         /*if (_debug)
@@ -1000,21 +1024,32 @@ static void scan_pe(File file)
         writefln("Pointer to Symbol Table : %s", peh.PointerToSymbolTable);
         writefln("Number of symbols : %s", peh.NumberOfSymbols);
         writefln("Size of Optional Header : %s", peh.SizeOfOptionalHeader);
-        writefln("Characteristics : %s", peh.Characteristics);
+        writefln("Characteristics : %Xh", peh.Characteristics);
 
         if (peh.SizeOfOptionalHeader > 0)
         {
-            writefln("Format : %s", peoh.Format);
-            writefln("Subsystem : %s", peoh.Subsystem);
+            writefln("Format : %Xh", peoh.Format);
+            writefln("Subsystem : %Xh", peoh.Subsystem);
         }
     }
     
     writef("%s: PE32", file.name);
     
-    if (peoh.Format == PE_FORMAT.PE32P)
-        write("+");
-
-    write(" ");
+    switch (peoh.Format)
+    {
+        case PE_FORMAT.ROM:
+            write("-ROM ");
+            break;
+        case PE_FORMAT.PE32:
+            write(" ");
+            break;
+        case PE_FORMAT.PE32P:
+            write("+ ");
+            break;
+        default:
+            write(" (?) ");
+            break;
+    }
 
     switch (peoh.Subsystem)
     {
@@ -1054,14 +1089,22 @@ static void scan_pe(File file)
         case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
             write("(EFI Runtime driver)");
             break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_ROM:
+            write("(EFI ROM)");
+            break;
+
+        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_XBOX:
+            write("(XBOX)");
+            break;
     }
 
     write(" Windows ");
 
-    if ((peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_DLL) != 0)
-        write("Library (DLL)");
-    else
+    if ((peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_DLL) == 0)
         write("Executable (EXE)");
+    else
+        write("Library (DLL)");
 
     write(" for ");
 
@@ -1077,7 +1120,7 @@ static void scan_pe(File file)
             break;
 
         case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AMD64:
-            write("AMD64");
+            write("x86-64");
             break;
 
         case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM:
@@ -1097,7 +1140,7 @@ static void scan_pe(File file)
             break;
             
         case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_I386:
-            write("i386");
+            write("x86");
             break;
             
         case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_IA64:
@@ -1200,11 +1243,19 @@ enum ELF_e_machine : ushort
     EM_NONE = 0,  // No machine
     EM_M32 = 1,   // AT&T WE 32100
     EM_SPARC = 2, // SPARC
-    EM_386 = 3,   // Intel 80386
+    EM_386 = 3,   // Intel Architecture
     EM_68K = 4,   // Motorola 68000
     EM_88K = 5,   // Motorola 88000
     EM_860 = 7,   // Intel 80860
     EM_MIPS = 8,  // MIPS RS3000
+    EM_MIPS_RS4_BE = 10, // MIPS RS4000 Big-Endian
+    // Rest is from http://wiki.osdev.org/ELF
+    EM_POWERPC = 0x14,
+    EM_ARM = 0x28,
+    EM_SUPERH = 0xA2,
+    EM_IA64 = 0x32,
+    EM_AMD64 = 0x3E,
+    EM_AARCH64 = 0xB7
 }
 
 enum ELF_e_version : uint
@@ -1225,15 +1276,32 @@ static void scan_elf(File file)
         file.rewind();
         file.rawRead(buf);
 
-        byte* pbuf = cast(byte*)&buf,
-              pheader = cast(byte*)&header;
+        byte* pbuf = cast(byte*)&buf, pheader = cast(byte*)&header;
 
         for (size_t i = 0; i < Elf32_Ehdr.sizeof; ++i)
             *(pheader + i) = *(pbuf + i);
     }
 
     if (_debug)
+    {
+        write("e_ident: ");
+        foreach (c; header.e_ident)
+            writef("%02X ", c);
+        writeln();
+        writefln("e_type: %s", header.e_type);
         writefln("e_machine: %s", header.e_machine);
+        writefln("e_version: %s", header.e_version);
+        writefln("e_entry: %s", header.e_entry);
+        writefln("e_phoff: %s", header.e_phoff);
+        writefln("e_shoff: %s", header.e_shoff);
+        writefln("e_flags: %s", header.e_flags);
+        writefln("e_ehsize: %s", header.e_ehsize);
+        writefln("e_phentsize: %s", header.e_phentsize);
+        writefln("e_phnum: %s", header.e_phnum);
+        writefln("e_shentsize: %s", header.e_shentsize);
+        writefln("e_shnum: %s", header.e_shnum);
+        writefln("e_shstrndx: %s", header.e_shstrndx);
+    }
 
     writef("%s: ELF", file.name);
 
@@ -1297,7 +1365,7 @@ static void scan_elf(File file)
             break;
         
         case ELF_e_machine.EM_386:
-            write("Intel 80386");
+            write("x86");
             break;
             
         case ELF_e_machine.EM_68K:
@@ -1316,13 +1384,57 @@ static void scan_elf(File file)
             write("MIPS RS3000");
             break;
 
+        case ELF_e_machine.EM_POWERPC:
+            write("PowerPC");
+            break;
+
+        case ELF_e_machine.EM_ARM:
+            write("ARM");
+            break;
+
+        case ELF_e_machine.EM_SUPERH:
+            write("SuperH");
+            break;
+
+        case ELF_e_machine.EM_IA64:
+            write("IA64");
+            break;
+
+        case ELF_e_machine.EM_AMD64:
+            write("x86-64");
+            break;
+
+        case ELF_e_machine.EM_AARCH64:
+            write("AArch64");
+            break;
+
         default:
-            write("Unknown");
+            write("unknown");
+            break;
+    }
+
+    write(" ");
+
+    switch (header.e_ident[5])
+    {
+        default:
+        case 0:
+            write("(Invalid)");
+            break;
+        case 1:
+            write("(Little-endian)");
+            break;
+        case 2:
+            write("(Big-endian)");
             break;
     }
 
     writeln(" systems");
 }
+
+/**
+ * Etc.
+ */
 
 static void scan_unknown(File file)
 {
