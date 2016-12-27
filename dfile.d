@@ -28,31 +28,31 @@ static int main(string[] args)
     {
         switch (args[i])
         {
-            case "-d":
-            case "--debug":
-                _debug = true;
-                writeln("Debugging mode turned on");
-                break;
+        case "-d":
+        case "--debug":
+            _debug = true;
+            writeln("Debugging mode turned on");
+            break;
 
-            case "-t":
-            case "--through":
-                _through = true;
-                break;
+        case "-t":
+        case "--through":
+            _through = true;
+            break;
 
-            case "-h":
-                print_help;
-                return 0;
+        case "-h":
+            print_help;
+            return 0;
 
-            case "--help":
-                print_help_full;
-                return 0;
+        case "--help":
+            print_help_full;
+            return 0;
 
-            case "-v":
-            case "--version":
-                print_version;
-                return 0;
+        case "-v":
+        case "--version":
+            print_version;
+            return 0;
 
-            default:
+        default:
         }
     }
 
@@ -137,695 +137,695 @@ static void scan_file(File file)
 
     switch (sig)
     {
-        case [0xBE, 0xBA, 0xFE, 0xCA]:
-            report(file, "Palm Desktop Calendar Archive (DBA)");
-            break;
+    case [0xBE, 0xBA, 0xFE, 0xCA]:
+        report(file, "Palm Desktop Calendar Archive (DBA)");
+        break;
 
-        case [0x00, 0x01, 0x42, 0x44]:
-            report(file, "Palm Desktop To Do Archive (DBA)");
-            break;
+    case [0x00, 0x01, 0x42, 0x44]:
+        report(file, "Palm Desktop To Do Archive (DBA)");
+        break;
 
-        case [0x00, 0x01, 0x44, 0x54]:
-            report(file, "Palm Desktop Calendar Archive (TDA)");
-            break;
+    case [0x00, 0x01, 0x44, 0x54]:
+        report(file, "Palm Desktop Calendar Archive (TDA)");
+        break;
 
-        case [0x00, 0x01, 0x00, 0x00]:
-            report(file, "Palm Desktop Data File (Access format)");
-            break;
+    case [0x00, 0x01, 0x00, 0x00]:
+        report(file, "Palm Desktop Data File (Access format)");
+        break;
 
-        case [0x00, 0x00, 0x01, 0x00]:
-            report(file, "Icon, ICO format");
-            break;
+    case [0x00, 0x00, 0x01, 0x00]:
+        report(file, "Icon, ICO format");
+        break;
 
-        case "ftyp":
+    case "ftyp":
+        {
+            ubyte[2] b;
+            file.rawRead(b);
+
+            const string s = cast(string)b;
+
+            switch (s)
             {
-                ubyte[2] b;
-                file.rawRead(b);
+            case [0x33, 0x67]:
+                report(file, "3rd Generation Partnership Project 3GPP and 3GPP2 multimedia files");
+                break;
 
-                const string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x33, 0x67]:
-                        report(file, "3rd Generation Partnership Project 3GPP and 3GPP2 multimedia files");
-                        break;
-
-                    default:
-                        report_unknown(file);
-                        break;
-                }
+            default:
+                report_unknown(file);
+                break;
             }
-            break;
+        }
+        break;
 
-        case "BACK":
+    case "BACK":
+        {
+            file.rawRead(magic);
+            string s = cast(string)magic;
+
+            switch (s)
+            {
+            case "MIKE":
             {
                 file.rawRead(magic);
-                string s = cast(string)magic;
+                s = cast(string)magic;
 
                 switch (s)
                 {
-                    case "MIKE":
+                    case "DISK":
+                        report(file, "AmiBack backup");
+                        break;
+
+                    default:
+                }
+            }
+            break;
+
+            default:
+            }
+        }
+        break;
+
+    case "GIF8":
+        {
+            ubyte[2] b;
+            file.rawRead(b);
+
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "7a":
+                report(file, "GIF87a");
+                break;
+            case "9a":
+                report(file, "GIF89a");
+                break;
+
+            default:
+            }
+        }
+        break;
+
+    case ['I', 'I', '*', 0x00]:
+        {
+            ubyte[6] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x10, 0, 0, 0, 'C', 'R']:
+                report(file, "Canon RAW Format Version 2 image (TIFF)");
+                break;
+
+            default:
+                report(file, "Tagged Image File Format image (TIFF)");
+                break;
+            }
+        }
+        break;
+
+    case ['M', 'M', 0x00, '*']:
+        report(file, "Tagged Image File Format image (TIFF)");
+        break;
+
+    case [0x80, 0x2A, 0x5F, 0xD7]:
+        report(file, "Kodak Cineon image");
+        break;
+
+    case ['R', 'N', 'C', 0x01]:
+    case ['R', 'N', 'C', 0x02]:
+        report(file, "Compressed file (Rob Northen Compression v1/v2)");
+        break;
+
+    case "SDPX":
+    case "XPDS":
+        report(file, "SMPTE DPX image");
+        break;
+
+    case [0x76, 0x2F, 0x31, 0x01]:
+        report(file, "OpenEXR image");
+        break;
+
+    case "BPGû":
+        report(file, "Better Portable Graphics image (BPG)");
+        break;
+
+    case [0xFF, 0xD8, 0xFF, 0xDB]:
+    case [0xFF, 0xD8, 0xFF, 0xE0]:
+    case [0xFF, 0xD8, 0xFF, 0xE1]:
+        report(file, "Joint Photographic Experts Group image (JPEG)");
+        break;
+        
+    case "FORM":
+        {
+            ubyte[4] b;
+            file.seek(8, 0);
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "ILBM":
+                report(file, "IFF Interleaved Bitmap Image");
+                break;
+            case "8SVX":
+                report(file, "IFF 8-Bit Sampled Voice");
+                break;
+            case "ACBM":
+                report(file, "Amiga Contiguous Bitmap");
+                break;
+            case "ANBM":
+                report(file, "IFF Animated Bitmap");
+                break;
+            case "ANIM":
+                report(file, "IFF CEL Animation");
+                break;
+            case "FAXX":
+                report(file, "IFF Facsimile Image");
+                break;
+            case "FTXT":
+                report(file, "IFF Formatted Text");
+                break;
+            case "SMUS":
+                report(file, "IFF Simple Musical Score");
+                break;
+            case "CMUS":
+                report(file, "IFF Musical Score");
+                break;
+            case "YUVN":
+                report(file, "IFF YUV Image");
+                break;
+            case "FANT":
+                report(file, "Amiga Fantavision Movie");
+                break;
+            case "AIFF":
+                report(file, "Audio Interchange File Format");
+                break;
+            default:
+            }
+        }
+        break;
+
+    case "INDX":
+        report(file, "AmiBack backup index file");
+        break;
+
+    case "LZIP":
+        report(file, "lzip compressed file");
+        break;
+
+    case ['P', 'K', 0x03, 0x04]:
+    case ['P', 'K', 0x05, 0x06]:
+    case ['P', 'K', 0x07, 0x08]:
+        report(file, "ZIP compressed file (or JAR, ODF, OOXML)");
+        break;
+
+    case "Rar!":
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x1A, 0x07, 0x01, 0x00]:
+                report(file, "RAR archive v5.0+");
+                break;
+            default:
+                report(file, "RAR archive v1.5+");
+                break;
+            }
+        }
+        break;
+
+    case [0x7F, 'E', 'L', 'F']:
+        scan_elf(file);
+        break;
+
+    case [0x89, 'P', 'N', 'G']:
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x0D, 0x0A, 0x1A, 0x0A]:
+                report(file, "Portable Network Graphics image (PNG)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case [0xCA, 0xFE, 0xBA, 0xBE]:
+        report(file, "Java class file, Mach-O Fat Binary");
+        break;
+
+    case [0xFE, 0xED, 0xFA, 0xCE]:
+        report(file, "Mach-O binary (32-bit)");
+        break;
+
+    case [0xFE, 0xED, 0xFA, 0xCF]:
+        report(file, "Mach-O binary (64-bit)");
+        break;
+
+    case [0xCE, 0xFA, 0xED, 0xFE]:
+        report(file, "Mach-O binary (32-bit, Reversed)");
+        break;
+
+    case [0xCF, 0xFA, 0xED, 0xFE]:
+        report(file, "Mach-O binary (64-bit, Reversed)");
+        break;
+
+    case [0xFF, 0xFE, 0x00, 0x00]:
+        report(file, "UTF-32 text file (byte-order mark)");
+        break;
+
+    case "%!PS":
+        report(file, "PostScript document");
+        break;
+
+    case "%PDF":
+        report(file, "PDF document");
+        break;
+
+    case [0x30, 0x26, 0xB2, 0x75]:
+        {
+            ubyte[12] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0, 0xAA, 0, 0x62, 0xCE, 0x6C]:
+                report(file, "Advanced Systems Format file (ASF, WMA, WMV)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case "$SDI":
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x30, 0x30, 0x30, 0x31]:
+                report(file, "System Deployment Image (Microsoft disk image)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case "OggS":
+        report(file, "Ogg audio file");
+        break;
+
+    case "8BPS":
+        report(file, "Photoshop native document file");
+        break;
+
+    case "RIFF":
+        {
+            ubyte[4] b;
+            file.seek(8);
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "WAVE":
+                report(file, "Waveform Audio File (wav)");
+                break;
+            case "AVI ":
+                report(file, "Audio Video Interface video (avi)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    /*case "CD00": // Offset: 0x8001, 0x8801, 0x9001
+        {
+            ubyte[1] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+                case ['1']:
+                    report(file, "ISO9660 CD/DVD image file (ISO)");
+                    break;
+                default:
+                    report_unknown(file);
+                    break;
+            }
+        }
+        break;*/
+
+    case "SIMP":
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "LE  ":
+                report(file, "Flexible Image Transport System (FITS)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case "fLaC":
+        report(file, "Free Lossless Audio Codec audio file (FLAC)");
+        break;
+
+    case "MThd":
+        report(file, "MIDI file");
+        break;
+
+    case [0xD0, 0xCF, 0x11, 0xE0]:
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0xA1, 0xB1, 0x1A, 0xE1]:
+                report(file, "Compound File Binary Format document (doc, xls, ppt)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case ['d', 'e', 'x', 0x0A]:
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "035\0":
+                report(file, "Dalvik Executable");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case "Cr24":
+        report(file, "Google Chrome extension or packaged app (crx)");
+        break;
+
+    case "AGD3":
+        report(file, "FreeHand 8 document (fh8)");
+        break;
+
+    case [0x05, 0x07, 0x00, 0x00]:
+        {
+            ubyte[6] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
+                report(file, "AppleWorks 5 document (cwk)");
+                break;
+            case [0x4F, 0x42, 0x4F, 0x06, 0x07, 0xE1]:
+                report(file, "AppleWorks 6 document (cwk)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case ['E', 'R', 0x02, 0x00]:
+        report(file, "Roxio Toast disc image or DMG file (toast or dmg)");
+        break;
+
+    case ['x', 0x01, 's', 0x0D]:
+        report(file, "Apple Disk Image file (dmg)");
+        break;
+
+    case "xar!":
+        report(file, "eXtensible ARchive format (xar)");
+        break;
+
+    case "PMOC":
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "CMOC":
+                report(file, "USMT, Windows Files And Settings Transfer Repository (dat)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    /*case "usta": // Tar offset 0x101
+        {
+
+        }
+        break;*/
+
+    case "TOX3":
+        report(file, "Open source portable voxel file");
+        break;
+
+    case "MLVI":
+        report(file, "Magic Lantern Video file");
+        break;
+
+    case "DCM\0":
+        {
+            ubyte[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "PA30":
+                report(file, "Windows Update Binary Delta Compression");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case [0x37, 0x7A, 0xBC, 0xAF, 0x27]:
+        {
+            ubyte[1] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case [0x1C]:
+                report(file, "7-Zip compressed file (7z)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case [0x04, 0x22, 0x4D, 0x18]:
+        report(file, "LZ4 Streaming Format (lz4)");
+        break;
+
+    case "MSCF":
+        report(file, "Microsoft Cabinet File (cab)");
+        break;
+
+    case "FLIF":
+        report(file, "Free Lossless Image Format image file (flif)");
+        break;
+
+    case [0x1A, 0x45, 0xDF, 0xA3]:
+        report(file, "Matroska media container (mkv, webm)");
+        break;
+
+    case "MIL ":
+        report(file, `"SEAN : Session Analysis" Training file`);
+        break;
+
+    case "AT&T":
+        {
+            char[4] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (b)
+            {
+            case "FORM":
+                {
+                    file.seek(4);
+                    file.rawRead(b);
+                    s = cast(string)b;
+
+                    switch (s)
                     {
-                        file.rawRead(magic);
-                        s = cast(string)magic;
-
-                        switch (s)
-                        {
-                            case "DISK":
-                                report(file, "AmiBack backup");
-                                break;
-
-                            default:
-                        }
+                        case "DJVU":
+                            report(file, "DjVu document, single page (djvu)");
+                            break;
+                        case "DJVM":
+                            report(file, "DjVu document, multiple pages (djvu)");
+                            break;
+                        default:
+                            report_unknown(file);
+                            break;
                     }
+                }
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break;
+
+    case "wOFF":
+        report(file, "WOFF File Format 1.0 font (woff)");
+        break;
+
+    case "wOF2":
+        report(file, "WOFF File Format 2.0 font (woff)");
+        break;
+
+    case "<?xm":
+        {
+            ubyte[2] b;
+            file.rawRead(b);
+            string s = cast(string)b;
+
+            switch (s)
+            {
+            case "l>":
+                report(file, "ASCII XML (xml)");
+                break;
+            default:
+                report_unknown(file);
+                break;
+            }
+        }
+        break; // too lazy for utf-16/32
+
+    case "\0asm":
+        report(file, "WebAssembly file (wasm)");
+        break;
+
+    default:
+        {
+            switch (sig[0..2])
+            {
+            case [0x1F, 0x9D]:
+                report(file, "Lempel-Ziv-Welch compressed file (RAR/ZIP)");
+                break;
+
+            case [0x1F, 0xA0]:
+                report(file, "LZH compressed file (RAR/ZIP)");
+                break;
+
+            case "MZ":
+                scan_pe(file);
+                break;
+
+            case [0xFF, 0xFE]:
+                report(file, "UTF-16 text file (Byte-Order mark)");
+                break;
+
+            case [0xFF, 0xFB]:
+                report(file, "MPEG-2 Audio Layer III audio file (MP3)");
+                break;
+
+            case "BM":
+                report(file, "Bitmap iamge file (BMP)");
+                break;
+
+            case [0x1F, 0x8B]:
+                report(file, "GZIP compressed file ([tar.]gz)");
+                break;
+
+            case [0x30, 0x82]:
+                report(file, "DER encoded X.509 certificate (der)");
+                break;
+
+            default:
+                switch (sig[0..3])
+                {
+                case "BZh":
+                    report(file, "Bzip2 compressed file (BZh)");
                     break;
 
-                    default:
+                case [0xEF, 0xBB, 0xBF]:
+                    report(file, "UTF-8 text file with BOM");
+                    break;
+
+                case "ID3":
+                    report(file, "MPEG-2 Audio Layer III audio file with ID3v2 container (MP3)");
+                    break;
+
+                case "KDM":
+                    report(file, "VMware Disk K virtual disk file (VMDK)");
+                    break;
+
+                case "NES":
+                    report(file, "Nintendo Entertainment System ROM file (nes)");
+                    break;
+
+                case [0xCF, 0x84, 0x01]:
+                    report(file, "Lepton compressed JPEG image (lep)");
+                    break;
+
+                default:
+                    report_unknown(file);
+                    break;
                 }
+                break;
             }
-            break;
-
-        case "GIF8":
-            {
-                ubyte[2] b;
-                file.rawRead(b);
-
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "7a":
-                        report(file, "GIF87a");
-                        break;
-                    case "9a":
-                        report(file, "GIF89a");
-                        break;
-
-                    default:
-                }
-            }
-            break;
-
-        case ['I', 'I', '*', 0x00]:
-            {
-                ubyte[6] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x10, 0, 0, 0, 'C', 'R']:
-                        report(file, "Canon RAW Format Version 2 image (TIFF)");
-                        break;
-
-                    default:
-                        report(file, "Tagged Image File Format image (TIFF)");
-                        break;
-                }
-            }
-            break;
-
-        case ['M', 'M', 0x00, '*']:
-            report(file, "Tagged Image File Format image (TIFF)");
-            break;
-
-        case [0x80, 0x2A, 0x5F, 0xD7]:
-            report(file, "Kodak Cineon image");
-            break;
-
-        case ['R', 'N', 'C', 0x01]:
-        case ['R', 'N', 'C', 0x02]:
-            report(file, "Compressed file (Rob Northen Compression v1/v2)");
-            break;
-
-        case "SDPX":
-        case "XPDS":
-            report(file, "SMPTE DPX image");
-            break;
-
-        case [0x76, 0x2F, 0x31, 0x01]:
-            report(file, "OpenEXR image");
-            break;
-
-        case "BPGû":
-            report(file, "Better Portable Graphics image (BPG)");
-            break;
-
-        case [0xFF, 0xD8, 0xFF, 0xDB]:
-        case [0xFF, 0xD8, 0xFF, 0xE0]:
-        case [0xFF, 0xD8, 0xFF, 0xE1]:
-            report(file, "Joint Photographic Experts Group image (JPEG)");
-            break;
-            
-        case "FORM":
-            {
-                ubyte[4] b;
-                file.seek(8, 0);
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "ILBM":
-                        report(file, "IFF Interleaved Bitmap Image");
-                        break;
-                    case "8SVX":
-                        report(file, "IFF 8-Bit Sampled Voice");
-                        break;
-                    case "ACBM":
-                        report(file, "Amiga Contiguous Bitmap");
-                        break;
-                    case "ANBM":
-                        report(file, "IFF Animated Bitmap");
-                        break;
-                    case "ANIM":
-                        report(file, "IFF CEL Animation");
-                        break;
-                    case "FAXX":
-                        report(file, "IFF Facsimile Image");
-                        break;
-                    case "FTXT":
-                        report(file, "IFF Formatted Text");
-                        break;
-                    case "SMUS":
-                        report(file, "IFF Simple Musical Score");
-                        break;
-                    case "CMUS":
-                        report(file, "IFF Musical Score");
-                        break;
-                    case "YUVN":
-                        report(file, "IFF YUV Image");
-                        break;
-                    case "FANT":
-                        report(file, "Amiga Fantavision Movie");
-                        break;
-                    case "AIFF":
-                        report(file, "Audio Interchange File Format");
-                        break;
-                    default:
-                }
-            }
-            break;
-
-        case "INDX":
-            report(file, "AmiBack backup index file");
-            break;
-
-        case "LZIP":
-            report(file, "lzip compressed file");
-            break;
-
-        case ['P', 'K', 0x03, 0x04]:
-        case ['P', 'K', 0x05, 0x06]:
-        case ['P', 'K', 0x07, 0x08]:
-            report(file, "ZIP compressed file (or JAR, ODF, OOXML)");
-            break;
-
-        case "Rar!":
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x1A, 0x07, 0x01, 0x00]:
-                        report(file, "RAR archive v5.0+");
-                        break;
-                    default:
-                        report(file, "RAR archive v1.5+");
-                        break;
-                }
-            }
-            break;
-
-        case [0x7F, 'E', 'L', 'F']:
-            scan_elf(file);
-            break;
-
-        case [0x89, 'P', 'N', 'G']:
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x0D, 0x0A, 0x1A, 0x0A]:
-                        report(file, "Portable Network Graphics image (PNG)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case [0xCA, 0xFE, 0xBA, 0xBE]:
-            report(file, "Java class file, Mach-O Fat Binary");
-            break;
-
-        case [0xFE, 0xED, 0xFA, 0xCE]:
-            report(file, "Mach-O binary (32-bit)");
-            break;
-
-        case [0xFE, 0xED, 0xFA, 0xCF]:
-            report(file, "Mach-O binary (64-bit)");
-            break;
-
-        case [0xCE, 0xFA, 0xED, 0xFE]:
-            report(file, "Mach-O binary (32-bit, Reversed)");
-            break;
-
-        case [0xCF, 0xFA, 0xED, 0xFE]:
-            report(file, "Mach-O binary (64-bit, Reversed)");
-            break;
-
-        case [0xFF, 0xFE, 0x00, 0x00]:
-            report(file, "UTF-32 text file (byte-order mark)");
-            break;
-
-        case "%!PS":
-            report(file, "PostScript document");
-            break;
-
-        case "%PDF":
-            report(file, "PDF document");
-            break;
-
-        case [0x30, 0x26, 0xB2, 0x75]:
-            {
-                ubyte[12] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0, 0xAA, 0, 0x62, 0xCE, 0x6C]:
-                        report(file, "Advanced Systems Format file (ASF, WMA, WMV)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case "$SDI":
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x30, 0x30, 0x30, 0x31]:
-                        report(file, "System Deployment Image (Microsoft disk image)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case "OggS":
-            report(file, "Ogg audio file");
-            break;
-
-        case "8BPS":
-            report(file, "Photoshop native document file");
-            break;
-
-        case "RIFF":
-            {
-                ubyte[4] b;
-                file.seek(8);
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "WAVE":
-                        report(file, "Waveform Audio File (wav)");
-                        break;
-                    case "AVI ":
-                        report(file, "Audio Video Interface video (avi)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        /*case "CD00": // Offset: 0x8001, 0x8801, 0x9001
-            {
-                ubyte[1] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case ['1']:
-                        report(file, "ISO9660 CD/DVD image file (ISO)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;*/
-
-        case "SIMP":
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "LE  ":
-                        report(file, "Flexible Image Transport System (FITS)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case "fLaC":
-            report(file, "Free Lossless Audio Codec audio file (FLAC)");
-            break;
-
-        case "MThd":
-            report(file, "MIDI file");
-            break;
-
-        case [0xD0, 0xCF, 0x11, 0xE0]:
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0xA1, 0xB1, 0x1A, 0xE1]:
-                        report(file, "Compound File Binary Format document (doc, xls, ppt)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case ['d', 'e', 'x', 0x0A]:
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "035\0":
-                        report(file, "Dalvik Executable");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case "Cr24":
-            report(file, "Google Chrome extension or packaged app (crx)");
-            break;
-
-        case "AGD3":
-            report(file, "FreeHand 8 document (fh8)");
-            break;
-
-        case [0x05, 0x07, 0x00, 0x00]:
-            {
-                ubyte[6] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
-                        report(file, "AppleWorks 5 document (cwk)");
-                        break;
-                    case [0x4F, 0x42, 0x4F, 0x06, 0x07, 0xE1]:
-                        report(file, "AppleWorks 6 document (cwk)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case ['E', 'R', 0x02, 0x00]:
-            report(file, "Roxio Toast disc image or DMG file (toast or dmg)");
-            break;
-
-        case ['x', 0x01, 's', 0x0D]:
-            report(file, "Apple Disk Image file (dmg)");
-            break;
-
-        case "xar!":
-            report(file, "eXtensible ARchive format (xar)");
-            break;
-
-        case "PMOC":
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "CMOC":
-                        report(file, "USMT, Windows Files And Settings Transfer Repository (dat)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        /*case "usta": // Tar offset 0x101
-            {
-
-            }
-            break;*/
-
-        case "TOX3":
-            report(file, "Open source portable voxel file");
-            break;
-
-        case "MLVI":
-            report(file, "Magic Lantern Video file");
-            break;
-
-        case "DCM\0":
-            {
-                ubyte[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "PA30":
-                        report(file, "Windows Update Binary Delta Compression");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case [0x37, 0x7A, 0xBC, 0xAF, 0x27]:
-            {
-                ubyte[1] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case [0x1C]:
-                        report(file, "7-Zip compressed file (7z)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case [0x04, 0x22, 0x4D, 0x18]:
-            report(file, "LZ4 Streaming Format (lz4)");
-            break;
-
-        case "MSCF":
-            report(file, "Microsoft Cabinet File (cab)");
-            break;
-
-        case "FLIF":
-            report(file, "Free Lossless Image Format image file (flif)");
-            break;
-
-        case [0x1A, 0x45, 0xDF, 0xA3]:
-            report(file, "Matroska media container (mkv, webm)");
-            break;
-
-        case "MIL ":
-            report(file, `"SEAN : Session Analysis" Training file`);
-            break;
-
-        case "AT&T":
-            {
-                char[4] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (b)
-                {
-                    case "FORM":
-                        {
-                            file.seek(4);
-                            file.rawRead(b);
-                            s = cast(string)b;
-
-                            switch (s)
-                            {
-                                case "DJVU":
-                                    report(file, "DjVu document, single page (djvu)");
-                                    break;
-                                case "DJVM":
-                                    report(file, "DjVu document, multiple pages (djvu)");
-                                    break;
-                                default:
-                                    report_unknown(file);
-                                    break;
-                            }
-                        }
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break;
-
-        case "wOFF":
-            report(file, "WOFF File Format 1.0 font (woff)");
-            break;
-
-        case "wOF2":
-            report(file, "WOFF File Format 2.0 font (woff)");
-            break;
-
-        case "<?xm":
-            {
-                ubyte[1] b;
-                file.rawRead(b);
-                string s = cast(string)b;
-
-                switch (s)
-                {
-                    case "m>":
-                        report(file, "ASCII XML (xml)");
-                        break;
-                    default:
-                        report_unknown(file);
-                        break;
-                }
-            }
-            break; // too lazy for utf-*
-
-        case "\0asm":
-            report(file, "WebAssembly file (wasm)");
-            break;
-
-        default:
-            {
-                switch (sig[0..2])
-                {
-                    case [0x1F, 0x9D]:
-                        report(file, "Lempel-Ziv-Welch compressed file (RAR/ZIP)");
-                        break;
-
-                    case [0x1F, 0xA0]:
-                        report(file, "LZH compressed file (RAR/ZIP)");
-                        break;
-
-                    case "MZ":
-                        scan_pe(file);
-                        break;
-
-                    case [0xFF, 0xFE]:
-                        report(file, "UTF-16 text file (Byte-Order mark)");
-                        break;
-
-                    case [0xFF, 0xFB]:
-                        report(file, "MPEG-2 Audio Layer III audio file (MP3)");
-                        break;
-
-                    case "BM":
-                        report(file, "Bitmap iamge file (BMP)");
-                        break;
-
-                    case [0x1F, 0x8B]:
-                        report(file, "GZIP compressed file ([tar.]gz)");
-                        break;
-
-                    case [0x30, 0x82]:
-                        report(file, "DER encoded X.509 certificate (der)");
-                        break;
-
-                    default:
-                        switch (sig[0..3])
-                        {
-                            case "BZh":
-                                report(file, "Bzip2 compressed file (BZh)");
-                                break;
-
-                            case [0xEF, 0xBB, 0xBF]:
-                                report(file, "UTF-8 text file with BOM");
-                                break;
-
-                            case "ID3":
-                                report(file, "MPEG-2 Audio Layer III audio file with ID3v2 container (MP3)");
-                                break;
-
-                            case "KDM":
-                                report(file, "VMware Disk K virtual disk file (VMDK)");
-                                break;
-
-                            case "NES":
-                                report(file, "Nintendo Entertainment System ROM file (nes)");
-                                break;
-
-                            case [0xCF, 0x84, 0x01]:
-                                report(file, "Lepton compressed JPEG image (lep)");
-                                break;
-
-                            default:
-                                report_unknown(file);
-                                break;
-                        }
-                        break;
-                }
-            }
-            break;
+        }
+        break;
     }
 }
 
@@ -1036,66 +1036,66 @@ static void scan_pe(File file)
     
     switch (peoh.Format)
     {
-        case PE_FORMAT.ROM:
-            write("-ROM ");
-            break;
-        case PE_FORMAT.PE32:
-            write(" ");
-            break;
-        case PE_FORMAT.PE32P:
-            write("+ ");
-            break;
-        default:
-            write(" (?) ");
-            break;
+    case PE_FORMAT.ROM:
+        write("-ROM ");
+        break;
+    case PE_FORMAT.PE32:
+        write(" ");
+        break;
+    case PE_FORMAT.PE32P:
+        write("+ ");
+        break;
+    default:
+        write(" (?) ");
+        break;
     }
 
     switch (peoh.Subsystem)
     {
-        default:
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_UNKNOWN:
-            write("(Unknown)");
-            break;
+    default:
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_UNKNOWN:
+        write("(Unknown)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_NATIVE:
-            write("(Native)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_NATIVE:
+        write("(Native)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_GUI:
-            write("(GUI)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_GUI:
+        write("(GUI)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_CUI:
-            write("(CUI)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_CUI:
+        write("(CUI)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_POSIX_CUI:
-            write("(POSIX CUI)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_POSIX_CUI:
+        write("(POSIX CUI)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:
-            write("(CE GUI)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:
+        write("(CE GUI)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_APPLICATION :
-            write("(EFI)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_APPLICATION :
+        write("(EFI)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER :
-            write("(EFI Boot Service Driver)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER :
+        write("(EFI Boot Service Driver)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
-            write("(EFI Runtime driver)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
+        write("(EFI Runtime driver)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_ROM:
-            write("(EFI ROM)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_ROM:
+        write("(EFI ROM)");
+        break;
 
-        case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_XBOX:
-            write("(XBOX)");
-            break;
+    case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_XBOX:
+        write("(XBOX)");
+        break;
     }
 
     write(" Windows ");
@@ -1109,94 +1109,94 @@ static void scan_pe(File file)
 
     switch (peh.Machine)
     {
-        default:
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_UNKNOWN:
-            write("Unknown");
-            break;
+    default:
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_UNKNOWN:
+        write("Unknown");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AM33:
-            write("Matsushita AM33");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AM33:
+        write("Matsushita AM33");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AMD64:
-            write("x86-64");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AMD64:
+        write("x86-64");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM:
-            write("ARM (Little endian)");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM:
+        write("ARM (Little endian)");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARMNT:
-            write("ARMv7+ (Thumb mode)");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARMNT:
+        write("ARMv7+ (Thumb mode)");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM64:
-            write("ARMv8 (64-bit)");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_EBC:
-            write("EFI (Byte Code)");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_I386:
-            write("x86");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_IA64:
-            write("IA64");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_M32R:
-            write("Mitsubishi M32R (Little endian)");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPS16:
-            write("MIPS16");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU:
-            write("MIPS (w/FPU)");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU16:
-            write("MIPS16 (w/FPU)");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPC:
-            write("PowerPC");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPCFP:
-            write("PowerPC (w/FPU)");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM64:
+        write("ARMv8 (64-bit)");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_EBC:
+        write("EFI (Byte Code)");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_I386:
+        write("x86");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_IA64:
+        write("IA64");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_M32R:
+        write("Mitsubishi M32R (Little endian)");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPS16:
+        write("MIPS16");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU:
+        write("MIPS (w/FPU)");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU16:
+        write("MIPS16 (w/FPU)");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPC:
+        write("PowerPC");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPCFP:
+        write("PowerPC (w/FPU)");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_R4000:
-            write("MIPS (Little endian)");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3:
-            write("Hitachi SH3");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3DSP:
-            write("Hitachi SH3 DSP");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH4:
-            write("Hitachi SH4");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_R4000:
+        write("MIPS (Little endian)");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3:
+        write("Hitachi SH3");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3DSP:
+        write("Hitachi SH3 DSP");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH4:
+        write("Hitachi SH4");
+        break;
 
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH5:
-            write("Hitachi SH5");
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_THUMB:
-            write(`ARM or Thumb ("interworking")`);
-            break;
-            
-        case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_WCEMIPSV2:
-            write("MIPS WCE v2 (Little endian)");
-            break;
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH5:
+        write("Hitachi SH5");
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_THUMB:
+        write(`ARM or Thumb ("interworking")`);
+        break;
+        
+    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_WCEMIPSV2:
+        write("MIPS WCE v2 (Little endian)");
+        break;
     }
 
     writeln(" systems");
@@ -1310,126 +1310,126 @@ static void scan_elf(File file)
 
     switch (header.e_ident[4])
     {
-        default:
-        case 0: // Invalid class
-            write(" (Invalid) ");
-            break;
-        case 1: // 32-bit objects
-            write("32 ");
-            break;
-        case 2: // 64-bit objects
-            write("64 ");
-            break;
+    default:
+    case 0: // Invalid class
+        write(" (Invalid) ");
+        break;
+    case 1: // 32-bit objects
+        write("32 ");
+        break;
+    case 2: // 64-bit objects
+        write("64 ");
+        break;
     }
 
     switch (header.e_type)
     {
-        default:
-        case ELF_e_type.ET_NONE:
-            write("(No file type)");
-            break;
+    default:
+    case ELF_e_type.ET_NONE:
+        write("(No file type)");
+        break;
 
-        case ELF_e_type.ET_REL:
-            write("Relocatable file");
-            break;
+    case ELF_e_type.ET_REL:
+        write("Relocatable file");
+        break;
 
-        case ELF_e_type.ET_EXEC:
-            write("Executable file");
-            break;
+    case ELF_e_type.ET_EXEC:
+        write("Executable file");
+        break;
 
-        case ELF_e_type.ET_DYN:
-            write("Shared object file");
-            break;
+    case ELF_e_type.ET_DYN:
+        write("Shared object file");
+        break;
 
-        case ELF_e_type.ET_CORE:
-            write("Core file");
-            break;
+    case ELF_e_type.ET_CORE:
+        write("Core file");
+        break;
 
-        case ELF_e_type.ET_LOPROC:
-        case ELF_e_type.ET_HIPROC:
-            write("Professor-specific file");
-            break;
+    case ELF_e_type.ET_LOPROC:
+    case ELF_e_type.ET_HIPROC:
+        write("Professor-specific file");
+        break;
     }
 
     write(" for ");
 
     switch (header.e_machine)
     {
-        case ELF_e_machine.EM_NONE:
-            write("no");
-            break;
-            
-        case ELF_e_machine.EM_M32:
-            write("AT&T WE 32100");
-            break;
-            
-        case ELF_e_machine.EM_SPARC:
-            write("SPARC");
-            break;
+    case ELF_e_machine.EM_NONE:
+        write("no");
+        break;
         
-        case ELF_e_machine.EM_386:
-            write("x86");
-            break;
-            
-        case ELF_e_machine.EM_68K:
-            write("Motorola 68000");
-            break;
-            
-        case ELF_e_machine.EM_88K:
-            write("Motorola 88000");
-            break;
-            
-        case ELF_e_machine.EM_860:
-            write("Intel 80860");
-            break;
-            
-        case ELF_e_machine.EM_MIPS:
-            write("MIPS RS3000");
-            break;
+    case ELF_e_machine.EM_M32:
+        write("AT&T WE 32100");
+        break;
+        
+    case ELF_e_machine.EM_SPARC:
+        write("SPARC");
+        break;
+    
+    case ELF_e_machine.EM_386:
+        write("x86");
+        break;
+        
+    case ELF_e_machine.EM_68K:
+        write("Motorola 68000");
+        break;
+        
+    case ELF_e_machine.EM_88K:
+        write("Motorola 88000");
+        break;
+        
+    case ELF_e_machine.EM_860:
+        write("Intel 80860");
+        break;
+        
+    case ELF_e_machine.EM_MIPS:
+        write("MIPS RS3000");
+        break;
 
-        case ELF_e_machine.EM_POWERPC:
-            write("PowerPC");
-            break;
+    case ELF_e_machine.EM_POWERPC:
+        write("PowerPC");
+        break;
 
-        case ELF_e_machine.EM_ARM:
-            write("ARM");
-            break;
+    case ELF_e_machine.EM_ARM:
+        write("ARM");
+        break;
 
-        case ELF_e_machine.EM_SUPERH:
-            write("SuperH");
-            break;
+    case ELF_e_machine.EM_SUPERH:
+        write("SuperH");
+        break;
 
-        case ELF_e_machine.EM_IA64:
-            write("IA64");
-            break;
+    case ELF_e_machine.EM_IA64:
+        write("IA64");
+        break;
 
-        case ELF_e_machine.EM_AMD64:
-            write("x86-64");
-            break;
+    case ELF_e_machine.EM_AMD64:
+        write("x86-64");
+        break;
 
-        case ELF_e_machine.EM_AARCH64:
-            write("AArch64");
-            break;
+    case ELF_e_machine.EM_AARCH64:
+        write("AArch64");
+        break;
 
-        default:
-            write("unknown");
-            break;
+    default:
+        write("unknown");
+        break;
     }
 
     write(" ");
 
     switch (header.e_ident[5])
     {
-        default:
-        case 0:
-            write("(Invalid)");
-            break;
-        case 1:
-            write("(Little-endian)");
-            break;
-        case 2:
-            write("(Big-endian)");
-            break;
+    default:
+    case 0:
+        write("(Invalid)");
+        break;
+    case 1:
+        write("(Little-endian)");
+        break;
+    case 2:
+        write("(Big-endian)");
+        break;
     }
 
     writeln(" systems");
