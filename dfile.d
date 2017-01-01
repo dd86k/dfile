@@ -1,6 +1,5 @@
 import std.stdio : write, writeln, writef, writefln, File;
 import std.file : exists, isDir;
-import std.exception;
 
 const string PROJECT_NAME = "dfile";
 const string PROJECT_VERSION = "0.1.0";
@@ -10,9 +9,9 @@ static bool _debug, _more;
 static File current_file;
 
 /*
-https://en.wikipedia.org/wiki/List_of_file_signatures
+https://en.wikipedia.org/wiki/List_of_file_signatures (Complete)
 https://mimesniff.spec.whatwg.org
-http://www.garykessler.net/library/file_sigs.html
+http://www.garykessler.net/library/file_sigs.html (To complete with)
 */
 
 /*
@@ -61,7 +60,7 @@ static int main(string[] args)
 
         case "-v":
         case "--version":
-            print_version();
+            print_version;
             return 0;
 
         default:
@@ -983,6 +982,10 @@ static void scan_file(File file)
 
                 case [0xCF, 0x84, 0x01]:
                     report("Lepton compressed JPEG image (lep)");
+                    break;
+
+                case [0, 1, 1]:
+                    report("OpenFlight 3D file");
                     break;
 
                 default:
