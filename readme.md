@@ -1,12 +1,10 @@
-# dfile - Simple File scanner
+# dfile - Simple file scanner
 
-The "Hey, I could do this for Windows" syndrome.
-
-dfile is a simple file scanner that was inspired by the UNIX `file` utility. It scans the file for a signature and will try to tell the nature of the file.
+dfile is a simple file scanner that is very similar to the UNIX `file` utility. It scans the file for a signature and will try to tell the nature of the file. I thought of making this as a native alternative mostly for Windows and adding some details here and there.
 
 Don't be shy to request a file format or request more information from a file format!
 
-### Examples
+## Examples
 ```
 D:\DOCUMENTS\D projects\dfile>dfile tests\dfile
 tests\dfile: ELF64 Executable file for x86-64 (Little-endian) systems

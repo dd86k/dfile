@@ -3,28 +3,40 @@ import std.file : exists, isDir;
 import std.exception;
 
 const string PROJECT_NAME = "dfile";
-const string PROJECT_VERSION = "0.0.0";
+const string PROJECT_VERSION = "0.1.0";
 
-static bool _debug, _through;
+static bool _debug, _more;
+
+static File current_file;
 
 /*
 https://en.wikipedia.org/wiki/List_of_file_signatures
 https://mimesniff.spec.whatwg.org
+http://www.garykessler.net/library/file_sigs.html
 */
+
+/*
+ * Sections (That Search feature is going to be handy! __*)
+ * 1. Generic (__GENERIC)
+ *   a. TODO: Re-organize by category (audio, etc.)
+ * 2. MZ, NE, LE, LX, PE32 (__PE32)
+ * 3. ELF (__ELF)
+ * 4. Misc. (__ETC)
+ */
 
 static int main(string[] args)
 {
-    size_t arglen = args.length - 1;
+    size_t l = args.length;
 
-    if (arglen == 0)
+    if (l <= 1)
     {
         print_help;
         return 0;
     }
 
-    string filename = args[arglen];
+    string filename = args[$-1];
 
-    for (int i = 0; i < arglen; ++i)
+    for (int i = 0; i < l; ++i)
     {
         switch (args[i])
         {
@@ -34,9 +46,9 @@ static int main(string[] args)
             writeln("Debugging mode turned on");
             break;
 
-        case "-t":
-        case "--through":
-            _through = true;
+        case "-m":
+        case "--more":
+            _more = true;
             break;
 
         case "-h":
@@ -49,41 +61,38 @@ static int main(string[] args)
 
         case "-v":
         case "--version":
-            print_version;
+            print_version();
             return 0;
 
         default:
         }
     }
 
-    if (filename != null)
+    if (exists(filename))
     {
-        if (exists(filename))
+        if (isDir(filename))
         {
-            if (isDir(filename))
-            {
-                writefln("%s: Directory", filename);
-            }
-            else
-            {
-                if (_debug)
-                    writefln("L%04d: Opening file..", __LINE__);
-                File f = File(filename, "rb");
-                
-                if (_debug)
-                    writefln("L%04d: Scaning file..", __LINE__);
-                scan_file(f);
-                
-                if (_debug)
-                    writefln("L%04d: Closing file..", __LINE__);
-                f.close();
-            }
+            writefln("%s: Directory", filename);
         }
         else
         {
-            writefln("File does not exist: %s", filename);
-            return 1;
+            if (_debug)
+                writefln("L%04d: Opening file..", __LINE__);
+            current_file = File(filename, "rb");
+            
+            if (_debug)
+                writefln("L%04d: Scaning file..", __LINE__);
+            scan_file(current_file);
+            
+            if (_debug)
+                writefln("L%04d: Closing file..", __LINE__);
+            current_file.close();
         }
+    }
+    else
+    {
+        writefln("File does not exist: %s", filename);
+        return 1;
     }
 
     return 0;
@@ -91,32 +100,35 @@ static int main(string[] args)
 
 static void print_help()
 {
-    writefln(" Usage: %s [<Options>] [<File>]", PROJECT_NAME);
+    writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
     writefln("        %s [-h|--help|-v|--version]", PROJECT_NAME);
 }
 
 static void print_help_full()
 {
     writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
-    writeln("Determine the nature of the file.\n");
+    writeln("Determine the nature of the file with the file signature.\n");
+    writeln("  -m, --more     Print more information");
+    writeln("  -d, --debug    Print debugging information\n");
     writeln("  -h     Print help and exit");
-    writeln("  -v     Print version and exit");
-    writeln("  -d, --debug     Print debugging information");
+    writeln("  -v,      Print version and exit");;
 }
 
 static void print_version()
 {
-    writeln("dfile - v%s", PROJECT_VERSION);
+    writefln("%s - v%s", PROJECT_NAME, PROJECT_VERSION);
     writeln("Copyright (c) 2016 dd86k");
     writeln("License: MIT");
     writeln("Project page: <https://github.com/dd86k/dfile>");
+    writefln("Compiled on %s with %s v%s", __TIMESTAMP__, __VENDOR__, __VERSION__);
 }
 
+/// __GENERIC
 static void scan_file(File file)
 {
     if (file.size == 0)
     {
-        report(file, "Empty file");
+        report("Empty file");
         return;
     }
 
@@ -138,43 +150,58 @@ static void scan_file(File file)
     switch (sig)
     {
     case [0xBE, 0xBA, 0xFE, 0xCA]:
-        report(file, "Palm Desktop Calendar Archive (DBA)");
+        report("Palm Desktop Calendar Archive (DBA)");
         break;
 
     case [0x00, 0x01, 0x42, 0x44]:
-        report(file, "Palm Desktop To Do Archive (DBA)");
+        report("Palm Desktop To Do Archive (DBA)");
         break;
 
     case [0x00, 0x01, 0x44, 0x54]:
-        report(file, "Palm Desktop Calendar Archive (TDA)");
+        report("Palm Desktop Calendar Archive (TDA)");
         break;
 
     case [0x00, 0x01, 0x00, 0x00]:
-        report(file, "Palm Desktop Data File (Access format)");
+        {
+            char[12] b;
+            file.rawRead(b);
+            const string s = cast(string)b;
+            switch (s[0..3])
+            {
+                case "MSIS":
+                    report("Microsoft Money file");
+                    break;
+                case "Stan":
+                    switch (s[8..11])
+                    {
+                        case " ACE":
+                            report("Microsoft Access 2007 file");
+                            break;
+                        case " Jet":
+                            report("Microsoft Access file");
+                            break;
+                        default:
+                    }
+                    break;
+                default:
+                    {
+                        if (b[0] == 0)
+                            report("TrueType font file");
+                        else
+                            report_unknown();
+                    }
+                    break;
+            }    
+        }
+        report("Palm Desktop Data File (Access format)");
         break;
 
     case [0x00, 0x00, 0x01, 0x00]:
-        report(file, "Icon, ICO format");
+        report("Icon, ICO format");
         break;
 
-    case "ftyp":
-        {
-            ubyte[2] b;
-            file.rawRead(b);
-
-            const string s = cast(string)b;
-
-            switch (s)
-            {
-            case [0x33, 0x67]:
-                report(file, "3rd Generation Partnership Project 3GPP and 3GPP2 multimedia files");
-                break;
-
-            default:
-                report_unknown(file);
-                break;
-            }
-        }
+    case [0, 1, 0, 8]:
+        report("Ventura Publisher/GEM VDI Image Format Bitmap file");
         break;
 
     case "BACK":
@@ -192,7 +219,7 @@ static void scan_file(File file)
                 switch (s)
                 {
                     case "DISK":
-                        report(file, "AmiBack backup");
+                        report("AmiBack backup");
                         break;
 
                     default:
@@ -210,73 +237,140 @@ static void scan_file(File file)
             ubyte[2] b;
             file.rawRead(b);
 
-            string s = cast(string)b;
+            const string s = cast(string)b;
 
             switch (s)
             {
             case "7a":
-                report(file, "GIF87a");
+                report("GIF87a");
                 break;
             case "9a":
-                report(file, "GIF89a");
+                report("GIF89a");
                 break;
 
             default:
             }
         }
+        break;
+
+    case [0, 0, 1, 0xBA]:
+        report("DVD Video Movie File or DVD MPEG2");
+        break;
+
+    case ['M', 'M', 0x00, '*']:
+        report("Tagged Image File Format image (TIFF)");
         break;
 
     case ['I', 'I', '*', 0x00]:
         {
             ubyte[6] b;
             file.rawRead(b);
-            string s = cast(string)b;
+            const string s = cast(string)b;
 
             switch (s)
             {
             case [0x10, 0, 0, 0, 'C', 'R']:
-                report(file, "Canon RAW Format Version 2 image (TIFF)");
+                report("Canon RAW Format Version 2 image (TIFF)");
                 break;
 
             default:
-                report(file, "Tagged Image File Format image (TIFF)");
+                report("Tagged Image File Format image (TIFF)");
                 break;
             }
         }
         break;
 
-    case ['M', 'M', 0x00, '*']:
-        report(file, "Tagged Image File Format image (TIFF)");
+    case [0, 0, 0, 0xc]:
+        report("Various JPEG-2000 image file formats");
         break;
 
     case [0x80, 0x2A, 0x5F, 0xD7]:
-        report(file, "Kodak Cineon image");
+        report("Kodak Cineon image");
         break;
 
     case ['R', 'N', 'C', 0x01]:
     case ['R', 'N', 'C', 0x02]:
-        report(file, "Compressed file (Rob Northen Compression v1/v2)");
+        report("Compressed file (Rob Northen Compression v1/v2)");
         break;
 
     case "SDPX":
     case "XPDS":
-        report(file, "SMPTE DPX image");
+        report("SMPTE DPX image");
         break;
 
     case [0x76, 0x2F, 0x31, 0x01]:
-        report(file, "OpenEXR image");
+        report("OpenEXR image");
         break;
 
     case "BPGû":
-        report(file, "Better Portable Graphics image (BPG)");
+        report("Better Portable Graphics image (BPG)");
         break;
 
     case [0xFF, 0xD8, 0xFF, 0xDB]:
     case [0xFF, 0xD8, 0xFF, 0xE0]:
     case [0xFF, 0xD8, 0xFF, 0xE1]:
-        report(file, "Joint Photographic Experts Group image (JPEG)");
+        report("Joint Photographic Experts Group image (JPEG)");
         break;
-        
+
+    case [0, 0, 0, 0x14]:
+    case [0, 0, 0, 0x18]:
+    case [0, 0, 0, 0x1C]:
+    case [0, 0, 0, 0x20]:
+        {
+            char[8] b;
+            file.rawRead(b);
+
+            const string s = cast(string)b;
+
+            switch (s[0..3])
+            {
+                case "ftyp":
+                    switch (s[4..7])
+                    {
+                        case "isom":
+                            report("ISO Base Media file (MPEG-4) v1");
+                            break;
+
+                        case "qt  ":
+                            report("QuickTime movie file");
+                            break;
+
+                        case "3gp5":
+                            report("MPEG-4 video files (MP4)");
+                            break;
+
+                        case "mp42":
+                            report("MPEG-4 video/QuickTime file (MP4)");
+                            break;
+
+                        case "MSNV":
+                            report("MPEG-4 video file (MP4)");
+                            break;
+
+                        case "M4A ":
+                            report("Apple Lossless Audio Codec file (M4A)");
+                            break;
+
+                        default:
+                            switch (s[4..6])
+                            {
+                                case "3gp":
+                                    report("3rd Generation Partnership Project multimedia file (3GP)");
+                                    break;
+                                default:
+                                    report_unknown();
+                                    break;
+                            }
+                            break;
+                    }
+                    break;
+                default:
+                    report_unknown();
+                    break;
+            }
+        }
+        break;
+
     case "FORM":
         {
             ubyte[4] b;
@@ -287,58 +381,62 @@ static void scan_file(File file)
             switch (s)
             {
             case "ILBM":
-                report(file, "IFF Interleaved Bitmap Image");
+                report("IFF Interleaved Bitmap Image");
                 break;
             case "8SVX":
-                report(file, "IFF 8-Bit Sampled Voice");
+                report("IFF 8-Bit Sampled Voice");
                 break;
             case "ACBM":
-                report(file, "Amiga Contiguous Bitmap");
+                report("Amiga Contiguous Bitmap");
                 break;
             case "ANBM":
-                report(file, "IFF Animated Bitmap");
+                report("IFF Animated Bitmap");
                 break;
             case "ANIM":
-                report(file, "IFF CEL Animation");
+                report("IFF CEL Animation");
                 break;
             case "FAXX":
-                report(file, "IFF Facsimile Image");
+                report("IFF Facsimile Image");
                 break;
             case "FTXT":
-                report(file, "IFF Formatted Text");
+                report("IFF Formatted Text");
                 break;
             case "SMUS":
-                report(file, "IFF Simple Musical Score");
+                report("IFF Simple Musical Score");
                 break;
             case "CMUS":
-                report(file, "IFF Musical Score");
+                report("IFF Musical Score");
                 break;
             case "YUVN":
-                report(file, "IFF YUV Image");
+                report("IFF YUV Image");
                 break;
             case "FANT":
-                report(file, "Amiga Fantavision Movie");
+                report("Amiga Fantavision Movie");
                 break;
             case "AIFF":
-                report(file, "Audio Interchange File Format");
+                report("Audio Interchange File Format");
                 break;
             default:
             }
         }
         break;
 
+    case [0, 0, 1, 0xB7]:
+        report("MPEG video file");
+        break;
+
     case "INDX":
-        report(file, "AmiBack backup index file");
+        report("AmiBack backup index file");
         break;
 
     case "LZIP":
-        report(file, "lzip compressed file");
+        report("lzip compressed file");
         break;
 
     case ['P', 'K', 0x03, 0x04]:
     case ['P', 'K', 0x05, 0x06]:
     case ['P', 'K', 0x07, 0x08]:
-        report(file, "ZIP compressed file (or JAR, ODF, OOXML)");
+        report("ZIP compressed file (or JAR, ODF, OOXML)");
         break;
 
     case "Rar!":
@@ -351,10 +449,10 @@ static void scan_file(File file)
             switch (s)
             {
             case [0x1A, 0x07, 0x01, 0x00]:
-                report(file, "RAR archive v5.0+");
+                report("RAR archive v5.0+");
                 break;
             default:
-                report(file, "RAR archive v1.5+");
+                report("RAR archive v1.5+");
                 break;
             }
         }
@@ -374,45 +472,45 @@ static void scan_file(File file)
             switch (s)
             {
             case [0x0D, 0x0A, 0x1A, 0x0A]:
-                report(file, "Portable Network Graphics image (PNG)");
+                report("Portable Network Graphics image (PNG)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case [0xCA, 0xFE, 0xBA, 0xBE]:
-        report(file, "Java class file, Mach-O Fat Binary");
+        report("Java class file, Mach-O Fat Binary");
         break;
 
     case [0xFE, 0xED, 0xFA, 0xCE]:
-        report(file, "Mach-O binary (32-bit)");
+        report("Mach-O binary (32-bit)");
         break;
 
     case [0xFE, 0xED, 0xFA, 0xCF]:
-        report(file, "Mach-O binary (64-bit)");
+        report("Mach-O binary (64-bit)");
         break;
 
     case [0xCE, 0xFA, 0xED, 0xFE]:
-        report(file, "Mach-O binary (32-bit, Reversed)");
+        report("Mach-O binary (32-bit, Reversed)");
         break;
 
     case [0xCF, 0xFA, 0xED, 0xFE]:
-        report(file, "Mach-O binary (64-bit, Reversed)");
+        report("Mach-O binary (64-bit, Reversed)");
         break;
 
     case [0xFF, 0xFE, 0x00, 0x00]:
-        report(file, "UTF-32 text file (byte-order mark)");
+        report("UTF-32 text file (byte-order mark)");
         break;
 
     case "%!PS":
-        report(file, "PostScript document");
+        report("PostScript document");
         break;
 
     case "%PDF":
-        report(file, "PDF document");
+        report("PDF document");
         break;
 
     case [0x30, 0x26, 0xB2, 0x75]:
@@ -424,10 +522,10 @@ static void scan_file(File file)
             switch (s)
             {
             case [0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0, 0xAA, 0, 0x62, 0xCE, 0x6C]:
-                report(file, "Advanced Systems Format file (ASF, WMA, WMV)");
+                report("Advanced Systems Format file (ASF, WMA, WMV)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
@@ -442,21 +540,21 @@ static void scan_file(File file)
             switch (s)
             {
             case [0x30, 0x30, 0x30, 0x31]:
-                report(file, "System Deployment Image (Microsoft disk image)");
+                report("System Deployment Image (Microsoft disk image)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case "OggS":
-        report(file, "Ogg audio file");
+        report("Ogg audio file");
         break;
 
     case "8BPS":
-        report(file, "Photoshop native document file");
+        report("Photoshop native document file");
         break;
 
     case "RIFF":
@@ -469,13 +567,13 @@ static void scan_file(File file)
             switch (s)
             {
             case "WAVE":
-                report(file, "Waveform Audio File (wav)");
+                report("Waveform Audio File (wav)");
                 break;
             case "AVI ":
-                report(file, "Audio Video Interface video (avi)");
+                report("Audio Video Interface video (avi)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
@@ -490,7 +588,7 @@ static void scan_file(File file)
             switch (s)
             {
                 case ['1']:
-                    report(file, "ISO9660 CD/DVD image file (ISO)");
+                    report("ISO9660 CD/DVD image file (ISO)");
                     break;
                 default:
                     report_unknown(file);
@@ -508,21 +606,21 @@ static void scan_file(File file)
             switch (s)
             {
             case "LE  ":
-                report(file, "Flexible Image Transport System (FITS)");
+                report("Flexible Image Transport System (FITS)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case "fLaC":
-        report(file, "Free Lossless Audio Codec audio file (FLAC)");
+        report("Free Lossless Audio Codec audio file (FLAC)");
         break;
 
     case "MThd":
-        report(file, "MIDI file");
+        report("MIDI file");
         break;
 
     case [0xD0, 0xCF, 0x11, 0xE0]:
@@ -534,10 +632,10 @@ static void scan_file(File file)
             switch (s)
             {
             case [0xA1, 0xB1, 0x1A, 0xE1]:
-                report(file, "Compound File Binary Format document (doc, xls, ppt)");
+                report("Compound File Binary Format document (doc, xls, ppt)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
@@ -552,21 +650,21 @@ static void scan_file(File file)
             switch (s)
             {
             case "035\0":
-                report(file, "Dalvik Executable");
+                report("Dalvik Executable");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case "Cr24":
-        report(file, "Google Chrome extension or packaged app (crx)");
+        report("Google Chrome extension or packaged app (crx)");
         break;
 
     case "AGD3":
-        report(file, "FreeHand 8 document (fh8)");
+        report("FreeHand 8 document (fh8)");
         break;
 
     case [0x05, 0x07, 0x00, 0x00]:
@@ -578,28 +676,28 @@ static void scan_file(File file)
             switch (s)
             {
             case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
-                report(file, "AppleWorks 5 document (cwk)");
+                report("AppleWorks 5 document (cwk)");
                 break;
             case [0x4F, 0x42, 0x4F, 0x06, 0x07, 0xE1]:
-                report(file, "AppleWorks 6 document (cwk)");
+                report("AppleWorks 6 document (cwk)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case ['E', 'R', 0x02, 0x00]:
-        report(file, "Roxio Toast disc image or DMG file (toast or dmg)");
+        report("Roxio Toast disc image or DMG file (toast or dmg)");
         break;
 
     case ['x', 0x01, 's', 0x0D]:
-        report(file, "Apple Disk Image file (dmg)");
+        report("Apple Disk Image file (dmg)");
         break;
 
     case "xar!":
-        report(file, "eXtensible ARchive format (xar)");
+        report("eXtensible ARchive format (xar)");
         break;
 
     case "PMOC":
@@ -611,10 +709,10 @@ static void scan_file(File file)
             switch (s)
             {
             case "CMOC":
-                report(file, "USMT, Windows Files And Settings Transfer Repository (dat)");
+                report("USMT, Windows Files And Settings Transfer Repository (dat)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
@@ -627,11 +725,11 @@ static void scan_file(File file)
         break;*/
 
     case "TOX3":
-        report(file, "Open source portable voxel file");
+        report("Open source portable voxel file");
         break;
 
     case "MLVI":
-        report(file, "Magic Lantern Video file");
+        report("Magic Lantern Video file");
         break;
 
     case "DCM\0":
@@ -643,10 +741,10 @@ static void scan_file(File file)
             switch (s)
             {
             case "PA30":
-                report(file, "Windows Update Binary Delta Compression");
+                report("Windows Update Binary Delta Compression");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
@@ -661,33 +759,33 @@ static void scan_file(File file)
             switch (s)
             {
             case [0x1C]:
-                report(file, "7-Zip compressed file (7z)");
+                report("7-Zip compressed file (7z)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case [0x04, 0x22, 0x4D, 0x18]:
-        report(file, "LZ4 Streaming Format (lz4)");
+        report("LZ4 Streaming Format (lz4)");
         break;
 
     case "MSCF":
-        report(file, "Microsoft Cabinet File (cab)");
+        report("Microsoft Cabinet File (cab)");
         break;
 
     case "FLIF":
-        report(file, "Free Lossless Image Format image file (flif)");
+        report("Free Lossless Image Format image file (flif)");
         break;
 
     case [0x1A, 0x45, 0xDF, 0xA3]:
-        report(file, "Matroska media container (mkv, webm)");
+        report("Matroska media container (mkv, webm)");
         break;
 
     case "MIL ":
-        report(file, `"SEAN : Session Analysis" Training file`);
+        report(`"SEAN : Session Analysis" Training file`);
         break;
 
     case "AT&T":
@@ -707,30 +805,30 @@ static void scan_file(File file)
                     switch (s)
                     {
                         case "DJVU":
-                            report(file, "DjVu document, single page (djvu)");
+                            report("DjVu document, single page (djvu)");
                             break;
                         case "DJVM":
-                            report(file, "DjVu document, multiple pages (djvu)");
+                            report("DjVu document, multiple pages (djvu)");
                             break;
                         default:
-                            report_unknown(file);
+                            report_unknown();
                             break;
                     }
                 }
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break;
 
     case "wOFF":
-        report(file, "WOFF File Format 1.0 font (woff)");
+        report("WOFF File Format 1.0 font (woff)");
         break;
 
     case "wOF2":
-        report(file, "WOFF File Format 2.0 font (woff)");
+        report("WOFF File Format 2.0 font (woff)");
         break;
 
     case "<?xm":
@@ -742,17 +840,86 @@ static void scan_file(File file)
             switch (s)
             {
             case "l>":
-                report(file, "ASCII XML (xml)");
+                report("ASCII XML (xml)");
                 break;
             default:
-                report_unknown(file);
+                report_unknown();
                 break;
             }
         }
         break; // too lazy for utf-16/32
 
+    case "PWAD":
+    case "IWAD":
+    {
+        int[2] b; // Doom reads as int
+        file.rawRead(b);
+
+        writefln("%s: %s holding %d entries at %Xh", file.name, sig, b[0], b[1]);
+    }
+    break;
+
     case "\0asm":
-        report(file, "WebAssembly file (wasm)");
+        report("WebAssembly file (wasm)");
+        break;
+
+    case "TRUE":
+    {
+        char[12] b;
+        file.rawRead(b);
+
+        switch (cast(string)b)
+        {
+            case "VISION-XFILE":
+                report("Truevision Targa Graphic image file");
+                break;
+            default:
+                report_unknown();
+                break;
+        }
+    }
+    break;
+
+    case [0, 0, 2, 0]:
+        report("Lotus 1-2-3 spreadsheet (v1) file");
+        break;
+
+    case [0, 0, 0x1A, 0]:
+        {
+            char[3] b;
+            file.rawRead(b);
+
+            const string s = cast(string)b;
+
+            switch (s)
+            {
+                case [0, 0x10, 4]:
+                    report("Lotus 1-2-3 spreadsheet (v3) file");
+                    break;
+                case [2, 0x10, 4]:
+                    report("Lotus 1-2-3 spreadsheet (v4, v5) file");
+                    break;
+                case [5, 0x10, 4]:
+                    report("Lotus 1-2-3 spreadsheet (v9) file");
+                    break;
+                default:
+                    report_unknown();
+                    break;
+            }
+        }
+        break;
+
+    case [0, 0, 3, 0xF3]:
+        report("Amiga Hunk executable file");
+        break;    
+
+    case "\0\0II":
+    case "\0\0MM":
+        report("Quark Express document");
+        break;
+
+    case [0, 0, 0xFE, 0xFF]:
+        report("UTF-32BE file");
         break;
 
     default:
@@ -760,66 +927,66 @@ static void scan_file(File file)
             switch (sig[0..2])
             {
             case [0x1F, 0x9D]:
-                report(file, "Lempel-Ziv-Welch compressed file (RAR/ZIP)");
+                report("Lempel-Ziv-Welch compressed file (RAR/ZIP)");
                 break;
 
             case [0x1F, 0xA0]:
-                report(file, "LZH compressed file (RAR/ZIP)");
+                report("LZH compressed file (RAR/ZIP)");
                 break;
 
             case "MZ":
-                scan_pe(file);
+                scan_mz(file);
                 break;
 
             case [0xFF, 0xFE]:
-                report(file, "UTF-16 text file (Byte-Order mark)");
+                report("UTF-16 text file (Byte-Order mark)");
                 break;
 
             case [0xFF, 0xFB]:
-                report(file, "MPEG-2 Audio Layer III audio file (MP3)");
+                report("MPEG-2 Audio Layer III audio file (MP3)");
                 break;
 
             case "BM":
-                report(file, "Bitmap iamge file (BMP)");
+                report("Bitmap iamge file (BMP)");
                 break;
 
             case [0x1F, 0x8B]:
-                report(file, "GZIP compressed file ([tar.]gz)");
+                report("GZIP compressed file ([tar.]gz)");
                 break;
 
             case [0x30, 0x82]:
-                report(file, "DER encoded X.509 certificate (der)");
+                report("DER encoded X.509 certificate (der)");
                 break;
 
             default:
                 switch (sig[0..3])
                 {
                 case "BZh":
-                    report(file, "Bzip2 compressed file (BZh)");
+                    report("Bzip2 compressed file (BZh)");
                     break;
 
                 case [0xEF, 0xBB, 0xBF]:
-                    report(file, "UTF-8 text file with BOM");
+                    report("UTF-8 text file with BOM");
                     break;
 
                 case "ID3":
-                    report(file, "MPEG-2 Audio Layer III audio file with ID3v2 container (MP3)");
+                    report("MPEG-2 Audio Layer III audio file with ID3v2 container (MP3)");
                     break;
 
                 case "KDM":
-                    report(file, "VMware Disk K virtual disk file (VMDK)");
+                    report("VMware Disk K virtual disk file (VMDK)");
                     break;
 
                 case "NES":
-                    report(file, "Nintendo Entertainment System ROM file (nes)");
+                    report("Nintendo Entertainment System ROM file (nes)");
                     break;
 
                 case [0xCF, 0x84, 0x01]:
-                    report(file, "Lepton compressed JPEG image (lep)");
+                    report("Lepton compressed JPEG image (lep)");
                     break;
 
                 default:
-                    report_unknown(file);
+                    report_unknown();
                     break;
                 }
                 break;
@@ -829,59 +996,59 @@ static void scan_file(File file)
     }
 }
 
-static void report(File file, string type)
+static void report(string type)
 {
-    writefln("%s: %s", file.name, type);
+    writefln("%s: %s", current_file.name, type);
 }
 
-static void report_unknown(File file)
+static void report_unknown()
 {
-    writefln("%s: Unknown file format", file.name);
+    writefln("%s: Unknown file format", current_file.name);
 }
 
 /**
- * PE32 File Scanner
+ * MZ/NE/LE/LX/PE32 File Scanner | __PE32
  */
 
 struct PE_HEADER
 {
-    // Skipping magic
-    public PE_MACHINE_TYPE Machine;
-    public ushort NumberOfSections;
-    public uint TimeDateStamp;
-    public uint PointerToSymbolTable;
-    public uint NumberOfSymbols;
-    public ushort SizeOfOptionalHeader;
-    public PE_CHARACTERISTIC_TYPE Characteristics;
+    char[4] Signature;
+    PE_MACHINE_TYPE Machine;
+    ushort NumberOfSections;
+    uint TimeDateStamp;
+    uint PointerToSymbolTable;
+    uint NumberOfSymbols;
+    ushort SizeOfOptionalHeader;
+    PE_CHARACTERISTIC_TYPE Characteristics;
 }
 
 struct PE_OPTIONAL_HEADER
 {
-    public PE_FORMAT Format;
-    public byte MajorLinkerVersion;
-    public byte MinorLinkerVersion;
-    public uint SizeOfCode;
-    public uint SizeOfInitializedData;
-    public uint SizeOfUninitializedData;
-    public uint AddressOfEntryPoint;
-    public uint BaseOfCode;
-    public union {
-        public uint BaseOfData;
-        public uint ImageBase; // ??
+    PE_FORMAT Format;
+    byte MajorLinkerVersion;
+    byte MinorLinkerVersion;
+    uint SizeOfCode;
+    uint SizeOfInitializedData;
+    uint SizeOfUninitializedData;
+    uint AddressOfEntryPoint;
+    uint BaseOfCode;
+    union {
+        uint BaseOfData;
+        uint ImageBase; // ??
     }
-    public uint SectionAlignment;
-    public uint FileAlignment;
-    public ushort MajorOperatingSystemVersion;
-    public ushort MinorOperatingSystemVersion;
-    public ushort MajorImageVersion;
-    public ushort MinorImageVersion;
-    public ushort MajorSubsystemVersion;
-    public ushort MinorSubsystemVersion;
-    public uint Win32VersionValue;
-    public uint SizeOfImage;
-    public uint SizeOfHeaders;
-    public uint CheckSum;
-    public WIN_SUBSYSTEM Subsystem;
+    uint SectionAlignment;
+    uint FileAlignment;
+    ushort MajorOperatingSystemVersion;
+    ushort MinorOperatingSystemVersion;
+    ushort MajorImageVersion;
+    ushort MinorImageVersion;
+    ushort MajorSubsystemVersion;
+    ushort MinorSubsystemVersion;
+    uint Win32VersionValue;
+    uint SizeOfImage;
+    uint SizeOfHeaders;
+    uint CheckSum;
+    WIN_SUBSYSTEM Subsystem;
 }
 
 enum PE_MACHINE_TYPE : ushort
@@ -951,43 +1118,217 @@ enum WIN_SUBSYSTEM : ushort
     IMAGE_SUBSYSTEM_XBOX,
 }
 
-static void scan_pe(File file)
+struct LE_HEADER
 {
+    char[2] Signature; //"LX"
+    ubyte ByteOrder;
+    ubyte WordOrder;
+    uint FormatLevel;
+    ushort CPUType;
+    ushort OSType;
+    uint ModuleVersion;
+    uint ModuleFlags;
+    // And these are the most interesting parts.
+}
+
+struct NE_HEADER
+{
+    char[2] Signature;
+    ubyte MajLinkerVersion;
+    ubyte MinLinkerVersion;
+    ushort EntryTableOffset;
+    ushort EntryTableLength;
+    uint FileLoadCRC;
+    ubyte ProgFlags;
+    ubyte ApplFlags;
+    ubyte AutoDataSegIndex;
+    ushort InitHeapSize;
+    ushort InitStackSize;
+    uint EntryPoint;
+    uint InitStack;
+    ushort SegCount;
+    ushort ModRefs;
+    ushort NoResNamesTabSiz;
+    ushort SegTableOffset;
+    ushort ResTableOffset;
+    ushort ResidNamTable;
+    ushort ModRefTable;
+    ushort ImportNameTable;
+    uint OffStartNonResTab;
+    ushort MovEntryCount;
+    ushort FileAlnSzShftCnt;
+    ushort nResTabEntries;
+    ubyte targOS;
+}
+
+static void scan_mz(File file)
+{
+    import core.stdc.string;
+    //TODO: Use memcpy instead of manually playing with pointers.
+
     if (_debug)
         writefln("L%04d: Started scanning PE file", __LINE__);
 
-    uint peheader_offset;
-
+    uint header_offset;
     {
         int[1] b;
         file.seek(0x3c, 0);
         file.rawRead(b);
-        peheader_offset = b[0];
+        header_offset = b[0];
 
         if (_debug)
-            writefln("L%04d: PE Header Offset: %X", __LINE__, peheader_offset);
+            writefln("L%04d: PE Header Offset: %X", __LINE__, header_offset);
 
-        file.seek(peheader_offset, 0);
-        ubyte[4] pesig;
+        file.seek(header_offset, 0);
+        char[2] pesig;
         file.rawRead(pesig);
 
-        if (cast(string)pesig != "PE\0\0")
-        {
-            report(file, "MZ Executable (MS-DOS)");
+        if (header_offset)
+            switch (cast(string)pesig)
+            {
+            case "PE": break; // PE32 has the biggest analysis part
+
+            case "NE":
+            {
+                NE_HEADER peh;
+                {
+                    file.seek(header_offset, 0);
+                    ubyte[NE_HEADER.sizeof] buf;
+                    file.rawRead(buf);
+                    
+                    ubyte* pbuf = cast(ubyte*)&buf, ppeh = cast(ubyte*)&peh;
+
+                    for (size_t i = 0; i < NE_HEADER.sizeof; ++i)
+                        *(ppeh + i) = *(pbuf + i);
+                }
+
+                writef("%s: NE ", file.name);
+
+                if (peh.ApplFlags & 0x80)
+                    write("DLL/Driver");
+                else
+                    write("Executable");
+
+                write(" (");
+
+                switch (peh.targOS)
+                {
+                    default: case 0:
+                        write("Unknown");
+                        break;
+                    case 1:
+                        write("OS/2");
+                        break;
+                    case 2:
+                        write("Windows");
+                        break;
+                    case 3:
+                        write("European MS-DOS 4.x");
+                        break;
+                    case 4:
+                        write("Windows 386");
+                        break;
+                    case 5:
+                        write("BOSS");
+                        break;
+                }
+
+                write(") with ");
+                
+                if (peh.ProgFlags & 0x80)
+                    write("80x87");
+                else if (peh.ProgFlags & 0x40)
+                    write("80386");
+                else if (peh.ProgFlags & 0x20)
+                    write("80286");
+                else
+                    write("8086");
+
+                writeln(" instructions");
+            }
             return;
-        }
+
+            case "LE": case "LX": // LE/LX
+            {
+                LE_HEADER peh;
+                {
+                    file.seek(header_offset, 0);
+                    ubyte[LE_HEADER.sizeof] buf;
+                    file.rawRead(buf);
+                    
+                    ubyte* pbuf = cast(ubyte*)&buf, ppeh = cast(ubyte*)&peh;
+
+                    for (size_t i = 0; i < LE_HEADER.sizeof; ++i)
+                        *(ppeh + i) = *(pbuf + i);
+                }
+
+                writef("%s: %s ", file.name, pesig);
+
+                if (peh.ModuleFlags & 0x8000)
+                    write("Libary module");
+                else
+                    write("Program module");
+
+                write(" (");
+
+                switch (peh.OSType)
+                {
+                default: case 0:
+                    write("Unknown");
+                    break;
+                case 1:
+                    write("OS/2");
+                    break;
+                case 2:
+                    write("Windows");
+                    break;
+                case 3:
+                    write("DOS 4.x");
+                    break;
+                case 4:
+                    write("Windows 386");
+                    break;
+                }
+
+                write("), ");
+
+                switch (peh.CPUType)
+                {
+                default:
+                    write("unknown");
+                    break;
+                case 1:
+                    write("Intel 80286");
+                    break;
+                case 2:
+                    write("Intel 80386");
+                    break;
+                case 3:
+                    write("Intel 80486");
+                    break;
+                }
+
+                writeln(" CPU and up");
+            }
+            return;
+
+            default:
+                writefln("%s: MZ Executable (MS-DOS)", file.name);
+                return;
+            }
+        else
+            writefln("%s: MZ Executable (MS-DOS)", file.name);
     }
 
-    PE_HEADER peh;
+    PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
-
-    { // PE Header
-        file.seek(peheader_offset + 4, 0); // Skip magic
+    {
+        file.seek(header_offset, 0);
 
         ubyte[PE_HEADER.sizeof] buf;
         file.rawRead(buf);
         
-        byte* pbuf = cast(byte*)&buf, ppeh = cast(byte*)&peh;
+        ubyte* pbuf = cast(ubyte*)&buf, ppeh = cast(ubyte*)&peh;
 
         for (size_t i = 0; i < PE_HEADER.sizeof; ++i)
             *(ppeh + i) = *(pbuf + i);
@@ -997,12 +1338,12 @@ static void scan_pe(File file)
             ubyte[PE_OPTIONAL_HEADER.sizeof] obuf;
             file.rawRead(obuf);
             
-            byte* pobuf = cast(byte*)&obuf, ppeoh = cast(byte*)&peoh;
+            ubyte* pobuf = cast(ubyte*)&obuf, ppeoh = cast(ubyte*)&peoh;
 
             for (size_t i = 0; i < PE_OPTIONAL_HEADER.sizeof; ++i)
                 *(ppeoh + i) = *(pobuf + i);
             
-            // ???
+            // ?????????????????????????????
             peoh.Format = cast(PE_FORMAT)(obuf[0] | (obuf[1] << 8));
         }
 
@@ -1015,7 +1356,7 @@ static void scan_pe(File file)
         }*/
     }
 
-    if (_through || _debug)
+    if (_more || _debug)
     {
         writefln("Machine type : %s", peh.Machine);
         writefln("Number of sections : %s", peh.NumberOfSymbols);
@@ -1100,10 +1441,10 @@ static void scan_pe(File file)
 
     write(" Windows ");
 
-    if ((peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_DLL) == 0)
-        write("Executable (EXE)");
-    else
+    if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_DLL)
         write("Library (DLL)");
+    else
+        write("Executable (EXE)");
 
     write(" for ");
 
@@ -1203,11 +1544,10 @@ static void scan_pe(File file)
 }
 
 /**
- * ELF File Scanner
+ * ELF File Scanner | __ELF
  */
 
 const size_t EI_NIDENT = 16;
-
 struct Elf32_Ehdr
 {
     public char[EI_NIDENT] e_ident;
@@ -1289,7 +1629,7 @@ static void scan_elf(File file)
         writeln();
     }
 
-    if (_debug || _through)
+    if (_debug || _more)
     {
         writefln("type: %s", header.e_type);
         writefln("machine: %s", header.e_machine);
@@ -1435,12 +1775,13 @@ static void scan_elf(File file)
     writeln(" systems");
 }
 
-/**
+/*
  * Etc.
  */
 
 const size_t BYTE_LIMIT = 1024 * 64;
 
+/// __ETC
 static void scan_unknown(File file)
 {
     // Scan for readable characters for X(64KB?) bytes and at least
