@@ -164,7 +164,7 @@ static void scan_file(File file)
 
     case [0x00, 0x01, 0x00, 0x00]:
         {
-            char[12] b;
+            ubyte[12] b;
             file.rawRead(b);
             const string s = cast(string)b;
             switch (s[0..3])
@@ -318,7 +318,7 @@ static void scan_file(File file)
     case [0, 0, 0, 0x1C]:
     case [0, 0, 0, 0x20]:
         {
-            char[8] b;
+            ubyte[8] b;
             file.rawRead(b);
 
             const string s = cast(string)b;
@@ -791,11 +791,11 @@ static void scan_file(File file)
 
     case "AT&T":
         {
-            char[4] b;
+            ubyte[4] b;
             file.rawRead(b);
             string s = cast(string)b;
 
-            switch (b)
+            switch (s)
             {
             case "FORM":
                 {
@@ -866,7 +866,7 @@ static void scan_file(File file)
 
     case "TRUE":
     {
-        char[12] b;
+        ubyte[12] b;
         file.rawRead(b);
 
         switch (cast(string)b)
@@ -887,7 +887,7 @@ static void scan_file(File file)
 
     case [0, 0, 0x1A, 0]:
         {
-            char[3] b;
+            ubyte[3] b;
             file.rawRead(b);
 
             const string s = cast(string)b;
@@ -1017,7 +1017,7 @@ static void report_unknown()
 
 struct PE_HEADER
 {
-    char[4] Signature;
+    ubyte[4] Signature;
     PE_MACHINE_TYPE Machine;
     ushort NumberOfSections;
     uint TimeDateStamp;
@@ -1125,7 +1125,7 @@ enum WIN_SUBSYSTEM : ushort
 
 struct LE_HEADER
 {
-    char[2] Signature; //"LX"
+    ubyte[2] Signature; //"LX"
     ubyte ByteOrder;
     ubyte WordOrder;
     uint FormatLevel;
@@ -1138,7 +1138,7 @@ struct LE_HEADER
 
 struct NE_HEADER
 {
-    char[2] Signature;
+    ubyte[2] Signature;
     ubyte MajLinkerVersion;
     ubyte MinLinkerVersion;
     ushort EntryTableOffset;
@@ -1185,7 +1185,7 @@ static void scan_mz(File file)
             writefln("L%04d: PE Header Offset: %X", __LINE__, header_offset);
 
         file.seek(header_offset, 0);
-        char[2] pesig;
+        ubyte[2] pesig;
         file.rawRead(pesig);
 
         if (header_offset)
@@ -1555,7 +1555,7 @@ static void scan_mz(File file)
 const size_t EI_NIDENT = 16;
 struct Elf32_Ehdr
 {
-    public char[EI_NIDENT] e_ident;
+    public ubyte[EI_NIDENT] e_ident;
     public ELF_e_type e_type;
     public ELF_e_machine e_machine;
     public ELF_e_version e_version;
