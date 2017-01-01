@@ -12,6 +12,8 @@ static File current_file;
 https://en.wikipedia.org/wiki/List_of_file_signatures (Complete)
 https://mimesniff.spec.whatwg.org
 http://www.garykessler.net/library/file_sigs.html (To complete with)
+Thought be warned with the last link, since there are entries that I do not
+trust, and some entries repeat.
 */
 
 /*
