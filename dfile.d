@@ -28,7 +28,7 @@ trust, and some entries repeat.
 static int main(string[] args)
 {
     size_t l = args.length;
-
+    
     if (l <= 1)
     {
         print_help;
@@ -224,11 +224,15 @@ static void scan_file(File file)
                         break;
 
                     default:
+                        report_unknown();
+                        break;
                 }
             }
             break;
 
             default:
+                report_unknown();
+                break;
             }
         }
         break;
@@ -291,7 +295,7 @@ static void scan_file(File file)
 
     case ['R', 'N', 'C', 0x01]:
     case ['R', 'N', 'C', 0x02]:
-        report("Compressed file (Rob Northen Compression v1/v2)");
+        report("Compressed file (Rob Northen Compression v"~sig[3]~")");
         break;
 
     case "SDPX":
@@ -312,6 +316,91 @@ static void scan_file(File file)
     case [0xFF, 0xD8, 0xFF, 0xE1]:
         report("Joint Photographic Experts Group image (JPEG)");
         break;
+
+    case ['g', 0xA3, 0xA1, 0xCE]:
+        report("IMG archive");
+        break;
+
+    case [0xA9, 0x4E, 0x2A, 0x52]: //TODO: Finish https://www.gtamodding.com/wiki/IMG_archive
+        report("IMG unencrypted archive");
+        break;
+
+    case "GBLE":
+    case "GBLF":
+    case "GBLG":
+    case "GBLI":
+    case "GBLS":
+    case "GBLJ":
+        report("GTA Text (GTA2+) file in ");
+        final switch (sig[3])
+        {
+            case 'E':
+                write("English");
+                break;
+            case 'F':
+                write("French");
+                break;
+            case 'G':
+                write("German");
+                break;
+            case 'I':
+                write("Italian");
+                break;
+            case 'S':
+                write("Spanish");
+                break;
+            case 'J':
+                write("Japanese");
+                break;
+        }
+        write(" language");
+        break;
+
+    case "2TXG":
+        ubyte[4] b;
+        current_file.rawRead(b);
+        int e = b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24; // Byte swapped
+        report("GTA Text 2 file with ");
+        writef("%d entries", e);
+        break;
+
+    case "RPF0":
+    case "RPF2":
+    case "RPF3":
+    case "RPF4":
+    case "RPF6":
+    case "RPF7": {
+        int[4] buf; // Table of Contents Size, Number of Entries, ?, Encryted
+        current_file.rawRead(buf);
+        report("RPF");
+        if (buf[3])
+            write(" encrypted");
+        write(" archive v" ~ sig[3] ~ " (");
+        final switch (sig[3])
+        {
+            case '0':
+                write("Table Tennis");
+                break;
+            case '2':
+                write("GTA IV");
+                break;
+            case '3':
+                write("GTA IV:A&MC:LA");
+                break;
+            case '4':
+                write("Max Payne 3");
+                break;
+            case '6':
+                write("Red Dead Redemption");
+                break;
+            case '7':
+                write("GTA V");
+                break;
+        }
+        write(") with ", buf[1]);
+        write(" entries");
+    }
+    break;
 
     case [0, 0, 0, 0x14]:
     case [0, 0, 0, 0x18]:
@@ -1101,7 +1190,7 @@ enum PE_CHARACTERISTIC_TYPE : ushort
     IMAGE_FILE_BYTES_REVERSED_HI = 0x8000
 }
 
-enum PE_FORMAT
+enum PE_FORMAT : short
 {
     ROM   = 0x0107,
     PE32  = 0x010B,
@@ -1168,9 +1257,6 @@ struct NE_HEADER
 
 static void scan_mz(File file)
 {
-    import core.stdc.string;
-    //TODO: Use memcpy instead of manually playing with pointers.
-
     if (_debug)
         writefln("L%04d: Started scanning PE file", __LINE__);
 
@@ -1187,6 +1273,7 @@ static void scan_mz(File file)
         file.seek(header_offset, 0);
         ubyte[2] pesig;
         file.rawRead(pesig);
+        file.seek(header_offset, 0);
 
         if (header_offset)
             switch (cast(string)pesig)
@@ -1197,7 +1284,6 @@ static void scan_mz(File file)
             {
                 NE_HEADER peh;
                 {
-                    file.seek(header_offset, 0);
                     ubyte[NE_HEADER.sizeof] buf;
                     file.rawRead(buf);
                     
@@ -1257,7 +1343,6 @@ static void scan_mz(File file)
             {
                 LE_HEADER peh;
                 {
-                    file.seek(header_offset, 0);
                     ubyte[LE_HEADER.sizeof] buf;
                     file.rawRead(buf);
                     
@@ -1327,29 +1412,20 @@ static void scan_mz(File file)
 
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
-    {
-        file.seek(header_offset, 0);
+    { // GC
+        import core.stdc.string;
 
         ubyte[PE_HEADER.sizeof] buf;
         file.rawRead(buf);
-        
-        ubyte* pbuf = cast(ubyte*)&buf, ppeh = cast(ubyte*)&peh;
-
-        for (size_t i = 0; i < PE_HEADER.sizeof; ++i)
-            *(ppeh + i) = *(pbuf + i);
+        memcpy(&peh, &buf, peh.sizeof);
 
         if (peh.SizeOfOptionalHeader > 0)
         { // PE Optional Header
             ubyte[PE_OPTIONAL_HEADER.sizeof] obuf;
             file.rawRead(obuf);
-            
-            ubyte* pobuf = cast(ubyte*)&obuf, ppeoh = cast(ubyte*)&peoh;
+            memcpy(&peoh, &obuf, peoh.sizeof);
 
-            for (size_t i = 0; i < PE_OPTIONAL_HEADER.sizeof; ++i)
-                *(ppeoh + i) = *(pobuf + i);
-            
-            // ?????????????????????????????
-            peoh.Format = cast(PE_FORMAT)(obuf[0] | (obuf[1] << 8));
+            //peoh.Format = cast(PE_FORMAT)(obuf[0] | (obuf[1] << 8)); // ??
         }
 
         /*if (_debug)
@@ -1392,7 +1468,7 @@ static void scan_mz(File file)
         write("+ ");
         break;
     default:
-        write(" (?) ");
+        write(" (Format?) ");
         break;
     }
 
@@ -1428,7 +1504,7 @@ static void scan_mz(File file)
         break;
 
     case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER :
-        write("(EFI Boot Service Driver)");
+        write("(EFI Boot Service driver)");
         break;
 
     case WIN_SUBSYSTEM.IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
@@ -1447,9 +1523,13 @@ static void scan_mz(File file)
     write(" Windows ");
 
     if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_DLL)
-        write("Library (DLL)");
+        write("Library");
+    else if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_EXECUTABLE_IMAGE)
+        write("Executable");
+    else if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_SYSTEM)
+        write("System");
     else
-        write("Executable (EXE)");
+        write("Unknown");
 
     write(" for ");
 
@@ -1545,7 +1625,13 @@ static void scan_mz(File file)
         break;
     }
 
-    writeln(" systems");
+    write(" systems");
+    
+    if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_AGGRESSIVE_WS_TRIM)
+        write(", aggressively trimmed");
+
+    if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.IMAGE_FILE_LARGE_ADDRESS_AWARE)
+        write(", large addresses aware");
 }
 
 /**
@@ -1767,7 +1853,7 @@ static void scan_elf(File file)
     {
     default:
     case 0:
-        write("(Invalid)");
+        write("(Invalid Endian)");
         break;
     case 1:
         write("(Little-endian)");
