@@ -335,7 +335,7 @@ static void scan_file(File file)
     case "GBLI":
     case "GBLS":
     case "GBLJ":
-        report("GTA Text (GTA2+) file in ");
+        writef("%s: GTA Text (GTA2+) file in ", file.name);
         final switch (sig[3])
         {
         case 'E':
@@ -374,9 +374,9 @@ static void scan_file(File file)
     case "RPF4":
     case "RPF6":
     case "RPF7": {
+        writef("%s: RPF", file.name);
         int[4] buf; // Table of Contents Size, Number of Entries, ?, Encryted
         current_file.rawRead(buf);
-        report("RPF");
         if (buf[3])
             write(" encrypted");
         write(" archive v" ~ sig[3] ~ " (");
@@ -401,8 +401,7 @@ static void scan_file(File file)
                 write("GTA V");
                 break;
         }
-        write(") with ", buf[1]);
-        write(" entries");
+        writefln(") with %d entries", buf[1]);
     }
     break;
 
@@ -565,11 +564,11 @@ static void scan_file(File file)
     }
         break;
 
-    case [0xCA, 0xFE, 0xBA, 0xBE]: // CaFE BABE?
+    case [0xCA, 0xFE, 0xBA, 0xBE]: // CAFE BABE?
         report("Java class file, Mach-O Fat Binary");
         break;
 
-    case [0xFE, 0xED, 0xFA, 0xCE]:
+    case [0xFE, 0xED, 0xFA, 0xCE]: // FEED FACE?
         report("Mach-O binary (32-bit)");
         break;
     case [0xFE, 0xED, 0xFA, 0xCF]:
@@ -866,7 +865,7 @@ static void scan_file(File file)
         switch (s)
         {
         case "FORM": {
-            file.seek(4);
+            file.seek(8);
             file.rawRead(b);
             s = cast(string)b;
 
@@ -1159,28 +1158,28 @@ struct IMAGE_DATA_DIRECTORY
 
 enum PE_MACHINE_TYPE : ushort
 {
-    IMAGE_FILE_MACHINE_UNKNOWN = 0x0,
-    IMAGE_FILE_MACHINE_AM33 = 0x1d3,
-    IMAGE_FILE_MACHINE_AMD64 = 0x8664,
-    IMAGE_FILE_MACHINE_ARM = 0x1c0,
-    IMAGE_FILE_MACHINE_ARMNT = 0x1c4,
-    IMAGE_FILE_MACHINE_ARM64 = 0xaa64,
-    IMAGE_FILE_MACHINE_EBC = 0xebc,
-    IMAGE_FILE_MACHINE_I386 = 0x14c,
-    IMAGE_FILE_MACHINE_IA64 = 0x200,
-    IMAGE_FILE_MACHINE_M32R = 0x9041,
-    IMAGE_FILE_MACHINE_MIPS16 = 0x266,
-    IMAGE_FILE_MACHINE_MIPSFPU = 0x366,
-    IMAGE_FILE_MACHINE_MIPSFPU16 = 0x466,
-    IMAGE_FILE_MACHINE_POWERPC = 0x1f0,
-    IMAGE_FILE_MACHINE_POWERPCFP = 0x1f1,
-    IMAGE_FILE_MACHINE_R4000 = 0x166,
-    IMAGE_FILE_MACHINE_SH3 = 0x1a2,
-    IMAGE_FILE_MACHINE_SH3DSP = 0x1a3,
-    IMAGE_FILE_MACHINE_SH4 = 0x1a6,
-    IMAGE_FILE_MACHINE_SH5 = 0x1a8,
-    IMAGE_FILE_MACHINE_THUMB = 0x1c2,
-    IMAGE_FILE_MACHINE_WCEMIPSV2 = 0x169
+    MACHINE_UNKNOWN = 0x0,
+    MACHINE_AM33 = 0x1d3,
+    MACHINE_AMD64 = 0x8664,
+    MACHINE_ARM = 0x1c0,
+    MACHINE_ARMNT = 0x1c4,
+    MACHINE_ARM64 = 0xaa64,
+    MACHINE_EBC = 0xebc,
+    MACHINE_I386 = 0x14c,
+    MACHINE_IA64 = 0x200,
+    MACHINE_M32R = 0x9041,
+    MACHINE_MIPS16 = 0x266,
+    MACHINE_MIPSFPU = 0x366,
+    MACHINE_MIPSFPU16 = 0x466,
+    MACHINE_POWERPC = 0x1f0,
+    MACHINE_POWERPCFP = 0x1f1,
+    MACHINE_R4000 = 0x166,
+    MACHINE_SH3 = 0x1a2,
+    MACHINE_SH3DSP = 0x1a3,
+    MACHINE_SH4 = 0x1a6,
+    MACHINE_SH5 = 0x1a8,
+    MACHINE_THUMB = 0x1c2,
+    MACHINE_WCEMIPSV2 = 0x169
 }
 
 enum PE_CHARACTERISTIC_TYPE : ushort
@@ -1420,7 +1419,10 @@ static void scan_mz(File file)
                 return;
             }
         else
+        {
             report("MZ Executable (MS-DOS)");
+            return;
+        }
     }
 
     PE_HEADER peh; // PE32
@@ -1557,91 +1559,91 @@ static void scan_mz(File file)
     switch (peh.Machine)
     {
     default:
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_UNKNOWN:
-        write("Unknown");
+    case PE_MACHINE_TYPE.MACHINE_UNKNOWN:
+        write("unknown");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AM33:
+    case PE_MACHINE_TYPE.MACHINE_AM33:
         write("Matsushita AM33");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_AMD64:
+    case PE_MACHINE_TYPE.MACHINE_AMD64:
         write("x86-64");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM:
+    case PE_MACHINE_TYPE.MACHINE_ARM:
         write("ARM (Little endian)");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARMNT:
+    case PE_MACHINE_TYPE.MACHINE_ARMNT:
         write("ARMv7+ (Thumb mode)");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_ARM64:
+    case PE_MACHINE_TYPE.MACHINE_ARM64:
         write("ARMv8 (64-bit)");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_EBC:
+    case PE_MACHINE_TYPE.MACHINE_EBC:
         write("EFI (Byte Code)");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_I386:
+    case PE_MACHINE_TYPE.MACHINE_I386:
         write("x86");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_IA64:
+    case PE_MACHINE_TYPE.MACHINE_IA64:
         write("IA64");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_M32R:
+    case PE_MACHINE_TYPE.MACHINE_M32R:
         write("Mitsubishi M32R (Little endian)");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPS16:
+    case PE_MACHINE_TYPE.MACHINE_MIPS16:
         write("MIPS16");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU:
+    case PE_MACHINE_TYPE.MACHINE_MIPSFPU:
         write("MIPS (w/FPU)");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_MIPSFPU16:
+    case PE_MACHINE_TYPE.MACHINE_MIPSFPU16:
         write("MIPS16 (w/FPU)");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPC:
+    case PE_MACHINE_TYPE.MACHINE_POWERPC:
         write("PowerPC");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_POWERPCFP:
+    case PE_MACHINE_TYPE.MACHINE_POWERPCFP:
         write("PowerPC (w/FPU)");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_R4000:
+    case PE_MACHINE_TYPE.MACHINE_R4000:
         write("MIPS (Little endian)");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3:
+    case PE_MACHINE_TYPE.MACHINE_SH3:
         write("Hitachi SH3");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH3DSP:
+    case PE_MACHINE_TYPE.MACHINE_SH3DSP:
         write("Hitachi SH3 DSP");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH4:
+    case PE_MACHINE_TYPE.MACHINE_SH4:
         write("Hitachi SH4");
         break;
 
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_SH5:
+    case PE_MACHINE_TYPE.MACHINE_SH5:
         write("Hitachi SH5");
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_THUMB:
+    case PE_MACHINE_TYPE.MACHINE_THUMB:
         write(`ARM or Thumb ("interworking")`);
         break;
         
-    case PE_MACHINE_TYPE.IMAGE_FILE_MACHINE_WCEMIPSV2:
+    case PE_MACHINE_TYPE.MACHINE_WCEMIPSV2:
         write("MIPS WCE v2 (Little endian)");
         break;
     }
