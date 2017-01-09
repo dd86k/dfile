@@ -466,11 +466,6 @@ static void scan_mach(File file)
             cpu_type = mh.cputype;
             cpu_subtype = mh.cpusubtype;
         }
-
-        if (_debug)
-        {
-            writefln("%08X -> %08X", mh.filetype, filetype);
-        }
     }
 
     if (!fat)

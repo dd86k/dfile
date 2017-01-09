@@ -14,9 +14,8 @@ It tells more details of:
 
 It does a detailed scan of:
 - Exectuable files
-  - MZ (MS-DOS) (TODO)
   - LE/LX (OS/2)
   - NE (Windows 3.x)
   - PE32 (Win32)
   - ELF (POSIX)
-  - Mach-O (macOS) (Incomplete)
+  - Mach-O (macOS)
