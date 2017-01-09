@@ -7,6 +7,7 @@ import s_mz;
 import s_pe;
 import s_ne;
 import s_le;
+import s_mach;
 
 const string PROJECT_NAME = "dfile";
 const string PROJECT_VERSION = "0.1.0";
@@ -460,7 +461,7 @@ static void scan_file(File file)
 
     case "FORM": {
         ubyte[4] b;
-        file.seek(8, 0);
+        file.seek(8);
         file.rawRead(b);
         string s = cast(string)b;
 
@@ -564,8 +565,15 @@ static void scan_file(File file)
     case [0xCA, 0xFE, 0xBA, 0xBE]: // CAFE BABE?
         report("Java class file, Mach-O Fat Binary");
         break;
+    
+    case [0xFE, 0xED, 0xFA, 0xCE]: // FEED FACE
+    case [0xFE, 0xED, 0xFA, 0xCF]:
+    case [0xCE, 0xFA, 0xED, 0xFE]:
+    case [0xCF, 0xFA, 0xED, 0xFE]:
+        scan_mach(current_file);
+        break;
 
-    case [0xFE, 0xED, 0xFA, 0xCE]: // FEED FACE?
+    /*case [0xFE, 0xED, 0xFA, 0xCE]: // FEED FACE?
         report("Mach-O binary (32-bit)");
         break;
     case [0xFE, 0xED, 0xFA, 0xCF]:
@@ -576,7 +584,7 @@ static void scan_file(File file)
         break;
     case [0xCF, 0xFA, 0xED, 0xFE]:
         report("Mach-O binary (64-bit, Reversed)");
-        break;
+        break;*/
 
     case [0xFF, 0xFE, 0x00, 0x00]:
         report("UTF-32 text file (byte-order mark)");

@@ -7,7 +7,7 @@ import dfile;
  * MZ/NE/LE/LX/PE32 File Scanner | __PE32
  */
 
-struct PE_HEADER
+private struct PE_HEADER
 {
     ubyte[4] Signature; // "PE\0\0"
     PE_MACHINE_TYPE Machine;
@@ -20,7 +20,7 @@ struct PE_HEADER
 }
 
 /// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
-struct PE_OPTIONAL_HEADER
+private struct PE_OPTIONAL_HEADER
 {
     PE_FORMAT Format;
     byte MajorLinkerVersion;
@@ -54,7 +54,7 @@ struct PE_OPTIONAL_HEADER
     uint NumberOfRvaAndSizes;
 }
 
-struct IMAGE_DATA_DIRECTORY
+private struct IMAGE_DATA_DIRECTORY
 { // Make it a Steam bundle!
     uint ExportTable;
     uint ExportTableSize;
@@ -89,7 +89,7 @@ struct IMAGE_DATA_DIRECTORY
     uint ReservedSize;
 }
 
-enum PE_MACHINE_TYPE : ushort
+private enum PE_MACHINE_TYPE : ushort
 {
     UNKNOWN = 0x0,
     AM33 = 0x1d3,
@@ -115,7 +115,7 @@ enum PE_MACHINE_TYPE : ushort
     WCEMIPSV2 = 0x169
 }
 
-enum PE_CHARACTERISTIC_TYPE : ushort
+private enum PE_CHARACTERISTIC_TYPE : ushort
 {
     RELOCS_STRIPPED = 0x0001,
     EXECUTABLE_IMAGE = 0x0002,
@@ -134,14 +134,14 @@ enum PE_CHARACTERISTIC_TYPE : ushort
     BYTES_REVERSED_HI = 0x8000
 }
 
-enum PE_FORMAT : short
+private enum PE_FORMAT : short
 {
     ROM   = 0x0107,
     HDR32 = 0x010B,
     HDR64 = 0x020B
 }
 
-enum PE32_SUBSYSTEM : ushort
+private enum PE32_SUBSYSTEM : ushort
 {
     UNKNOWN = 0,
     NATIVE = 1,

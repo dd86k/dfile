@@ -7,8 +7,8 @@ import dfile;
  * ELF File Scanner | __ELF
  */
 
-const size_t EI_NIDENT = 16;
-struct Elf32_Ehdr
+private const size_t EI_NIDENT = 16;
+private struct Elf32_Ehdr
 {
     public ubyte[EI_NIDENT] e_ident;
     public ELF_e_type e_type;
@@ -26,7 +26,7 @@ struct Elf32_Ehdr
     public ushort e_shstrndx;
 }
 
-enum ELF_e_type : ushort
+private enum ELF_e_type : ushort
 {
     ET_NONE = 0,        // No file type
     ET_REL = 1,         // Relocatable file
@@ -37,7 +37,7 @@ enum ELF_e_type : ushort
     ET_HIPROC = 0xFFFF  // Processor-specific
 }
 
-enum ELF_e_machine : ushort
+private enum ELF_e_machine : ushort
 {
     EM_NONE = 0,  // No machine
     EM_M32 = 1,   // AT&T WE 32100
@@ -57,7 +57,7 @@ enum ELF_e_machine : ushort
     EM_AARCH64 = 0xB7
 }
 
-enum ELF_e_version : uint
+private enum ELF_e_version : uint
 {
     EV_NONE = 0,
     EV_CURRENT = 1

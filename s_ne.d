@@ -3,7 +3,7 @@ module s_ne;
 import std.stdio;
 import dfile;
 
-struct NE_HEADER
+private struct NE_HEADER
 {
     ubyte[2] Signature; // "NE"
     ubyte MajLinkerVersion;

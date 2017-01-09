@@ -3,7 +3,7 @@ module s_le;
 import std.stdio;
 import dfile;
 
-struct LE_HEADER
+private struct LE_HEADER
 {
     ubyte[2] Signature; // "LX" or "LE"
     ubyte ByteOrder;
