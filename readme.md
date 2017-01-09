@@ -15,7 +15,12 @@ It tells more details of:
 It does a detailed scan of:
 - Exectuable files
   - LE/LX (OS/2)
-  - NE (Windows 3.x)
-  - PE32 (Win32)
+  - NE (MS-DOS 4.x - Windows 3.x)
+  - PE32/PE32+ (Win32)
   - ELF (POSIX)
   - Mach-O (macOS)
+
+File formats I wish to implement:
+- Exectuable files
+  - [OS/360](https://en.wikipedia.org/wiki/OS/360_Object_File_Format)
+  - [a.out](https://en.wikipedia.org/wiki/A.out)

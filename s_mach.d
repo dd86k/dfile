@@ -112,16 +112,17 @@ private enum SUBTYPE_I386
 {
     I386_ALL = 3,
     X86_64_ALL = I386_ALL,
-    _386 = 3,
-    _486 = 4,
-    _486SX = 4 + 128,
-    _586 = 5,
+    i386 = 3,
+    i486 = 4,
+    i486SX = 4 + 128,
+    i586 = 5,
     PENT = SUBTYPE_INTEL(5, 0),
     PENPRO = SUBTYPE_INTEL(6, 1),
     PENTII_M3 = SUBTYPE_INTEL(6, 3),
     PENTII_M5 = SUBTYPE_INTEL(6, 5),
     PENTIUM_4 = SUBTYPE_INTEL(10, 0),
 }
+// Compiler will inline it automatically
 int SUBTYPE_INTEL(short f, short m) { return f + (m << 4); }
 
 // MIPS subtypes
@@ -146,9 +147,9 @@ private enum SUBTYPE_680x0
 // HPPA subtypes
 private enum SUBTYPE_HPPA
 {
+    HPPA7100 = 0,
+    HPPA7100LC = 1,
     ALL = 0,
-    _7100 = 0,
-    _7100LC = 1,
 }
 
 // Acorn subtypes
@@ -167,18 +168,18 @@ private enum SUBTYPE_ARM
 }
 
 // MC88000 subtypes
-private enum SUBTYPE_MC880000
+private enum SUBTYPE_MC88000
 {
-    MC88000_ALL = 0,
+    MC88000 = 0, //_ALL
     MMAX_JPC = 1,
     MC88100 = 1,
     MC88110 = 2,
 }
 
 // MC98000 (PowerPC) subtypes
-private enum SUBTYPE_MC980000
+private enum SUBTYPE_MC98000
 {
-    MC98000_ALL = 0,
+    MC98000 = 0, //_ALL
     MC98601 = 1,
 }
 
@@ -186,7 +187,7 @@ private enum SUBTYPE_MC980000
 private enum SUBTYPE_I860
 {
     ALL = 0,
-    _860 = 1,
+    i860 = 1,
 }
 
 // I860_LITTLE subtypes
@@ -264,7 +265,7 @@ private enum filetype_t : uint
     MH_KEXT_BUNDLE = 0xB,
 }
 
-private enum flag_t : uint
+private enum flag_t : uint // Reserved for future use
 {
     MH_NOUNDEFS                = 0x00000001,
     MH_INCRLINK                = 0x00000002,
@@ -292,59 +293,6 @@ private enum flag_t : uint
     MH_HAS_TLV_DESCRIPTORS     = 0x00800000,
     MH_NO_HEAP_EXECUTION       = 0x01000000,
     MH_APP_EXTENSION_SAFE      = 0x02000000
-}
-
-private enum cmd_t : uint // Reserved for future use
-{
-    LC_SEGMENT              = 0x00000001,
-    LC_SYMTAB               = 0x00000002,
-    LC_SYMSEG               = 0x00000003,
-    LC_THREAD               = 0x00000004,
-    LC_UNIXTHREAD           = 0x00000005,
-    LC_LOADFVMLIB           = 0x00000006,
-    LC_IDFVMLIB             = 0x00000007,
-    LC_IDENT                = 0x00000008,
-    LC_FVMFILE              = 0x00000009,
-    LC_PREPAGE              = 0x0000000A,
-    LC_DYSYMTAB             = 0x0000000B,
-    LC_LOAD_DYLIB           = 0x0000000C,
-    LC_ID_DYLIB             = 0x0000000D,
-    LC_LOAD_DYLINKER        = 0x0000000E,
-    LC_ID_DYLINKER          = 0x0000000F,
-    LC_PREBOUND_DYLIB       = 0x00000010,
-    LC_ROUTINES             = 0x00000011,
-    LC_SUB_FRAMEWORK        = 0x00000012,
-    LC_SUB_UMBRELLA         = 0x00000013,
-    LC_SUB_CLIENT           = 0x00000014,
-    LC_SUB_LIBRARY          = 0x00000015,
-    LC_TWOLEVEL_HINTS       = 0x00000016,
-    LC_PREBIND_CKSUM        = 0x00000017,
-    LC_LOAD_WEAK_DYLIB      = 0x80000018,
-    LC_SEGMENT_64           = 0x00000019,
-    LC_ROUTINES_64          = 0x0000001A,
-    LC_UUID                 = 0x0000001B,
-    LC_RPATH                = 0x8000001C,
-    LC_CODE_SIGNATURE       = 0x0000001D,
-    LC_SEGMENT_SPLIT_INFO   = 0x0000001E,
-    LC_REEXPORT_DYLIB       = 0x8000001F,
-    LC_LAZY_LOAD_DYLIB      = 0x00000020,
-    LC_ENCRYPTION_INFO      = 0x00000021,
-    LC_DYLD_INFO            = 0x00000022,
-    LC_DYLD_INFO_ONLY       = 0x80000022,
-    LC_LOAD_UPWARD_DYLIB    = 0x80000023,
-    LC_VERSION_MIN_MACOSX   = 0x00000024,
-    LC_VERSION_MIN_IPHONEOS = 0x00000025,
-    LC_FUNCTION_STARTS      = 0x00000026,
-    LC_DYLD_ENVIRONMENT     = 0x00000027,
-    LC_MAIN                 = 0x80000028,
-    LC_DATA_IN_CODE         = 0x00000029,
-    LC_SOURCE_VERSION       = 0x0000002A,
-    LC_DYLIB_CODE_SIGN_DRS  = 0x0000002B,
-    LC_ENCRYPTION_INFO_64   = 0x0000002C,
-    LC_LINKER_OPTION        = 0x0000002D,
-    LC_LINKER_OPTIMIZATION_HINT = 0x0000002E,
-    LC_VERSION_MIN_TVOS     = 0x0000002F,
-    LC_VERSION_MIN_WATCHOS  = 0x00000030,
 }
 
 enum : uint
@@ -512,5 +460,89 @@ static void scan_mach(File file)
             break;
     }
 
-    writefln(" for %s CPUs", cpu_type);
+    writef(" for %s (", cpu_type);
+
+    switch (cpu_type)
+    {
+    default:
+        write("any");
+        break;
+    case cpu_type_t.VAX:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_VAX)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.ROMP:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_ROMP)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.NS32032:
+    case cpu_type_t.NS32332:
+    case cpu_type_t.NS32532:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_32032)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.I386: //TODO: Better checking
+        if (cpu_subtype >= 3 && cpu_subtype <= SUBTYPE_INTEL(10, 0))
+            writef("%s", cast(SUBTYPE_I386)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.MIPS:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_MIPS)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.MC680x0:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_680x0)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.HPPA:
+        writef("%s", cast(SUBTYPE_HPPA)cpu_subtype);
+        break;
+    case cpu_type_t.ARM:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_680x0)cpu_subtype);
+        else
+            write("any");
+        break;
+    case cpu_type_t.MC88000:
+        writef("%s", cast(SUBTYPE_MC88000)cpu_subtype);
+        break;
+    case cpu_type_t.MC98000:
+        writef("%s", cast(SUBTYPE_MC98000)cpu_subtype);
+        break;
+    case cpu_type_t.I860:
+        if (cpu_subtype) write("i860 (MSB)");
+        else write("any (MSB)");
+        break;
+    case cpu_type_t.I860_LITTLE:
+        if (cpu_subtype) write("i860 (LSB)");
+        else write("any (LSB)");
+        break;
+    case cpu_type_t.RS6000:
+        if (cpu_type) write("RS6000");
+        else write("any");
+        break;
+    case cpu_type_t.POWERPC64:
+    case cpu_type_t.POWERPC:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_PowerPC)cpu_subtype);
+        else
+            write("any");
+        
+        if (cpu_type_t.POWERPC64)
+            write(" (64bit)");
+        break;
+    }
+
+    writeln(") CPUs");
 }
