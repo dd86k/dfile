@@ -3,6 +3,10 @@ module s_le;
 import std.stdio;
 import dfile;
 
+/*
+ * LE/LX format scanner
+ */
+
 private struct LE_HEADER
 {
     ubyte[2] Signature; // "LX" or "LE"

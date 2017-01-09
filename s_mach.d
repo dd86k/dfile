@@ -3,6 +3,10 @@ module s_mach;
 import std.stdio;
 import dfile;
 
+/*
+ * Mach-O format scanner
+ */
+
 private const uint CPU_SUBTYPE_MASK = 0xFF00_0000;
 
 private struct mach_header
@@ -353,12 +357,25 @@ enum : uint
     FAT_CIGAM =   0xBEBAFECA
 }
 
+private uint reverse(uint t)
+{
+    ubyte* pt = cast(ubyte*)&t;
+    return (pt[0] | pt[1] << 8 | pt[2] << 16 | pt[3] << 24);
+}
+
 static void scan_mach(File file)
 {
     bool reversed, fat;
-    file.rewind();
 
     uint sig;
+    {
+        uint[1] b;
+        file.rewind();
+        file.rawRead(b);
+        file.rewind();
+        sig = b[0];
+    }
+
     filetype_t filetype;
     cpu_type_t cpu_type;
     uint cpu_subtype;
@@ -392,13 +409,12 @@ static void scan_mach(File file)
             break;
     }
 
-    if (fat)
+    if (fat) // Java prefers Fat files
     {
         fat_header fh;
         {
             import core.stdc.string;
             ubyte[fat_header.sizeof] buf;
-            file.rewind();
             file.rawRead(buf);
             memcpy(&fh, &buf, fat_header.sizeof);
         }
@@ -412,12 +428,20 @@ static void scan_mach(File file)
                 file.rawRead(buf);
                 memcpy(&fa, &buf, fat_arch.sizeof);
             }
-            cpu_type = fa.cputype;
-            cpu_subtype = fa.cpusubtype;
+            if (reversed)
+            {
+                cpu_type = cast(cpu_type_t)reverse(fa.cputype);
+                cpu_subtype = reverse(fa.cpusubtype);
+            }
+            else
+            {
+                cpu_type = fa.cputype;
+                cpu_subtype = fa.cpusubtype;
+            }
         }
         else
         {
-            writeln(" binary file, invalid FAT header");
+            writeln(" binary file");
             return;
         }
     }
@@ -426,14 +450,27 @@ static void scan_mach(File file)
         mach_header mh;
         {
             import core.stdc.string;
-            uint[1] buf;
-            file.rewind();
+            ubyte[mach_header.sizeof] buf;
             file.rawRead(buf);
-            memcpy(&mh, &buf, uint.sizeof);
+            memcpy(&mh, &buf, mach_header.sizeof);
         }
-        filetype = mh.filetype;
-        cpu_type = mh.cputype;
-        cpu_subtype = mh.cpusubtype;
+        if (reversed)
+        {
+            filetype = cast(filetype_t)reverse(mh.filetype);
+            cpu_type = cast(cpu_type_t)reverse(mh.cputype);
+            cpu_subtype = reverse(mh.cpusubtype);
+        }
+        else
+        {
+            filetype = mh.filetype;
+            cpu_type = mh.cputype;
+            cpu_subtype = mh.cpusubtype;
+        }
+
+        if (_debug)
+        {
+            writefln("%08X -> %08X", mh.filetype, filetype);
+        }
     }
 
     if (!fat)
@@ -441,7 +478,7 @@ static void scan_mach(File file)
 
     switch (filetype)
     {
-        default: // Fat files always land here
+        default: // Fat files have no filetypes.
             if (!fat)
                 write("Unknown");
             break;

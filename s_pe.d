@@ -4,7 +4,7 @@ import std.stdio;
 import dfile;
 
 /**
- * MZ/NE/LE/LX/PE32 File Scanner | __PE32
+ * PE32 File Scanner
  */
 
 private struct PE_HEADER

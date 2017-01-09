@@ -4,7 +4,7 @@ import std.stdio;
 import dfile;
 
 /**
- * ELF File Scanner | __ELF
+ * ELF format Scanner
  */
 
 private const size_t EI_NIDENT = 16;

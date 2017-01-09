@@ -1,5 +1,9 @@
 module s_mz;
 
+/*
+ * MZ format scanner
+ */
+
 import std.stdio;
 import dfile;
 import s_pe;

@@ -3,6 +3,10 @@ module s_ne;
 import std.stdio;
 import dfile;
 
+/*
+ * NE format scanner
+ */
+
 private struct NE_HEADER
 {
     ubyte[2] Signature; // "NE"
