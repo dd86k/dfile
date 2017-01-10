@@ -243,7 +243,7 @@ private enum SUBTYPE_VEO
     VEO_2 = 2,
     VEO_3 = 3,
     VEO_4 = 4,
-    VEO_ALL = VEO_2,
+    //VEO_ALL = VEO_2,
 }
 
 //  =======================
@@ -487,8 +487,8 @@ static void scan_mach(File file)
         else
             write("any");
         break;
-    case cpu_type_t.I386: //TODO: Better checking
-        if (cpu_subtype >= 3 && cpu_subtype <= SUBTYPE_INTEL(10, 0))
+    case cpu_type_t.I386:
+        if (cpu_subtype)
             writef("%s", cast(SUBTYPE_I386)cpu_subtype);
         else
             write("any");
@@ -542,7 +542,14 @@ static void scan_mach(File file)
         if (cpu_type_t.POWERPC64)
             write(" (64bit)");
         break;
+    case cpu_type_t.VEO:
+        if (cpu_subtype)
+            writef("%s", cast(SUBTYPE_VEO)cpu_subtype);
+        else
+            write("any");
+        break;
     }
+
 
     writeln(") CPUs");
 }
