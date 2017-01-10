@@ -19,6 +19,7 @@ static File current_file;
 
 //TODO: Use sliced buffer instead in case of EOF/garbage.
 //TODO: Universal read_struct function (read_struct(object*,size_t)).
+//TODO: implment -more in all scanners.
 
 /*
 https://en.wikipedia.org/wiki/List_of_file_signatures (Complete)
@@ -153,7 +154,8 @@ static void scan_file(File file)
 
     switch (sig)
     {
-    /*case [0xBE, 0xBA, 0xFE, 0xCA]: // Conflicts with Mach-O
+    // Conflicts with Mach-O, need more data for these files
+    /*case [0xBE, 0xBA, 0xFE, 0xCA]:
         report("Palm Desktop Calendar Archive (DBA)");
         break;*/
 
@@ -1078,6 +1080,22 @@ static void report_unknown()
 {
     writefln("%s: Unknown file format", current_file.name);
 }
+
+/+static void read_struct(File file, void* pstruct, size_t s_size, bool rewind)
+{
+    import core.stdc.string;
+    if (rewind)
+        file.rewind();
+    if (_debug)
+        writeln("read_struct s_size: ", s_size);
+    ubyte[] buffer = new ubyte[s_size];
+    if (_debug)
+        writeln("read_struct size: ", buffer.length);
+    buffer = file.rawRead(buffer);
+    if (_debug)
+        writeln("read_struct size: ", buffer.length);
+    memcpy(pstruct, &buffer, buffer.length);
+}+/
 
 /*
  * Etc.

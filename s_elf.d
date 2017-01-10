@@ -70,14 +70,11 @@ static void scan_elf(File file)
 
     Elf32_Ehdr header;
     {
+        import core.stdc.string;
         ubyte[Elf32_Ehdr.sizeof] buf;
         file.rewind();
         file.rawRead(buf);
-
-        byte* pbuf = cast(byte*)&buf, pheader = cast(byte*)&header;
-
-        for (size_t i = 0; i < Elf32_Ehdr.sizeof; ++i)
-            *(pheader + i) = *(pbuf + i);
+        memcpy(&header, &buf, Elf32_Ehdr.sizeof);
     }
 
     if (_debug)
@@ -110,28 +107,28 @@ static void scan_elf(File file)
     switch (header.e_ident[4])
     {
     case 1: // 32-bit objects
-        write("32");
+        write("32 ");
         break;
     case 2: // 64-bit objects
-        write("64");
+        write("64 ");
         break;
     default:
+        write(" ");
+        break;
     }
-
-    write(" ");
 
     switch (header.e_ident[5])
     {
     case 1:
-        write("LSB");
+        write("LSB ");
         break;
     case 2:
-        write("MSB");
+        write("MSB ");
         break;
     default:
+        write(" ");
+        break;
     }
-
-    write(" ");
 
     switch (header.e_ident[7])
     {
