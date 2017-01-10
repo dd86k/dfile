@@ -38,7 +38,7 @@ static int main(string[] args)
         return 0;
     }
 
-    string filename = args[$-1];
+    string filename = args[l - 1]; // Last argument, no exceptions!
 
     for (int i = 0; i < l; ++i)
     {
@@ -112,10 +112,10 @@ static void print_help_full()
 {
     writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
     writeln("Determine the nature of the file with the file signature.\n");
-    writeln("  -m, --more     Print more information");
+    writeln("  -m, --more     Print more information (todo)");
     writeln("  -d, --debug    Print debugging information\n");
-    writeln("  -h,--help        Print help and exit");
-    writeln("  -v,--version     Print version and exit");;
+    writeln("  -h, --help        Print help and exit");
+    writeln("  -v, --version     Print version and exit");;
 }
 
 static void print_version()
