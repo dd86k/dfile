@@ -10,7 +10,7 @@ import s_le;
 import s_mach;
 
 const string PROJECT_NAME = "dfile";
-const string PROJECT_VERSION = "0.1.0";
+const string PROJECT_VERSION = "0.1.0-dev";
 
 static bool _debug, _more;
 
@@ -360,9 +360,9 @@ static void scan_file(File file)
 
     case "2TXG": {
         ubyte[4] b;
-        current_file.rawRead(b);
+        file.rawRead(b);
         int e = b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24; // Byte swapped
-        writef("%s: GTA Text 2 file with %d", current_file.name, e);
+        writef("%s: GTA Text 2 file with %d", file.name, e);
     }
         break;
 
@@ -374,7 +374,7 @@ static void scan_file(File file)
     case "RPF7": {
         writef("%s: RPF", file.name);
         int[4] buf; // Table of Contents Size, Number of Entries, ?, Encryted
-        current_file.rawRead(buf);
+        file.rawRead(buf);
         if (buf[3])
             write(" encrypted");
         write(" archive v" ~ sig[3] ~ " (");
@@ -568,7 +568,7 @@ static void scan_file(File file)
     case [0xCF, 0xFA, 0xED, 0xFE]: // MH_CIGAM_64
     case [0xCA, 0xFE, 0xBA, 0xBE]: // FAT_MAGIC
     case [0xBE, 0xBA, 0xFE, 0xCA]: // FAT_CIGAM
-        scan_mach(current_file);
+        scan_mach(file);
         break;
 
     /*case [0xFE, 0xED, 0xFA, 0xCE]: // FEED FACE?
