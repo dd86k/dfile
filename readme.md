@@ -14,11 +14,11 @@ It tells more details of:
 
 It does a detailed scan of:
 - Exectuable files
-  - LE/LX (OS/2)
-  - NE (MS-DOS 4.x - Windows 3.x)
-  - PE32/PE32+ (Win32)
-  - ELF (POSIX)
-  - Mach-O (macOS)
+  - NE
+  - LE/LX
+  - PE32/PE32+
+  - ELF/FatELF
+  - Mach-O/Fat Mach-O
 
 File formats I wish to implement:
 - Exectuable files

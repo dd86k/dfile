@@ -11,12 +11,12 @@ private const uint CPU_SUBTYPE_MASK = 0xFF00_0000;
 
 private struct mach_header
 { // 64bit version just adds a reserved field
-    uint magic;        /* mach magic number identifier */
-    cpu_type_t cputype;    /* cpu specifier */
-    uint/*cpu_subtype_t*/ cpusubtype;    /* machine specifier */
-    filetype_t filetype;    /* type of file */
-    uint ncmds;        /* number of load commands */
-    uint sizeofcmds;    /* the size of all the load commands */
+    uint magic;          /* mach magic number identifier */
+    cpu_type_t cputype;  /* cpu specifier */
+    uint cpusubtype;     /* machine specifier */
+    filetype_t filetype; /* type of file */
+    uint ncmds;          /* number of load commands */
+    uint sizeofcmds;     /* the size of all the load commands */
     flag_t flags;        /* flags */
 }
 
@@ -32,7 +32,7 @@ private struct fat_arch
     uint cpusubtype;
     uint offset;
     uint size;
-    uint _align;
+    uint align_;
 }
 
 private enum cpu_type_t : uint

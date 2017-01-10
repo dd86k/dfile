@@ -2,12 +2,13 @@ module dfile;
 
 import std.stdio : write, writeln, writef, writefln, File;
 import std.file : exists, isDir;
-import s_elf;
-import s_mz;
-import s_pe;
-import s_ne;
-import s_le;
-import s_mach;
+import s_elf : scan_elf;
+import s_fatelf : scan_fatelf;
+import s_mz : scan_mz;
+import s_pe : scan_pe;
+import s_ne : scan_ne;
+import s_le : scan_le;
+import s_mach : scan_mach;
 
 const string PROJECT_NAME = "dfile";
 const string PROJECT_VERSION = "0.1.0-dev";
@@ -17,6 +18,7 @@ static bool _debug, _more;
 static File current_file;
 
 //TODO: Use sliced buffer instead in case of EOF/garbage.
+//TODO: Universal read_struct function (read_struct(object*,size_t)).
 
 /*
 https://en.wikipedia.org/wiki/List_of_file_signatures (Complete)
@@ -544,6 +546,10 @@ static void scan_file(File file)
 
     case [0x7F, 'E', 'L', 'F']:
         scan_elf(file);
+        break;
+
+    case [0xFA, 0x70, 0x0E, 0x01]: // FatELF - 0x1F0E70FA
+        scan_fatelf(file);
         break;
 
     case [0x89, 'P', 'N', 'G']: {

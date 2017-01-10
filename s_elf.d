@@ -37,7 +37,7 @@ private enum ELF_e_type : ushort
     ET_HIPROC = 0xFFFF  // Processor-specific
 }
 
-private enum ELF_e_machine : ushort
+enum ELF_e_machine : ushort // Public for FatELF
 {
     EM_NONE = 0,  // No machine
     EM_M32 = 1,   // AT&T WE 32100
@@ -109,16 +109,80 @@ static void scan_elf(File file)
 
     switch (header.e_ident[4])
     {
-    default: // Invalid class
-        write(" (Invalid) ");
-        break;
     case 1: // 32-bit objects
-        write("32 ");
+        write("32");
         break;
     case 2: // 64-bit objects
-        write("64 ");
+        write("64");
+        break;
+    default:
+    }
+
+    write(" ");
+
+    switch (header.e_ident[5])
+    {
+    case 1:
+        write("LSB");
+        break;
+    case 2:
+        write("MSB");
+        break;
+    default:
+    }
+
+    write(" ");
+
+    switch (header.e_ident[7])
+    {
+    default:
+        write("System V");
+        break;
+    case 0x01:
+        write("HP-UX");
+        break;
+    case 0x02:
+        write("NetBSD");
+        break;
+    case 0x03:
+        write("Linux");
+        break;
+    case 0x06:
+        write("Solaris");
+        break;
+    case 0x07:
+        write("AIX");
+        break;
+    case 0x08:
+        write("IRIX");
+        break;
+    case 0x09:
+        write("FreeBSD");
+        break;
+    case 0x0C:
+        write("OpenBSD");
+        break;
+    case 0x0D:
+        write("OpenVMS");
+        break;
+    case 0x0E:
+        write("NonStop Kernel");
+        break;
+    case 0x0F:
+        write("AROS");
+        break;
+    case 0x10:
+        write("Fenix OS");
+        break;
+    case 0x11:
+        write("CloudABI");
+        break;
+    case 0x53:
+        write("Sortix");
         break;
     }
+
+    write(" ");
 
     switch (header.e_type)
     {
@@ -126,23 +190,18 @@ static void scan_elf(File file)
     case ELF_e_type.ET_NONE:
         write("(No file type)");
         break;
-
     case ELF_e_type.ET_REL:
         write("Relocatable file");
         break;
-
     case ELF_e_type.ET_EXEC:
         write("Executable file");
         break;
-
     case ELF_e_type.ET_DYN:
         write("Shared object file");
         break;
-
     case ELF_e_type.ET_CORE:
         write("Core file");
         break;
-
     case ELF_e_type.ET_LOPROC:
     case ELF_e_type.ET_HIPROC:
         write("Professor-specific file");
@@ -156,78 +215,49 @@ static void scan_elf(File file)
     case ELF_e_machine.EM_NONE:
         write("no");
         break;
-        
     case ELF_e_machine.EM_M32:
         write("AT&T WE 32100 (M32)");
         break;
-        
     case ELF_e_machine.EM_SPARC:
         write("SPARC");
         break;
-    
     case ELF_e_machine.EM_386:
         write("x86");
         break;
-        
     case ELF_e_machine.EM_68K:
         write("Motorola 68000");
         break;
-        
     case ELF_e_machine.EM_88K:
         write("Motorola 88000");
         break;
-        
     case ELF_e_machine.EM_860:
         write("Intel 80860");
         break;
-        
     case ELF_e_machine.EM_MIPS:
         write("MIPS RS3000");
         break;
-
     case ELF_e_machine.EM_POWERPC:
         write("PowerPC");
         break;
-
     case ELF_e_machine.EM_ARM:
         write("ARM");
         break;
-
     case ELF_e_machine.EM_SUPERH:
         write("SuperH");
         break;
-
     case ELF_e_machine.EM_IA64:
         write("IA64");
         break;
-
     case ELF_e_machine.EM_AMD64:
         write("x86-64");
         break;
-
     case ELF_e_machine.EM_AARCH64:
         write("AArch64");
         break;
-
     default:
         write("unknown");
         break;
     }
 
-    write(" ");
-
-    switch (header.e_ident[5])
-    {
-    default:
-        write("(Invalid Endian)");
-        break;
-    case 1:
-        write("(Little-endian)");
-        break;
-    case 2:
-        write("(Big-endian)");
-        break;
-    }
-
-    writeln(" systems");
+    writeln(" machines");
 }
