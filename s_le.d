@@ -9,7 +9,7 @@ import dfile;
 
 private struct LE_HEADER
 {
-    ubyte[2] Signature; // "LX" or "LE"
+    char[2] Signature; // "LX" or "LE"
     ubyte ByteOrder;
     ubyte WordOrder;
     uint FormatLevel;
