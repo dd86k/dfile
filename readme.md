@@ -2,11 +2,9 @@
 
 dfile is a simple file scanner that is very similar to the UNIX `file` utility.
 
-Don't be shy to request more formats or more details to a format!
-
 It currently recognizes quite a few signatures.
 
-Extra information for:
+dfile will provide more information for the follow files:
 - Exectuable files
   - NE
   - LE/LX
@@ -18,10 +16,13 @@ Extra information for:
   - GTA Text files
   - RPF GTA archives
 
-Wishlist:
+# Requesting new formats
+Don't be shy to request more formats or more details to a format!
+
+## Wishlist
 - Exectuable files
   - [OS/360](https://en.wikipedia.org/wiki/OS/360_Object_File_Format)
   - [a.out](https://en.wikipedia.org/wiki/A.out)
 
-User wishlist:
+## User Wishlist
 - None!
