@@ -20,11 +20,3 @@ dfile will provide more information for the following files:
 
 # Requesting new formats
 Don't be shy to request more formats or more details to a format!
-
-## Wishlist
-- Exectuable files
-  - [OS/360](https://en.wikipedia.org/wiki/OS/360_Object_File_Format)
-  - [a.out](https://en.wikipedia.org/wiki/A.out)
-
-## User Wishlist
-- None!
