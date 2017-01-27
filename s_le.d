@@ -7,27 +7,30 @@ import dfile;
  * LE/LX format scanner
  */
 
-private struct LE_HEADER
+private struct e32_hdr
 {
-    char[2] Signature; // "LX" or "LE"
-    ubyte ByteOrder;
-    ubyte WordOrder;
-    uint FormatLevel;
-    ushort CPUType;
-    ushort OSType;
-    uint ModuleVersion;
-    uint ModuleFlags;
+    char[2] e32_magic; // "LX" or "LE"
+    ubyte e32_border; // Byte order
+    ubyte e32_worder; // Word order
+    uint e32_level;   // LE/LX Version
+    ushort e32_cpu;   // CPU
+    ushort e32_os;    // OS
+    uint e32_ver;     // Module version
+    uint e32_mflags;  // Module flags
+    uint e32_mpages;  // # Module pages
+    uint e32_startobj;// Object # for IP
+    uint e32_eip;     // Extended IP
     // And these are the most interesting parts.
 }
 
-private enum {
+private enum : ushort {
     OS2 = 1,
     Windows,
     DOS4,
     Windows386
 }
 
-private enum {
+private enum : ushort {
     i286 = 1,
     i386,
     i486
@@ -35,17 +38,29 @@ private enum {
 
 static void scan_le(File file)
 {
-    LE_HEADER h;
+    e32_hdr h;
     {
         import core.stdc.string;
-        ubyte[LE_HEADER.sizeof] buf;
+        ubyte[e32_hdr.sizeof] buf;
         file.rawRead(buf);
-        memcpy(&h, &buf, LE_HEADER.sizeof);
+        memcpy(&h, &buf, e32_hdr.sizeof);
     }
 
     //TODO: Do _more option.
 
-    writef("%s: %s ", file.name, h.Signature);
+    if (_debug || _more)
+    {
+        writefln("NE e32_magic : %s",  h.e32_magic);
+        writefln("NE e32_border: %Xh", h.e32_border);
+        writefln("NE e32_worder: %Xh", h.e32_worder);
+        writefln("NE e32_level : %Xh", h.e32_level);
+        writefln("NE e32_cpu   : %Xh", h.e32_cpu);
+        writefln("NE e32_os    : %Xh", h.e32_os);
+        writefln("NE e32_ver   : %Xh", h.e32_ver);
+        writefln("NE e32_mflags: %Xh", h.e32_mflags);  // Module flags
+    }
+
+    writef("%s: %s ", file.name, h.e32_magic);
 
 /*
     00000000h = Program module.
@@ -54,20 +69,20 @@ static void scan_le(File file)
     00020000h = Physical Device Driver module.
     00028000h = Virtual Device Driver module.
 */
-    if (h.ModuleFlags & 0x8000)
+    if (h.e32_mflags & 0x8000)  // Module flags
         write("Libary module");
-    else if (h.ModuleFlags & 0x18000)
+    else if (h.e32_mflags & 0x18000)  // Module flags
         write("Protected Memory Library module");
-    else if (h.ModuleFlags & 0x20000)
+    else if (h.e32_mflags & 0x20000)  // Module flags
         write("Physical Device Driver module");
-    else if (h.ModuleFlags & 0x28000)
+    else if (h.e32_mflags & 0x28000)  // Module flags
         write("Virtual Device Driver module");
     else
-        write("Executable");
+        write("Executable"); // Program module
 
     write(" (");
 
-    switch (h.OSType)
+    switch (h.e32_os)
     {
     default:
         write("Unknown");
@@ -88,7 +103,7 @@ static void scan_le(File file)
 
     write("), ");
 
-    switch (h.CPUType)
+    switch (h.e32_cpu)
     {
     default:
         write("Unknown");
@@ -106,8 +121,8 @@ static void scan_le(File file)
 
     write(" CPUs, ");
 
-    write(h.ByteOrder ? "B-BE " : "B-LE ");
-    write(h.WordOrder ? "B-BE " : "B-LE ");
+    write(h.e32_border ? "B-BE " : "B-LE ");
+    write(h.e32_worder ? "W-BE " : "W-LE ");
 
     writeln();
 }
