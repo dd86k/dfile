@@ -43,6 +43,8 @@ static void scan_le(File file)
         memcpy(&h, &buf, LE_HEADER.sizeof);
     }
 
+    //TODO: Do _more option.
+
     writef("%s: %s ", file.name, h.Signature);
 
 /*
@@ -62,8 +64,6 @@ static void scan_le(File file)
         write("Virtual Device Driver module");
     else
         write("Executable");
-
-    
 
     write(" (");
 

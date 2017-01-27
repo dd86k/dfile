@@ -235,12 +235,9 @@ static void scan_file(File file)
 
     case "GIF8":
         {
-            ubyte[2] b;
+            char[2] b;
             file.rawRead(b);
-
-            const string s = cast(string)b;
-
-            switch (s)
+            switch (b)
             {
             case "7a":
                 report("GIF87a");
@@ -248,7 +245,6 @@ static void scan_file(File file)
             case "9a":
                 report("GIF89a");
                 break;
-
             default:
             }
         }
@@ -264,11 +260,9 @@ static void scan_file(File file)
 
     case ['I', 'I', '*', 0x00]:
         {
-            ubyte[6] b;
+            char[6] b;
             file.rawRead(b);
-            const string s = cast(string)b;
-
-            switch (s)
+            switch (b)
             {
             case [0x10, 0, 0, 0, 'C', 'R']:
                 report("Canon RAW Format Version 2 image (TIFF)");
@@ -357,7 +351,7 @@ static void scan_file(File file)
         ubyte[4] b;
         file.rawRead(b);
         int e = b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24; // Byte swapped
-        writef("%s: GTA Text 2 file with %d", file.name, e);
+        writef("%s: GTA Text 2 file with %d entries", file.name, e);
     }
         break;
 
@@ -402,13 +396,12 @@ static void scan_file(File file)
     case [0, 0, 0, 0x18]:
     case [0, 0, 0, 0x1C]:
     case [0, 0, 0, 0x20]: {
-        ubyte[8] b;
+        char[8] b;
         file.rawRead(b);
-        const string s = cast(string)b;
-        switch (s[0..3])
+        switch (b[0..3])
         {
         case "ftyp":
-            switch (s[4..7])
+            switch (b[4..7])
             {
             case "isom":
                 report("ISO Base Media file (MPEG-4) v1");
@@ -435,7 +428,7 @@ static void scan_file(File file)
                 break;
 
             default:
-                switch (s[4..6])
+                switch (b[4..6])
                 {
                 case "3gp":
                     report("3rd Generation Partnership Project multimedia file (3GP)");
@@ -455,12 +448,10 @@ static void scan_file(File file)
         break;
 
     case "FORM": {
-        ubyte[4] b;
+        char[4] b;
         file.seek(8);
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "ILBM":
             report("IFF Interleaved Bitmap Image");
@@ -522,10 +513,9 @@ static void scan_file(File file)
         break;
 
     case "Rar!": {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-        switch (s)
+        switch (b)
         {
         case [0x1A, 0x07, 0x01, 0x00]:
             report("RAR archive v5.0+");
@@ -546,10 +536,9 @@ static void scan_file(File file)
         break;
 
     case [0x89, 'P', 'N', 'G']: {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-        switch (s)
+        switch (b)
         {
         case [0x0D, 0x0A, 0x1A, 0x0A]:
             report("Portable Network Graphics image (PNG)");
@@ -596,10 +585,9 @@ static void scan_file(File file)
         break;
 
     case [0x30, 0x26, 0xB2, 0x75]: {
-        ubyte[12] b;
+        char[12] b;
         file.rawRead(b);
-        string s = cast(string)b;
-        switch (s)
+        switch (b)
         {
         case [0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0, 0xAA, 0, 0x62, 0xCE, 0x6C]:
             report("Advanced Systems Format file (ASF, WMA, WMV)");
@@ -612,11 +600,9 @@ static void scan_file(File file)
         break;
 
     case "$SDI": {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case [0x30, 0x30, 0x30, 0x31]:
             report("System Deployment Image (Microsoft disk image)");
@@ -637,12 +623,10 @@ static void scan_file(File file)
         break;
 
     case "RIFF": {
-        ubyte[4] b;
+        char[4] b;
         file.seek(8);
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "WAVE":
             report("Waveform Audio File (wav)");
@@ -659,11 +643,9 @@ static void scan_file(File file)
 
     /*case "CD00": // Offset: 0x8001, 0x8801, 0x9001
         {
-            ubyte[1] b;
+            char[1] b;
             file.rawRead(b);
-            string s = cast(string)b;
-
-            switch (s)
+            switch (b)
             {
                 case ['1']:
                     report("ISO9660 CD/DVD image file (ISO)");
@@ -676,11 +658,9 @@ static void scan_file(File file)
         break;*/
 
     case "SIMP": {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "LE  ":
             report("Flexible Image Transport System (FITS)");
@@ -701,11 +681,9 @@ static void scan_file(File file)
         break;
 
     case [0xD0, 0xCF, 0x11, 0xE0]: {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case [0xA1, 0xB1, 0x1A, 0xE1]:
             report("Compound File Binary Format document (doc, xls, ppt)");
@@ -718,11 +696,9 @@ static void scan_file(File file)
         break;
 
     case ['d', 'e', 'x', 0x0A]: {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "035\0":
             report("Dalvik Executable");
@@ -743,11 +719,9 @@ static void scan_file(File file)
         break;
 
     case [0x05, 0x07, 0x00, 0x00]: {
-        ubyte[6] b;
+        char[6] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
             report("AppleWorks 5 document (cwk)");
@@ -775,11 +749,9 @@ static void scan_file(File file)
         break;
 
     case "PMOC": {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "CMOC":
             report("USMT, Windows Files And Settings Transfer Repository (dat)");
@@ -806,11 +778,9 @@ static void scan_file(File file)
         break;
 
     case "DCM\0": {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "PA30":
             report("Windows Update Binary Delta Compression");
@@ -823,11 +793,9 @@ static void scan_file(File file)
         break;
 
     case [0x37, 0x7A, 0xBC, 0xAF]: {
-        ubyte[2] b;
+        char[2] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case [0x27, 0x1C]:
             report("7-Zip compressed file (7z)");
@@ -860,18 +828,14 @@ static void scan_file(File file)
         break;
 
     case "AT&T": {
-        ubyte[4] b;
+        char[4] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "FORM": {
             file.seek(8);
             file.rawRead(b);
-            s = cast(string)b;
-
-            switch (s)
+            switch (b)
             {
             case "DJVU":
                 report("DjVu document, single page");
@@ -900,11 +864,9 @@ static void scan_file(File file)
         break;
 
     case "<?xm": {
-        ubyte[2] b;
+        char[2] b;
         file.rawRead(b);
-        string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case "l>":
             report("ASCII XML (xml)");
@@ -929,10 +891,9 @@ static void scan_file(File file)
         break;
 
     case "TRUE": {
-        ubyte[12] b;
+        char[12] b;
         file.rawRead(b);
-
-        switch (cast(string)b)
+        switch (b)
         {
         case "VISION-XFILE":
             report("Truevision Targa Graphic image file");
@@ -949,12 +910,9 @@ static void scan_file(File file)
         break;
 
     case [0, 0, 0x1A, 0]: {
-        ubyte[3] b;
+        char[3] b;
         file.rawRead(b);
-
-        const string s = cast(string)b;
-
-        switch (s)
+        switch (b)
         {
         case [0, 0x10, 4]:
             report("Lotus 1-2-3 spreadsheet (v3) file");
