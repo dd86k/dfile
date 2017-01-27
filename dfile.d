@@ -19,7 +19,6 @@ static File current_file;
 
 //TODO: Use sliced buffer instead in case of EOF/garbage.
 //TODO: Universal read_struct function (read_struct(object*,size_t)).
-//TODO: implment -more in all scanners.
 
 /*
 https://en.wikipedia.org/wiki/List_of_file_signatures (Complete)
@@ -38,8 +37,6 @@ static int main(string[] args)
         print_help;
         return 0;
     }
-
-    string filename = args[l - 1]; // Last argument, no exceptions!
 
     for (int i = 0; i < l; ++i)
     {
@@ -73,12 +70,12 @@ static int main(string[] args)
         }
     }
 
+    string filename = args[l - 1]; // Last argument, no exceptions!
+
     if (exists(filename))
     {
         if (isDir(filename))
-        {
             writefln("%s: Directory", filename);
-        }
         else
         {
             if (_debug)
@@ -137,20 +134,18 @@ static void scan_file(File file)
         return;
     }
 
-    ubyte[4] magic;
+    char[4] sig;
     if (_debug)
         writefln("L%04d: Reading file..", __LINE__);
-    file.rawRead(magic);
+    file.rawRead(sig);
     
     if (_debug)
     {
         writef("L%04d: Magic - ", __LINE__);
-        foreach (b; magic)
+        foreach (b; sig)
             writef("%X ", b);
         writeln();
     }
-
-    const string sig = cast(string)magic;
 
     switch (sig)
     {
@@ -212,17 +207,13 @@ static void scan_file(File file)
 
     case "BACK":
         {
-            file.rawRead(magic);
-            string s = cast(string)magic;
-
-            switch (s)
+            file.rawRead(sig);
+            switch (sig)
             {
             case "MIKE":
             {
-                file.rawRead(magic);
-                s = cast(string)magic;
-
-                switch (s)
+                file.rawRead(sig);
+                switch (sig)
                 {
                     case "DISK":
                         report("AmiBack backup");

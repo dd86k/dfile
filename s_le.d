@@ -20,61 +20,94 @@ private struct LE_HEADER
     // And these are the most interesting parts.
 }
 
+private enum {
+    OS2 = 1,
+    Windows,
+    DOS4,
+    Windows386
+}
+
+private enum {
+    i286 = 1,
+    i386,
+    i486
+}
+
 static void scan_le(File file)
 {
-    LE_HEADER peh;
+    LE_HEADER h;
     {
         import core.stdc.string;
         ubyte[LE_HEADER.sizeof] buf;
         file.rawRead(buf);
-        memcpy(&peh, &buf, LE_HEADER.sizeof);
+        memcpy(&h, &buf, LE_HEADER.sizeof);
     }
 
-    writef("%s: %s ", file.name, peh.Signature);
+    writef("%s: %s ", file.name, h.Signature);
 
-    if (peh.ModuleFlags & 0x8000)
+/*
+    00000000h = Program module.
+    00008000h = Library module.
+    00018000h = Protected Memory Library module.
+    00020000h = Physical Device Driver module.
+    00028000h = Virtual Device Driver module.
+*/
+    if (h.ModuleFlags & 0x8000)
         write("Libary module");
+    else if (h.ModuleFlags & 0x18000)
+        write("Protected Memory Library module");
+    else if (h.ModuleFlags & 0x20000)
+        write("Physical Device Driver module");
+    else if (h.ModuleFlags & 0x28000)
+        write("Virtual Device Driver module");
     else
-        write("Program module");
+        write("Executable");
+
+    
 
     write(" (");
 
-    switch (peh.OSType)
+    switch (h.OSType)
     {
     default:
         write("Unknown");
         break;
-    case 1:
+    case OS2:
         write("OS/2");
         break;
-    case 2:
+    case Windows:
         write("Windows");
         break;
-    case 3:
+    case DOS4:
         write("DOS 4.x");
         break;
-    case 4:
+    case Windows386:
         write("Windows 386");
         break;
     }
 
     write("), ");
 
-    switch (peh.CPUType)
+    switch (h.CPUType)
     {
     default:
-        write("unknown");
+        write("Unknown");
         break;
-    case 1:
+    case i286:
         write("Intel 80286");
         break;
-    case 2:
+    case i386:
         write("Intel 80386");
         break;
-    case 3:
+    case i486:
         write("Intel 80486");
         break;
     }
 
-    writeln(" CPU and up");
+    write(" CPUs, ");
+
+    write(h.ByteOrder ? "B-BE " : "B-LE ");
+    write(h.WordOrder ? "B-BE " : "B-LE ");
+
+    writeln();
 }

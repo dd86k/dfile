@@ -7,6 +7,7 @@ import dfile;
  * New Executable format scanner
  */
 
+// New .EXE header, found in newexe.h in the Word 1.1a source.
 private struct ne_hdr
 {
     char[2] ne_magic;       /* Magic number NE_MAGIC */
@@ -40,49 +41,78 @@ private struct ne_hdr
 	ushort  ne_expver;      /* Expected Windows version number */
 }
 
-const ushort NENOTP = 0x8000; /* Not a process */
-const ushort NENONC = 0x4000; /* Non-conforming program */
-const ushort NEIERR = 0x2000; /* Errors in image */
-const ushort NEPROT = 0x0008; /* Runs in protected mode */
-const ushort NEREAL = 0x0004; /* Runs in real mode */
-const ushort NEINST = 0x0002; /* Instance data */
-const ushort NESOLO = 0x0001; /* Solo data */
+private const ushort
+    NENOTP = 0x8000, /* Not a process */
+    NENONC = 0x4000, /* Non-conforming program */
+    NEIERR = 0x2000, /* Errors in image */
+    NEPROT = 0x0008, /* Runs in protected mode */
+    NEREAL = 0x0004, /* Runs in real mode */
+    NEINST = 0x0002, /* Instance data */
+    NESOLO = 0x0001; /* Solo data */
 
 static void scan_ne(File file)
 {
-    ne_hdr peh;
+    ne_hdr h;
     {
         import core.stdc.string;
         ubyte[ne_hdr.sizeof] buf;
         file.rawRead(buf);
-        memcpy(&peh, &buf, ne_hdr.sizeof);
+        memcpy(&h, &buf, ne_hdr.sizeof);
     }
 
-    if (_debug)
+    if (_debug || _more)
     {
-        writefln("NE ne_flags: %X", peh.ne_flags);
+        writefln("NE ne_magic       : %Xh", h.ne_magic);
+        writefln("NE ne_ver         : %Xh", h.ne_ver);
+        writefln("NE ne_rev         : %Xh", h.ne_rev);
+        writefln("NE ne_enttab      : %Xh", h.ne_enttab);
+        writefln("NE ne_cbenttab    : %Xh", h.ne_cbenttab);
+        writefln("NE ne_crc         : %Xh", h.ne_crc);
+        writefln("NE ne_flags       : %Xh", h.ne_flags);
+        writefln("NE ne_autodata    : %Xh", h.ne_autodata);
+        writefln("NE ne_heap        : %Xh", h.ne_heap);
+        writefln("NE ne_stack       : %Xh", h.ne_stack);
+        writefln("NE ne_csip        : %Xh", h.ne_csip);
+        writefln("NE ne_sssp        : %Xh", h.ne_sssp);
+        writefln("NE ne_cseg        : %Xh", h.ne_cseg);
+        writefln("NE ne_cmod        : %Xh", h.ne_cmod);
+        writefln("NE ne_cbnrestab   : %Xh", h.ne_cbnrestab);
+        writefln("NE ne_segtab      : %Xh", h.ne_segtab);
+        writefln("NE ne_rsrctab     : %Xh", h.ne_rsrctab);
+        writefln("NE ne_restab      : %Xh", h.ne_restab);
+        writefln("NE ne_modtab      : %Xh", h.ne_modtab);
+        writefln("NE ne_imptab      : %Xh", h.ne_imptab);
+        writefln("NE ne_nrestab     : %Xh", h.ne_nrestab);
+        writefln("NE ne_cmovent     : %Xh", h.ne_cmovent);
+        writefln("NE ne_align       : %Xh", h.ne_align);
+        writefln("NE ne_cres        : %Xh", h.ne_cres);
+        writefln("NE ne_psegcsum    : %Xh", h.ne_psegcsum);
+        writefln("NE ne_pretthunks  : %Xh", h.ne_pretthunks);
+        writefln("NE ne_psegrefbytes: %Xh", h.ne_psegrefbytes);
+        writefln("NE ne_swaparea    : %Xh", h.ne_swaparea);
+        writefln("NE ne_expver      : %Xh", h.ne_expver);
     }
 
-    writef("%s: %s ", file.name, peh.ne_magic);
+    writef("%s: %s ", file.name, h.ne_magic);
 
-    if (peh.ne_flags & NENOTP)
+    if (h.ne_flags & NENOTP)
         write("DLL or driver");
     else
         write("Executable");
 
-    if (peh.ne_flags)
+    if (h.ne_flags)
     {
-        if (peh.ne_flags & NENONC)
+        if (h.ne_flags & NENONC)
             write(", non-conforming program");
-        if (peh.ne_flags & NEIERR)
+        if (h.ne_flags & NEIERR)
             write(", errors in image");
-        if (peh.ne_flags & NEPROT)
+        if (h.ne_flags & NEPROT)
             write(", runs in protected mode");
-        if (peh.ne_flags & NEREAL)
+        if (h.ne_flags & NEREAL)
             write(", runs in real mode");
-        if (peh.ne_flags & NEINST)
+        if (h.ne_flags & NEINST)
             write(", instance data");
-        if (peh.ne_flags & NESOLO)
+        if (h.ne_flags & NESOLO)
             write(", solo data");
     }
 
