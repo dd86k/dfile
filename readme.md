@@ -4,8 +4,10 @@ dfile is a simple file scanner that is very similar to the UNIX `file` utility.
 
 It currently recognizes quite a few signatures.
 
-dfile will provide more information for the follow files:
+# Additional information
+dfile will provide more information for the following files:
 - Exectuable files
+  - MZ
   - NE
   - LE/LX
   - PE32/PE32+
