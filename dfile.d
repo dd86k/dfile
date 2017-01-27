@@ -11,7 +11,7 @@ import s_le : scan_le;
 import s_mach : scan_mach;
 
 const string PROJECT_NAME = "dfile";
-const string PROJECT_VERSION = "0.1.0-dev";
+const string PROJECT_VERSION = "0.0.0";
 
 static bool _debug, _more;
 
