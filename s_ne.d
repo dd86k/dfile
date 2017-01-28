@@ -10,35 +10,35 @@ import dfile;
 // New .EXE header, found in newexe.h in the Word 1.1a source.
 private struct ne_hdr
 {
-    char[2] ne_magic;       /* Magic number NE_MAGIC */
-	char    ne_ver;         /* Version number */
-	char    ne_rev;         /* Revision number */
-	ushort  ne_enttab;      /* Offset of Entry Table */
-	ushort  ne_cbenttab;    /* Number of bytes in Entry Table */
-	uint    ne_crc;         /* Checksum of whole file */
-	ushort  ne_flags;       /* Flag word */
-	ushort  ne_autodata;    /* Automatic data segment number */
-	ushort  ne_heap;        /* Initial heap allocation */
-	ushort  ne_stack;       /* Initial stack allocation */
-	uint    ne_csip;        /* Initial CS:IP setting */
-	uint    ne_sssp;        /* Initial SS:SP setting */
-	ushort  ne_cseg;        /* Count of file segments */
-	ushort  ne_cmod;        /* Entries in Module Reference Table */
-	ushort  ne_cbnrestab;   /* Size of non-resident name table */
-	ushort  ne_segtab;      /* Offset of Segment Table */
-	ushort  ne_rsrctab;     /* Offset of Resource Table */
-	ushort  ne_restab;      /* Offset of resident name table */
-	ushort  ne_modtab;      /* Offset of Module Reference Table */
-	ushort  ne_imptab;      /* Offset of Imported Names Table */
-	uint    ne_nrestab;     /* Offset of Non-resident Names Table */
-	ushort  ne_cmovent;     /* Count of movable entries */
-	ushort  ne_align;       /* Segment alignment shift count */
-	ushort  ne_cres;        /* Count of resource segments */
-	ushort  ne_psegcsum;    /* offset to segment chksums */
-	ushort  ne_pretthunks;  /* offset to return thunks */
-	ushort  ne_psegrefbytes;/* offset to segment ref. bytes */
-	ushort  ne_swaparea;    /* Minimum code swap area size */
-	ushort  ne_expver;      /* Expected Windows version number */
+    char[2]  ne_magic;       /* Magic number NE_MAGIC */
+	char     ne_ver;         /* Version number */
+	char     ne_rev;         /* Revision number */
+	ushort   ne_enttab;      /* Offset of Entry Table */
+	ushort   ne_cbenttab;    /* Number of bytes in Entry Table */
+	uint     ne_crc;         /* Checksum of whole file */
+	ushort   ne_flags;       /* Flag word */
+	ushort   ne_autodata;    /* Automatic data segment number */
+	ushort   ne_heap;        /* Initial heap allocation */
+	ushort   ne_stack;       /* Initial stack allocation */
+	uint     ne_csip;        /* Initial CS:IP setting */
+	uint     ne_sssp;        /* Initial SS:SP setting */
+	ushort   ne_cseg;        /* Count of file segments */
+	ushort   ne_cmod;        /* Entries in Module Reference Table */
+	ushort   ne_cbnrestab;   /* Size of non-resident name table */
+	ushort   ne_segtab;      /* Offset of Segment Table */
+	ushort   ne_rsrctab;     /* Offset of Resource Table */
+	ushort   ne_restab;      /* Offset of resident name table */
+	ushort   ne_modtab;      /* Offset of Module Reference Table */
+	ushort   ne_imptab;      /* Offset of Imported Names Table */
+	uint     ne_nrestab;     /* Offset of Non-resident Names Table */
+	ushort   ne_cmovent;     /* Count of movable entries */
+	ushort   ne_align;       /* Segment alignment shift count */
+	ushort   ne_cres;        /* Count of resource segments */
+	ushort   ne_psegcsum;    /* offset to segment chksums */
+	ushort   ne_pretthunks;  /* offset to return thunks */
+	ushort   ne_psegrefbytes;/* offset to segment ref. bytes */
+	ushort   ne_swaparea;    /* Minimum code swap area size */
+    ubyte[2] ne_expver;      /* Expected Windows version number */
 }
 
 private const ushort
@@ -62,7 +62,7 @@ static void scan_ne(File file)
 
     if (_debug || _more)
     {
-        writefln("NE ne_magic       : %Xh", h.ne_magic);
+        writefln("NE ne_magic       : %s", h.ne_magic);
         writefln("NE ne_ver         : %Xh", h.ne_ver);
         writefln("NE ne_rev         : %Xh", h.ne_rev);
         writefln("NE ne_enttab      : %Xh", h.ne_enttab);
@@ -90,7 +90,10 @@ static void scan_ne(File file)
         writefln("NE ne_pretthunks  : %Xh", h.ne_pretthunks);
         writefln("NE ne_psegrefbytes: %Xh", h.ne_psegrefbytes);
         writefln("NE ne_swaparea    : %Xh", h.ne_swaparea);
-        writefln("NE ne_expver      : %Xh", h.ne_expver);
+        write("NE ne_expver      : ");
+        foreach (b; h.ne_expver)
+            writef("%X ", b);
+        writeln();
     }
 
     writef("%s: %s ", file.name, h.ne_magic);
@@ -99,6 +102,9 @@ static void scan_ne(File file)
         write("DLL or driver");
     else
         write("Executable");
+
+    if (h.ne_expver[0] > 0)
+        writef(", expected for Windows %d.%d", h.ne_expver[1], h.ne_expver[0]);
 
     if (h.ne_flags)
     {

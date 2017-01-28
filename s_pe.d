@@ -3,13 +3,13 @@ module s_pe;
 import std.stdio;
 import dfile;
 
-/**
- * PE32 File Scanner
+/*
+ * PE32 format Scanner
  */
 
 private struct PE_HEADER
 {
-    ubyte[4] Signature; // "PE\0\0"
+    char[4] Signature; // "PE\0\0"
     PE_MACHINE_TYPE Machine;
     ushort NumberOfSections;
     uint TimeDateStamp;
@@ -44,7 +44,7 @@ private struct PE_OPTIONAL_HEADER
     uint SizeOfImage;
     uint SizeOfHeaders;
     uint CheckSum;
-    PE32_SUBSYSTEM Subsystem;
+    PE_SUBSYSTEM Subsystem;
     ushort DllCharacteristics;
     uint SizeOfStackReserve;
     uint SizeOfStackCommit;
@@ -55,7 +55,7 @@ private struct PE_OPTIONAL_HEADER
 }
 
 private struct IMAGE_DATA_DIRECTORY
-{ // Make it a Steam bundle!
+{
     uint ExportTable;
     uint ExportTableSize;
     uint ImportTable;
@@ -141,7 +141,7 @@ private enum PE_FORMAT : short
     HDR64 = 0x020B
 }
 
-private enum PE32_SUBSYSTEM : ushort
+private enum PE_SUBSYSTEM : ushort
 {
     UNKNOWN = 0,
     NATIVE = 1,
@@ -163,7 +163,7 @@ static void scan_pe(File file)
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
-    { // GC
+    {
         import core.stdc.string;
 
         {
@@ -179,19 +179,9 @@ static void scan_pe(File file)
             memcpy(&peoh, &buf, peoh.sizeof);
         }
 
-        {
-            ubyte[IMAGE_DATA_DIRECTORY.sizeof] buf;
-            file.rawRead(buf);
-            memcpy(&dirs, &buf, dirs.sizeof);
-        }
-
-        /*if (_debug)
-        {
-            writef("L%04d: Buffer : ", __LINE__);
-            foreach (i; b)
-                writef("%04X ", i);
-            writeln();
-        }*/
+        ubyte[IMAGE_DATA_DIRECTORY.sizeof] buf;
+        file.rawRead(buf);
+        memcpy(&dirs, &buf, dirs.sizeof);
     }
 
     if (_more || _debug)
@@ -232,47 +222,36 @@ static void scan_pe(File file)
     switch (peoh.Subsystem)
     {
     default:
-    case PE32_SUBSYSTEM.UNKNOWN:
         write("(Unknown)");
         break;
-
-    case PE32_SUBSYSTEM.NATIVE:
+    case PE_SUBSYSTEM.NATIVE:
         write("(Native)");
         break;
-
-    case PE32_SUBSYSTEM.WINDOWS_GUI:
+    case PE_SUBSYSTEM.WINDOWS_GUI:
         write("(GUI)");
         break;
-
-    case PE32_SUBSYSTEM.WINDOWS_CUI:
+    case PE_SUBSYSTEM.WINDOWS_CUI:
         write("(CUI)");
         break;
-
-    case PE32_SUBSYSTEM.POSIX_CUI:
+    case PE_SUBSYSTEM.POSIX_CUI:
         write("(POSIX CUI)");
         break;
-
-    case PE32_SUBSYSTEM.WINDOWS_CE_GUI:
+    case PE_SUBSYSTEM.WINDOWS_CE_GUI:
         write("(CE GUI)");
         break;
-
-    case PE32_SUBSYSTEM.EFI_APPLICATION :
+    case PE_SUBSYSTEM.EFI_APPLICATION :
         write("(EFI)");
         break;
-
-    case PE32_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
+    case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
         write("(EFI Boot Service driver)");
         break;
-
-    case PE32_SUBSYSTEM.EFI_RUNTIME_DRIVER:
+    case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
         write("(EFI Runtime driver)");
         break;
-
-    case PE32_SUBSYSTEM.EFI_ROM:
+    case PE_SUBSYSTEM.EFI_ROM:
         write("(EFI ROM)");
         break;
-
-    case PE32_SUBSYSTEM.XBOX:
+    case PE_SUBSYSTEM.XBOX:
         write("(XBOX)");
         break;
     }
@@ -287,7 +266,7 @@ static void scan_pe(File file)
     else if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.DLL)
         write("Library file");
     else
-        write("Unknown");
+        write("Unknown file");
 
     write(" for ");
 
@@ -297,87 +276,66 @@ static void scan_pe(File file)
     case PE_MACHINE_TYPE.UNKNOWN:
         write("unknown");
         break;
-
     case PE_MACHINE_TYPE.AM33:
         write("Matsushita AM33");
         break;
-
     case PE_MACHINE_TYPE.AMD64:
         write("x86-64");
         break;
-
     case PE_MACHINE_TYPE.ARM:
         write("ARM (Little endian)");
         break;
-
     case PE_MACHINE_TYPE.ARMNT:
         write("ARMv7+ (Thumb mode)");
         break;
-
     case PE_MACHINE_TYPE.ARM64:
         write("ARMv8 (64-bit)");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.EBC:
         write("EFI (Byte Code)");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.I386:
         write("x86");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.IA64:
         write("IA64");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.M32R:
         write("Mitsubishi M32R (Little endian)");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.MIPS16:
         write("MIPS16");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.MIPSFPU:
         write("MIPS (w/FPU)");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.MIPSFPU16:
         write("MIPS16 (w/FPU)");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.POWERPC:
         write("PowerPC");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.POWERPCFP:
         write("PowerPC (w/FPU)");
         break;
-
     case PE_MACHINE_TYPE.R4000:
         write("MIPS (Little endian)");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.SH3:
         write("Hitachi SH3");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.SH3DSP:
         write("Hitachi SH3 DSP");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.SH4:
         write("Hitachi SH4");
         break;
-
     case PE_MACHINE_TYPE.SH5:
         write("Hitachi SH5");
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.THUMB:
         write(`ARM or Thumb ("interworking")`);
-        break;
-        
+        break;        
     case PE_MACHINE_TYPE.WCEMIPSV2:
         write("MIPS WCE v2 (Little endian)");
         break;

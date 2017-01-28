@@ -1,14 +1,14 @@
 module s_mz;
 
-/*
- * MZ format scanner
- */
-
 import std.stdio;
 import dfile;
 import s_pe;
 import s_le;
 import s_ne;
+
+/*
+ * MZ format scanner
+ */
 
 private const size_t ERESWDS = 0x10;
 //private const size_t ENEWh = 0x3C;
@@ -20,7 +20,7 @@ private struct mz_hdr
 	ushort e_cblp;         /* Bytes on last page of file */
 	ushort e_cp;           /* Pages in file */
 	ushort e_crlc;         /* Relocations */
-	ushort e_cparh;      /* Size of header in paragraphs */
+	ushort e_cparh;        /* Size of header in paragraphs */
 	ushort e_minalloc;     /* Minimum extra paragraphs needed */
 	ushort e_maxalloc;     /* Maximum extra paragraphs needed */
 	ushort e_ss;           /* Initial (relative) SS value */
@@ -85,7 +85,7 @@ static void scan_mz(File file)
             scan_ne(file);
             return;
 
-        case "LE": case "LX": // LE/LX
+        case "LE": case "LX":
             file.seek(h.e_lfanew);
             scan_le(file);
             return;
@@ -97,7 +97,7 @@ static void scan_mz(File file)
     writef("%s: MZ Executable", file.name);
 
     if (h.e_ovno)
-        writef(" (Overlay: %Xh)", h.e_ovno);
+        writef(" (Overlay: %d)", h.e_ovno);
 
-    writeln(" for MS-DOS");
+    writeln();
 }

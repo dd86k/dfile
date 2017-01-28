@@ -295,7 +295,7 @@ private enum flag_t : uint // Reserved for future use
     MH_APP_EXTENSION_SAFE      = 0x02000000
 }
 
-enum : uint
+private const enum : uint
 {
     MH_MAGIC =    0xFEEDFACE,
     MH_MAGIC_64 = 0xFEEDFACF,
@@ -376,6 +376,7 @@ static void scan_mach(File file)
                 file.rawRead(buf);
                 memcpy(&fa, &buf, fat_arch.sizeof);
             }
+
             if (reversed)
             {
                 cpu_type = cast(cpu_type_t)reverse(fa.cputype);
@@ -402,6 +403,7 @@ static void scan_mach(File file)
             file.rawRead(buf);
             memcpy(&mh, &buf, mach_header.sizeof);
         }
+
         if (reversed)
         {
             filetype = cast(filetype_t)reverse(mh.filetype);
@@ -549,7 +551,6 @@ static void scan_mach(File file)
             write("any");
         break;
     }
-
 
     writeln(") CPUs");
 }

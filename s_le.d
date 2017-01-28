@@ -23,17 +23,24 @@ private struct e32_hdr
     // And these are the most interesting parts.
 }
 
-private enum : ushort {
+private const enum : ushort {
     OS2 = 1,
     Windows,
     DOS4,
     Windows386
 }
 
-private enum : ushort {
+private const enum : ushort {
     i286 = 1,
     i386,
     i486
+}
+
+private const enum : uint {
+    Library = 0x8000,
+    ProtectedMemoryLibrary = 0x18000,
+    PhysicalDeviceDriver = 0x20000,
+    VirtualDeiveDriver = 0x28000
 }
 
 static void scan_le(File file)
@@ -46,36 +53,27 @@ static void scan_le(File file)
         memcpy(&h, &buf, e32_hdr.sizeof);
     }
 
-    //TODO: Do _more option.
-
     if (_debug || _more)
     {
-        writefln("NE e32_magic : %s",  h.e32_magic);
-        writefln("NE e32_border: %Xh", h.e32_border);
-        writefln("NE e32_worder: %Xh", h.e32_worder);
-        writefln("NE e32_level : %Xh", h.e32_level);
-        writefln("NE e32_cpu   : %Xh", h.e32_cpu);
-        writefln("NE e32_os    : %Xh", h.e32_os);
-        writefln("NE e32_ver   : %Xh", h.e32_ver);
-        writefln("NE e32_mflags: %Xh", h.e32_mflags);  // Module flags
+        writefln("LE e32_magic : %s",  h.e32_magic);
+        writefln("LE e32_border: %Xh", h.e32_border);
+        writefln("LE e32_worder: %Xh", h.e32_worder);
+        writefln("LE e32_level : %Xh", h.e32_level);
+        writefln("LE e32_cpu   : %Xh", h.e32_cpu);
+        writefln("LE e32_os    : %Xh", h.e32_os);
+        writefln("LE e32_ver   : %Xh", h.e32_ver);
+        writefln("LE e32_mflags: %Xh", h.e32_mflags);  // Module flags
     }
 
     writef("%s: %s ", file.name, h.e32_magic);
 
-/*
-    00000000h = Program module.
-    00008000h = Library module.
-    00018000h = Protected Memory Library module.
-    00020000h = Physical Device Driver module.
-    00028000h = Virtual Device Driver module.
-*/
-    if (h.e32_mflags & 0x8000)  // Module flags
+    if (h.e32_mflags & Library)
         write("Libary module");
-    else if (h.e32_mflags & 0x18000)  // Module flags
+    else if (h.e32_mflags & ProtectedMemoryLibrary)
         write("Protected Memory Library module");
-    else if (h.e32_mflags & 0x20000)  // Module flags
+    else if (h.e32_mflags & PhysicalDeviceDriver)
         write("Physical Device Driver module");
-    else if (h.e32_mflags & 0x28000)  // Module flags
+    else if (h.e32_mflags & VirtualDeiveDriver)
         write("Virtual Device Driver module");
     else
         write("Executable"); // Program module
