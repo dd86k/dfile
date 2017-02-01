@@ -104,7 +104,7 @@ static void scan_ne(File file)
         write("Executable");
 
     if (h.ne_expver[0] > 0)
-        writef(", expected for Windows %d.%d", h.ne_expver[1], h.ne_expver[0]);
+        writef(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
 
     if (h.ne_flags)
     {
