@@ -5,7 +5,7 @@ dfile is a simple file scanner that is very similar to the UNIX `file` utility.
 It currently recognizes quite a few signatures.
 
 # Additional information
-dfile will provide more information for the following files:
+dfile will provide extra information for:
 - Exectuable files
   - MZ
   - NE
@@ -17,6 +17,8 @@ dfile will provide more information for the following files:
   - PWAD/IWAD
   - GTA Text files
   - RPF GTA archives
+- Document files
+  - PDF
 
 # Requesting new formats
 Don't be shy to request more formats or more details to a format!
