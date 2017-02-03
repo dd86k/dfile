@@ -94,7 +94,9 @@ static void scan_mz(File file)
         }
     }
 
-    writef("%s: MZ Executable", file.name);
+    if (_showname)
+        writef("%s: ", file.name);
+    write("MZ Executable");
 
     if (h.e_ovno)
         writef(" (Overlay: %d)", h.e_ovno);
