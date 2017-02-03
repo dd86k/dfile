@@ -10,10 +10,12 @@ import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
 
-const string PROJECT_NAME = "dfile";
-const string PROJECT_VERSION = "0.0.1";
+const enum {
+    PROJECT_NAME = "dfile",
+    PROJECT_VERSION = "0.1.0"
+}
 
-static bool _debug, _more;
+static bool _debug, _more, _showname;
 
 static File current_file;
 
@@ -42,14 +44,16 @@ static int main(string[] args)
     {
         switch (args[i])
         {
-        case "-d":
-        case "--debug":
+        case "-d", "--debug":
             _debug = true;
             writeln("Debugging mode turned on");
             break;
 
-        case "-m":
-        case "--more":
+        case "-", "--":
+
+            break;
+
+        case "-m", "--more":
             _more = true;
             break;
 
@@ -110,10 +114,11 @@ static void print_help_full()
 {
     writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
     writeln("Determine the nature of the file with the file signature.\n");
-    writeln("  -m, --more     Print more information (todo)");
-    writeln("  -d, --debug    Print debugging information\n");
-    writeln("  -h, --help        Print help and exit");
-    writeln("  -v, --version     Print version and exit");;
+    writeln("  -m, --more      Print more information.");
+    writeln("  -s, --showname  Show filename alongside result.");
+    writeln("  -d, --debug     Print debugging information\n");
+    writeln("  -h, --help, /?  Print help and exit");
+    writeln("  -v, --version   Print version and exit");;
 }
 
 static void print_version()
@@ -122,8 +127,8 @@ static void print_version()
     writeln("Copyright (c) 2016 dd86k");
     writeln("License: MIT");
     writeln("Project page: <https://github.com/dd86k/dfile>");
-    writefln("Compiled on %s with %s v%s",
-        __TIMESTAMP__, __VENDOR__, __VERSION__);
+    writefln("Compiled %s on %s with %s v%s",
+        __FILE__ ,__TIMESTAMP__, __VENDOR__, __VERSION__);
 }
 
 static void scan_file(File file)
@@ -164,16 +169,15 @@ static void scan_file(File file)
 
     case [0x00, 0x01, 0x00, 0x00]:
         {
-            ubyte[12] b;
+            char[12] b;
             file.rawRead(b);
-            const string s = cast(string)b;
-            switch (s[0..3])
+            switch (b[0..3])
             {
                 case "MSIS":
                     report("Microsoft Money file");
                     break;
                 case "Stan":
-                    switch (s[8..11])
+                    switch (b[8..11])
                     {
                         case " ACE":
                             report("Microsoft Access 2007 file");
@@ -215,13 +219,12 @@ static void scan_file(File file)
                 file.rawRead(sig);
                 switch (sig)
                 {
-                    case "DISK":
-                        report("AmiBack backup");
-                        break;
-
-                    default:
-                        report_unknown();
-                        break;
+                case "DISK":
+                    report("AmiBack backup");
+                    break;
+                default:
+                    report_unknown();
+                    break;
                 }
             }
             break;
@@ -254,11 +257,11 @@ static void scan_file(File file)
         report("DVD Video Movie File or DVD MPEG2");
         break;
 
-    case ['M', 'M', 0x00, '*']:
+    case ['M', 'M', 0, '*']:
         report("Tagged Image File Format image (TIFF)");
         break;
 
-    case ['I', 'I', '*', 0x00]:
+    case ['I', 'I', '*', 0]:
         {
             char[6] b;
             file.rawRead(b);
@@ -1022,29 +1025,19 @@ static void scan_file(File file)
 
 static void report(string type)
 {
-    writefln("%s: %s", current_file.name, type);
+    if (_showname)
+        writefln("%s: %s", current_file.name, type);
+    else
+        writeln(type);
 }
 
 static void report_unknown()
 {
-    writefln("%s: Unknown file format", current_file.name);
-}
+    if (_showname)
+        writef("%s: ", current_file.name);
 
-/+static void read_struct(File file, void* pstruct, size_t s_size, bool rewind)
-{
-    import core.stdc.string;
-    if (rewind)
-        file.rewind();
-    if (_debug)
-        writeln("read_struct s_size: ", s_size);
-    ubyte[] buffer = new ubyte[s_size];
-    if (_debug)
-        writeln("read_struct size: ", buffer.length);
-    buffer = file.rawRead(buffer);
-    if (_debug)
-        writeln("read_struct size: ", buffer.length);
-    memcpy(pstruct, &buffer, buffer.length);
-}+/
+    writeln("Unknown file format");
+}
 
 /*
  * Etc.

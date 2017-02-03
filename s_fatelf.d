@@ -41,7 +41,10 @@ void scan_fatelf(File file)
         memcpy(&fh, &buf, fh.sizeof);
     }
 
-    writef("%s: FatELF", file.name);
+    if (_showname)
+        writef("%s: ", file.name);
+
+    write("FatELF");
     
     switch (fh.version_)
     {

@@ -65,7 +65,10 @@ static void scan_le(File file)
         writefln("LE e32_mflags: %Xh", h.e32_mflags);  // Module flags
     }
 
-    writef("%s: %s ", file.name, h.e32_magic);
+    if (_showname)
+        writef("%s: ", file.name);
+
+    writef("%s ", h.e32_magic);
 
     if (h.e32_mflags & Library)
         write("Libary module");
@@ -107,17 +110,17 @@ static void scan_le(File file)
         write("Unknown");
         break;
     case i286:
-        write("Intel 80286");
+        write("i286");
         break;
     case i386:
-        write("Intel 80386");
+        write("i386");
         break;
     case i486:
-        write("Intel 80486");
+        write("i486");
         break;
     }
 
-    write(" CPUs, ");
+    write(", ");
 
     write(h.e32_border ? "B-BE " : "B-LE ");
     write(h.e32_worder ? "W-BE " : "W-LE ");

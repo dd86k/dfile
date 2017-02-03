@@ -96,14 +96,17 @@ static void scan_ne(File file)
         writeln();
     }
 
-    writef("%s: %s ", file.name, h.ne_magic);
+    if (_showname)
+        writef("%s: ", file.name);
+
+    write("NE ");
 
     if (h.ne_flags & NENOTP)
         write("DLL or driver");
     else
         write("Executable");
 
-    if (h.ne_expver[0] > 0)
+    if (h.ne_expver[0])
         writef(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
 
     if (h.ne_flags)

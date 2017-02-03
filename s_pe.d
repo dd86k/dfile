@@ -201,7 +201,10 @@ static void scan_pe(File file)
         }
     }
     
-    writef("%s: PE32", file.name);
+    if (_showname)
+        writef("%s: ", file.name);
+
+    write("PE32");
     
     switch (peoh.Format)
     {

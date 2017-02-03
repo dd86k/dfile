@@ -296,7 +296,7 @@ private enum flag_t : uint // Reserved for future use
 }
 
 private const enum : uint
-{
+{   
     MH_MAGIC =    0xFEEDFACE,
     MH_MAGIC_64 = 0xFEEDFACF,
     MH_CIGAM =    0xCEFAEDFE,
@@ -320,7 +320,6 @@ static void scan_mach(File file)
         uint[1] b;
         file.rewind();
         file.rawRead(b);
-        file.rewind();
         sig = b[0];
     }
 
@@ -328,7 +327,10 @@ static void scan_mach(File file)
     cpu_type_t cpu_type;
     uint cpu_subtype;
 
-    writef("%s: Mach-O ", file.name);
+    if (_showname)
+        writef("%s: ", file.name);
+        
+    write("Mach-O ");
 
     final switch (sig)
     {

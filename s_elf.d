@@ -102,7 +102,10 @@ static void scan_elf(File file)
         writefln("shstrndx: %s", header.e_shstrndx);
     }
 
-    writef("%s: ELF", file.name);
+    if (_showname)
+        writef("%s: ", file.name);
+    
+    write("ELF");
 
     switch (header.e_ident[4])
     {
