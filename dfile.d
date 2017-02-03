@@ -49,8 +49,8 @@ static int main(string[] args)
             writeln("Debugging mode turned on");
             break;
 
-        case "-", "--":
-
+        case "-s", "--showname":
+            _showname = true;
             break;
 
         case "-m", "--more":
@@ -65,8 +65,7 @@ static int main(string[] args)
             print_help_full;
             return 0;
 
-        case "-v":
-        case "--version":
+        case "-v", "--version":
             print_version;
             return 0;
 
@@ -114,9 +113,10 @@ static void print_help_full()
 {
     writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
     writeln("Determine the nature of the file with the file signature.\n");
-    writeln("  -m, --more      Print more information.");
-    writeln("  -s, --showname  Show filename alongside result.");
-    writeln("  -d, --debug     Print debugging information\n");
+    writeln("  Switch          Description (Default value)");
+    writeln("  -m, --more      Print more information. (False)");
+    writeln("  -s, --showname  Show filename alongside result. (False)");
+    writeln("  -d, --debug     Print debugging information. (False)\n");
     writeln("  -h, --help, /?  Print help and exit");
     writeln("  -v, --version   Print version and exit");;
 }
