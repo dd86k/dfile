@@ -193,12 +193,11 @@ static void scan_file(File file)
                         if (b[0] == 0)
                             report("TrueType font file");
                         else
-                            report_unknown();
+                            report("Palm Desktop Data File (Access format)");
                     }
                     break;
             }    
         }
-        report("Palm Desktop Data File (Access format)");
         break;
 
     case [0x00, 0x00, 0x01, 0x00]:
@@ -319,12 +318,7 @@ static void scan_file(File file)
         report("IMG unencrypted archive");
         break;
 
-    case "GBLE":
-    case "GBLF":
-    case "GBLG":
-    case "GBLI":
-    case "GBLS":
-    case "GBLJ":
+    case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
         writef("%s: GTA Text (GTA2+) file in ", file.name);
         final switch (sig[3])
         {
@@ -358,12 +352,7 @@ static void scan_file(File file)
     }
         break;
 
-    case "RPF0":
-    case "RPF2":
-    case "RPF3":
-    case "RPF4":
-    case "RPF6":
-    case "RPF7": {
+    case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
         writef("%s: RPF", file.name);
         int[4] buf; // Table of Contents Size, Number of Entries, ?, Encryted
         file.rawRead(buf);
@@ -562,19 +551,6 @@ static void scan_file(File file)
         scan_mach(file);
         break;
 
-    /*case [0xFE, 0xED, 0xFA, 0xCE]: // FEED FACE?
-        report("Mach-O binary (32-bit)");
-        break;
-    case [0xFE, 0xED, 0xFA, 0xCF]:
-        report("Mach-O binary (64-bit)");
-        break;
-    case [0xCE, 0xFA, 0xED, 0xFE]:
-        report("Mach-O binary (32-bit, Reversed)");
-        break;
-    case [0xCF, 0xFA, 0xED, 0xFE]:
-        report("Mach-O binary (64-bit, Reversed)");
-        break;*/
-
     case [0xFF, 0xFE, 0x00, 0x00]:
         report("UTF-32 text file (byte-order mark)");
         break;
@@ -584,7 +560,28 @@ static void scan_file(File file)
         break;
 
     case "%PDF":
-        report("PDF document");
+        char[6] b;
+        file.rawRead(b);
+        if (_showname)
+            writef("%s: ", file.name);
+        writef("PDF%s document", b[0..4]);
+        switch (b[5..6])
+        {
+            case "\r\n":
+                writeln(", CRLF newline (Windows)");
+                break;
+            case "\n\r":
+                writeln(", LFCR newline");
+                break;
+            default:
+                if (b[5] == '\n')
+                    writeln(", NF newline (UNIX)");
+                else if (b[5] == '\r')
+                    writeln(", CR newline");
+                else
+                    writefln("%Xh newline", b[5]);
+                break;
+        }
         break;
 
     case [0x30, 0x26, 0xB2, 0x75]: {
