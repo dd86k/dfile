@@ -19,16 +19,11 @@ static bool _debug, _more, _showname;
 
 static File current_file;
 
-//TODO: Use sliced buffer instead in case of EOF/garbage.
-//TODO: Universal read_struct function (read_struct(object*,size_t)).
+//TODO: Fix .NET detection
 
-/*
-https://en.wikipedia.org/wiki/List_of_file_signatures (Complete)
-https://mimesniff.spec.whatwg.org
-http://www.garykessler.net/library/file_sigs.html (To complete with)
-Thought be warned with the last link, since there are entries that I do not
-trust, and some entries repeat.
-*/
+//TODO: Hex strings instead (x"00 A3")
+//TODO: https://wiki.openwrt.org/doc/techref/brcm63xx.imagetag
+//TODO: https://wiki.openwrt.org/doc/techref/header
 
 static int main(string[] args)
 {

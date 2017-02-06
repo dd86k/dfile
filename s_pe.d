@@ -22,7 +22,7 @@ private struct PE_HEADER
 /// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
 private struct PE_OPTIONAL_HEADER
 {
-    PE_FORMAT Format;
+    PE_FORMAT magic;
     byte MajorLinkerVersion;
     byte MinorLinkerVersion;
     uint SizeOfCode;
@@ -56,37 +56,22 @@ private struct PE_OPTIONAL_HEADER
 
 private struct IMAGE_DATA_DIRECTORY
 {
-    uint ExportTable;
-    uint ExportTableSize;
-    uint ImportTable;
-    uint ImportTableSize;
-    uint ResourceTable;
-    uint ResourceTableSize;
-    uint ExceptionTable;
-    uint ExceptionTableSize;
-    uint CertificateTable;
-    uint CertificateTableSize;
-    uint BaseRelocationTable;
-    uint BaseRelocationTableSize;
-    uint DebuggingInformation;
-    uint DebuggingInformationSize;
-    uint ArchitectureData;
-    uint ArchitectureDataSize;
-    ulong GlobalRegister;
-    uint TLSTable;
-    uint TLSTableSize;
-    uint LoadConfigurationTable;
-    uint LoadConfigurationTableSize;
-    uint BoundImportTable;
-    uint BoundImportTableSize;
-    uint ImportAddressTable;
-    uint ImportAddressTableSize;
-    uint DelayImport;
-    uint DelayImportTable;
-    uint CLRHeader;
-    uint CLRHeaderSize;
-    uint Reserved;
-    uint ReservedSize;
+    uint ExportTable,          ExportTableSize;
+    uint ImportTable,          ImportTableSize;
+    uint ResourceTable,        ResourceTableSize;
+    uint ExceptionTable,       ExceptionTableSize;
+    uint CertificateTable,     CertificateTableSize;
+    uint BaseRelocationTable,  BaseRelocationTableSize;
+    uint DebugDirectory,       DebugDirectorySize;
+    uint ArchitectureData,     ArchitectureDataSize;
+    uint GlobalRegister,       GlobalRegisterSize;
+    uint TLSTable,             TLSTableSize;
+    uint LoadConfigurationTable, LoadConfigurationTableSize;
+    uint BoundImportTable,     BoundImportTableSize;
+    uint ImportAddressTable,   ImportAddressTableSize;
+    uint DelayImport,          DelayImportTable;
+    uint CLRHeader,            CLRHeaderSize;
+    uint Reserved,             ReservedSize;
 }
 
 private enum PE_MACHINE_TYPE : ushort
@@ -177,11 +162,13 @@ static void scan_pe(File file)
             ubyte[PE_OPTIONAL_HEADER.sizeof] buf;
             file.rawRead(buf);
             memcpy(&peoh, &buf, peoh.sizeof);
-        }
 
-        ubyte[IMAGE_DATA_DIRECTORY.sizeof] buf;
-        file.rawRead(buf);
-        memcpy(&dirs, &buf, dirs.sizeof);
+            file.seek(peoh.magic == PE_FORMAT.HDR64 ? 40 : 24, SEEK_CUR);
+
+            ubyte[IMAGE_DATA_DIRECTORY.sizeof] dirbuf;
+            file.rawRead(dirbuf);
+            memcpy(&dirs, &dirbuf, dirs.sizeof);
+        }
     }
 
     if (_more || _debug)
@@ -196,8 +183,11 @@ static void scan_pe(File file)
 
         if (peh.SizeOfOptionalHeader > 0)
         {
-            writefln("Format : %X", peoh.Format);
-            writefln("Subsystem : %X", peoh.Subsystem);
+            writefln("Format    : %Xh", peoh.magic);
+            writefln("Subsystem : %Xh", peoh.Subsystem);
+
+            writefln("CLR Header : %Xh", dirs.CLRHeader);
+            writefln("Size       : %Xh", dirs.CLRHeaderSize);
         }
     }
     
@@ -206,7 +196,7 @@ static void scan_pe(File file)
 
     write("PE32");
     
-    switch (peoh.Format)
+    switch (peoh.magic)
     {
     case PE_FORMAT.ROM: // HDR
         write("-ROM ");
@@ -262,7 +252,9 @@ static void scan_pe(File file)
     write(" Windows ");
 
     if (dirs.CLRHeader && dirs.CLRHeaderSize)
+    {
         write(".NET ");
+    }
     
     if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.EXECUTABLE_IMAGE)
         write("Executable file");
