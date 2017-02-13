@@ -16,7 +16,7 @@ private struct PE_HEADER
     uint PointerToSymbolTable;
     uint NumberOfSymbols;
     ushort SizeOfOptionalHeader;
-    PE_CHARACTERISTIC_TYPE Characteristics;
+    PE_CHARACTERISTIC Characteristics;
 }
 
 /// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
@@ -54,24 +54,26 @@ private struct PE_OPTIONAL_HEADER
     uint NumberOfRvaAndSizes;
 }
 
+//private enum IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16;
+
 private struct IMAGE_DATA_DIRECTORY
 {
-    uint ExportTable,          ExportTableSize;
-    uint ImportTable,          ImportTableSize;
-    uint ResourceTable,        ResourceTableSize;
-    uint ExceptionTable,       ExceptionTableSize;
-    uint CertificateTable,     CertificateTableSize;
-    uint BaseRelocationTable,  BaseRelocationTableSize;
-    uint DebugDirectory,       DebugDirectorySize;
-    uint ArchitectureData,     ArchitectureDataSize;
-    uint GlobalRegister,       GlobalRegisterSize;
-    uint TLSTable,             TLSTableSize;
-    uint LoadConfigurationTable, LoadConfigurationTableSize;
-    uint BoundImportTable,     BoundImportTableSize;
-    uint ImportAddressTable,   ImportAddressTableSize;
-    uint DelayImport,          DelayImportTable;
-    uint CLRHeader,            CLRHeaderSize;
-    uint Reserved,             ReservedSize;
+    ulong ExportTable;
+    ulong ImportTable;
+    ulong ResourceTable;
+    ulong ExceptionTable;
+    ulong CertificateTable;
+    ulong BaseRelocationTable;
+    ulong DebugDirectory;
+    ulong ArchitectureData;
+    ulong GlobalPtr;
+    ulong TLSTable;
+    ulong LoadConfigurationTable;
+    ulong BoundImportTable;
+    ulong ImportAddressTable;
+    ulong DelayImport;
+    ulong CLRHeader;
+    //ulong Reserved;
 }
 
 private enum PE_MACHINE_TYPE : ushort
@@ -100,7 +102,7 @@ private enum PE_MACHINE_TYPE : ushort
     WCEMIPSV2 = 0x169
 }
 
-private enum PE_CHARACTERISTIC_TYPE : ushort
+private enum PE_CHARACTERISTIC : ushort
 {
     RELOCS_STRIPPED = 0x0001,
     EXECUTABLE_IMAGE = 0x0002,
@@ -119,7 +121,7 @@ private enum PE_CHARACTERISTIC_TYPE : ushort
     BYTES_REVERSED_HI = 0x8000
 }
 
-private enum PE_FORMAT : short
+private enum PE_FORMAT : ushort
 {
     ROM   = 0x0107,
     HDR32 = 0x010B,
@@ -157,13 +159,14 @@ static void scan_pe(File file)
             memcpy(&peh, &buf, peh.sizeof);
         }
 
-        if (peh.SizeOfOptionalHeader > 0)
+        if (peh.SizeOfOptionalHeader)
         { // PE Optional Header
             ubyte[PE_OPTIONAL_HEADER.sizeof] buf;
             file.rawRead(buf);
             memcpy(&peoh, &buf, peoh.sizeof);
 
-            file.seek(peoh.magic == PE_FORMAT.HDR64 ? 40 : 24, SEEK_CUR);
+            if (peoh.magic == PE_FORMAT.HDR64)
+                file.seek(16, SEEK_CUR);
 
             ubyte[IMAGE_DATA_DIRECTORY.sizeof] dirbuf;
             file.rawRead(dirbuf);
@@ -187,7 +190,6 @@ static void scan_pe(File file)
             writefln("Subsystem : %Xh", peoh.Subsystem);
 
             writefln("CLR Header : %Xh", dirs.CLRHeader);
-            writefln("Size       : %Xh", dirs.CLRHeaderSize);
         }
     }
     
@@ -208,57 +210,55 @@ static void scan_pe(File file)
         write("+ ");
         break;
     default:
-        write(" (Format?) ");
+        write(" (Magic?) ");
         break;
     }
 
     switch (peoh.Subsystem)
     {
     default:
-        write("(Unknown)");
+        write("Unknown ");
         break;
     case PE_SUBSYSTEM.NATIVE:
-        write("(Native)");
+        write("Native Windows ");
         break;
     case PE_SUBSYSTEM.WINDOWS_GUI:
-        write("(GUI)");
+        write("Windows GUI ");
         break;
     case PE_SUBSYSTEM.WINDOWS_CUI:
-        write("(CUI)");
+        write("Windows Console ");
         break;
     case PE_SUBSYSTEM.POSIX_CUI:
-        write("(POSIX CUI)");
+        write("Posix Console ");
         break;
     case PE_SUBSYSTEM.WINDOWS_CE_GUI:
-        write("(CE GUI)");
+        write("Windows CE GUI ");
         break;
     case PE_SUBSYSTEM.EFI_APPLICATION :
-        write("(EFI)");
+        write("EFI ");
         break;
     case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
-        write("(EFI Boot Service driver)");
+        write("EFI Boot Service driver ");
         break;
     case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
-        write("(EFI Runtime driver)");
+        write("EFI Runtime driver ");
         break;
     case PE_SUBSYSTEM.EFI_ROM:
-        write("(EFI ROM)");
+        write("EFI ROM ");
         break;
     case PE_SUBSYSTEM.XBOX:
-        write("(XBOX)");
+        write("XBOX ");
         break;
     }
 
-    write(" Windows ");
-
-    if (dirs.CLRHeader && dirs.CLRHeaderSize)
+    if (dirs.CLRHeader)
     {
         write(".NET ");
     }
     
-    if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.EXECUTABLE_IMAGE)
+    if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
         write("Executable file");
-    else if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.DLL)
+    else if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
         write("Library file");
     else
         write("Unknown file");
@@ -269,7 +269,7 @@ static void scan_pe(File file)
     {
     default:
     case PE_MACHINE_TYPE.UNKNOWN:
-        write("unknown");
+        write("Unknown");
         break;
     case PE_MACHINE_TYPE.AM33:
         write("Matsushita AM33");
@@ -278,71 +278,76 @@ static void scan_pe(File file)
         write("x86-64");
         break;
     case PE_MACHINE_TYPE.ARM:
-        write("ARM (Little endian)");
+        write("ARM (Little Endian)");
         break;
     case PE_MACHINE_TYPE.ARMNT:
-        write("ARMv7+ (Thumb mode)");
+        write("ARMv7+ (Thumb)");
         break;
     case PE_MACHINE_TYPE.ARM64:
         write("ARMv8 (64-bit)");
-        break;        
+        break;
     case PE_MACHINE_TYPE.EBC:
         write("EFI (Byte Code)");
-        break;        
+        break;
     case PE_MACHINE_TYPE.I386:
         write("x86");
-        break;        
+        break;
     case PE_MACHINE_TYPE.IA64:
         write("IA64");
-        break;        
+        break;
     case PE_MACHINE_TYPE.M32R:
         write("Mitsubishi M32R (Little endian)");
-        break;        
+        break;
     case PE_MACHINE_TYPE.MIPS16:
         write("MIPS16");
-        break;        
+        break;
     case PE_MACHINE_TYPE.MIPSFPU:
         write("MIPS (w/FPU)");
-        break;        
+        break;
     case PE_MACHINE_TYPE.MIPSFPU16:
         write("MIPS16 (w/FPU)");
-        break;        
+        break;
     case PE_MACHINE_TYPE.POWERPC:
         write("PowerPC");
-        break;        
+        break;
     case PE_MACHINE_TYPE.POWERPCFP:
         write("PowerPC (w/FPU)");
         break;
     case PE_MACHINE_TYPE.R4000:
         write("MIPS (Little endian)");
-        break;        
+        break;
     case PE_MACHINE_TYPE.SH3:
         write("Hitachi SH3");
-        break;        
+        break;
     case PE_MACHINE_TYPE.SH3DSP:
         write("Hitachi SH3 DSP");
-        break;        
+        break;
     case PE_MACHINE_TYPE.SH4:
         write("Hitachi SH4");
         break;
     case PE_MACHINE_TYPE.SH5:
         write("Hitachi SH5");
-        break;        
+        break;
     case PE_MACHINE_TYPE.THUMB:
-        write(`ARM or Thumb ("interworking")`);
-        break;        
+        write(`ARM or Thumb ("Interworking")`);
+        break;
     case PE_MACHINE_TYPE.WCEMIPSV2:
-        write("MIPS WCE v2 (Little endian)");
+        write("MIPS WCE v2 (Little Endian)");
         break;
     }
 
     write(" systems");
 
-    if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.RELOCS_STRIPPED)
+    if (peh.Characteristics & PE_CHARACTERISTIC.RELOCS_STRIPPED)
         write(", relocs stripped");
-
-    if (peh.Characteristics & PE_CHARACTERISTIC_TYPE.LARGE_ADDRESS_AWARE)
+    if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
         write(", large addresses aware");
+    if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
+        write(", 16-bit based machine");
+    if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
+        write(", 32-bit based machine");
+    if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
+        write(", system file");
 
     writeln();
 }

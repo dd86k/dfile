@@ -10,8 +10,7 @@ import s_ne;
  * MZ format scanner
  */
 
-private const size_t ERESWDS = 0x10;
-//private const size_t ENEWh = 0x3C;
+enum ERESWDS = 0x10;
 
 // DOS 1, 2, 3 .EXE header from newexe.h, Word 1.1a source.
 private struct mz_hdr
@@ -31,7 +30,7 @@ private struct mz_hdr
 	ushort e_lfarlc;       /* File address of relocation table */
 	ushort e_ovno;         /* Overlay number */
 	ushort[ERESWDS] e_res; /* Reserved words */
-	uint   e_lfanew;       /* File address of new exe header */
+	uint   e_lfanew;       /* File address of new exe header, or @0x3c */
 };
 
 static void scan_mz(File file)

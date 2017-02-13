@@ -1,5 +1,7 @@
 # dfile - Simple file scanner
 
+Don't know the nature of a file, or simply want to know more about it? dfile might help!
+
 dfile is a simple file scanner that is very similar to the UNIX `file` utility.
 
 It currently recognizes quite a few signatures.
