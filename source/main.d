@@ -25,7 +25,7 @@ static File current_file;
 //TODO: http://skaya.enix.org/wiki/FirmwareFormat
 //TODO: https://wiki.multimedia.cx/index.php?title=Nintendo_Sound_Format (NES Soundtrack)
 //      http://kevtris.org/nes/nsfspec.txt
-//TODO: http://blog.kevtris.org/blogfiles/spc2_file_specification_v1.txt (SNES Soundtrack)
+//TODO: http://blog.kevtris.org/blogfiles/spc2_file_specification_v1.txt (SNES Soundtrack, SPC2)
 
 static int main(string[] args)
 {
