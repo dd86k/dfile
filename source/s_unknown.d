@@ -14,14 +14,14 @@ static void scan_unknown(File file)
     import core.stdc.string;
     // Scan by offsets.
 
-    file.seek(0x101); // Tar
     {
         enum Tar = "usta";
         char[4] b;
+        file.seek(0x101);
         file.rawRead(b);
         if (b == Tar)
         {
-            report("Tar");
+            report("Tar file");
             return;
         }
     }
@@ -30,11 +30,11 @@ static void scan_unknown(File file)
         enum ISO = "CD0001";
         char[5] b0, b1, b2;
         file.seek(0x8001);
-        file.rawRead(b);
+        file.rawRead(b0);
         file.seek(0x8801);
-        file.rawRead(b);
+        file.rawRead(b1);
         file.seek(0x9001);
-        file.rawRead(b);
+        file.rawRead(b2);
         if (b0 == ISO || b1 == ISO || b2 == ISO)
         {
             report("ISO9660 CD/DVD image file (ISO)");
