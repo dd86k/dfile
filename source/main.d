@@ -12,7 +12,7 @@ import s_mach : scan_mach;
 
 const enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.1.0"
+    PROJECT_VERSION = "0.1.1"
 }
 
 static bool _debug, _more, _showname;
@@ -111,19 +111,19 @@ static void print_help_full()
     writeln("  Switch          Description (Default value)");
     writeln("  -m, --more      Print more information. (False)");
     writeln("  -s, --showname  Show filename alongside result. (False)");
-    writeln("  -d, --debug     Print debugging information. (False)\n");
-    writeln("  -h, --help, /?  Print help and exit");
+    writeln("  -d, --debug     Print debugging information. (False)");
+    writeln("\n  -h, --help, /?  Print help and exit");
     writeln("  -v, --version   Print version and exit");
 }
 
 static void print_version()
 {
     writefln("%s - v%s", PROJECT_NAME, PROJECT_VERSION);
-    writeln("Copyright (c) 2016 dd86k");
+    writeln("Copyright (c) 2016-2017 dd86k");
     writeln("License: MIT");
     writeln("Project page: <https://github.com/dd86k/dfile>");
     writefln("Compiled %s on %s with %s v%s",
-        __FILE__ ,__TIMESTAMP__, __VENDOR__, __VERSION__);
+        __FILE__, __TIMESTAMP__, __VENDOR__, __VERSION__);
 }
 
 static void scan_file(File file)
@@ -134,7 +134,7 @@ static void scan_file(File file)
         return;
     }
 
-    char[4] sig;
+    char[4] sig; // UTF-8, ASCII compatible.
     if (_debug)
         writefln("L%04d: Reading file..", __LINE__);
     file.rawRead(sig);
@@ -877,7 +877,9 @@ static void scan_file(File file)
     case "IWAD": {
         int[2] b; // Doom reads as int
         file.rawRead(b);
-        writefln("%s: %s holding %d entries at %Xh", file.name, sig, b[0], b[1]);
+        if (_showname)
+            writef("%s: ", file.name);
+        writefln("%s holding %d entries at %Xh", sig, b[0], b[1]);
     }
         break;
 
@@ -1009,7 +1011,7 @@ static void scan_file(File file)
                 break;
             }
             break; // 3 Byte signatures
-        }
+        } // 2 Byte signatures
     }
     break; // Signature
     }

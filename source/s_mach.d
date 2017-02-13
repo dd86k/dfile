@@ -7,10 +7,13 @@ import dfile;
  * Mach-O format scanner
  */
 
-private const uint CPU_SUBTYPE_MASK = 0xFF00_0000;
+/*private enum {
+    CPU_SUBTYPE_MULTIPLE = 0xFFFF_FFFF,
+    CPU_SUBTYPE_MASK = 0xFF00_0000
+}*/
 
 private struct mach_header
-{ // 64bit version just adds a reserved field
+{ // 64-bit version just adds a reserved field
     uint magic;          /* mach magic number identifier */
     cpu_type_t cputype;  /* cpu specifier */
     uint cpusubtype;     /* machine specifier */
@@ -37,7 +40,7 @@ private struct fat_arch
 
 private enum cpu_type_t : uint
 {
-    ANY = 0xFFFF_FFFF,
+    ANY = -1,
     VAX = 1,
     ROMP = 2,
     NS32032 = 4,
@@ -56,7 +59,7 @@ private enum cpu_type_t : uint
     RS6000 = 17,
     MC98000 = 18,
     POWERPC = 19,
-    ABI64 = 0x1000000,
+    ABI64 = 0x100_0000,
     POWERPC64 = POWERPC | ABI64,
     VEO = 255
 }
@@ -64,10 +67,6 @@ private enum cpu_type_t : uint
 // =============================
 // cpu_subtype_t - CPU Subtypes, int
 // =============================
-
-private enum {
-    CPU_SUBTYPE_MULTIPLE = 0xFFFF_FFFF
-}
 
 // VAX subtypes
 private enum SUBTYPE_VAX
@@ -122,10 +121,11 @@ private enum SUBTYPE_I386
     PENTII_M5 = SUBTYPE_INTEL(6, 5),
     PENTIUM_4 = SUBTYPE_INTEL(10, 0),
 }
-// Compiler will inline it automatically
-int SUBTYPE_INTEL(short f, short m) { return f + (m << 4); }
 
-// MIPS subtypes
+pragma(inline, true)
+private uint SUBTYPE_INTEL(short f, short m) { return f + (m << 4); }
+
+// MIPS subty
 private enum SUBTYPE_MIPS
 {
     ALL = 0,
@@ -246,9 +246,9 @@ private enum SUBTYPE_VEO
     //VEO_ALL = VEO_2,
 }
 
-//  =======================
+// ========================
 /// File types
-//  =======================
+// ========================
 private enum filetype_t : uint
 {
     Unknown        = 0,
@@ -295,8 +295,7 @@ private enum flag_t : uint // Reserved for future use
     MH_APP_EXTENSION_SAFE      = 0x02000000
 }
 
-private const enum : uint
-{   
+private const enum : uint {
     MH_MAGIC =    0xFEEDFACE,
     MH_MAGIC_64 = 0xFEEDFACF,
     MH_CIGAM =    0xCEFAEDFE,
@@ -325,7 +324,7 @@ static void scan_mach(File file)
 
     filetype_t filetype;
     cpu_type_t cpu_type;
-    uint cpu_subtype;
+    int cpu_subtype;
 
     if (_showname)
         writef("%s: ", file.name);
@@ -358,6 +357,9 @@ static void scan_mach(File file)
             fat = true;
             break;
     }
+
+    if (_debug)
+        writefln("\nFat: %s, Reversed: %s", fat, reversed);
 
     if (fat) // Java prefers Fat files
     {
@@ -427,44 +429,44 @@ static void scan_mach(File file)
     {
         default: // Fat files have no filetypes.
             if (!fat)
-                write("Unknown");
+                write("Unknown type");
             break;
         case filetype_t.MH_OBJECT:
-            write("Object file");
+            write("Object");
             break;
         case filetype_t.MH_EXECUTE:
-            write("Executable file");
+            write("Executable");
             break;
         case filetype_t.MH_FVMLIB:
-            write("FVMLIB");
+            write("Fixed VM Library");
             break;
         case filetype_t.MH_CORE:
-            write("Core file");
+            write("Core");
             break;
         case filetype_t.MH_PRELOAD:
-            write("Preload file");
+            write("Preload");
             break;
         case filetype_t.MH_DYLIB:
-            write("Dynamic library file");
+            write("Dynamic library");
             break;
         case filetype_t.MH_DYLINKER:
-            write("Dynamic linker file");
+            write("Dynamic linker");
             break;
         case filetype_t.MH_BUNDLE:
-            write("Bundle file");
+            write("Bundle");
             break;
         case filetype_t.MH_DYLIB_STUB:
-            write("Dynamic library stub file");
+            write("Dynamic library stub");
             break;
         case filetype_t.MH_DSYM:
-            write("DSYM file");
+            write("Companion file with only debug sections");
             break;
         case filetype_t.MH_KEXT_BUNDLE:
-            write("Kext bundle file");
+            write("Kext bundle");
             break;
     }
 
-    writef(" for %s (", cpu_type);
+    writef(" file for %s (", cpu_type);
 
     switch (cpu_type)
     {
