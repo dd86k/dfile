@@ -19,13 +19,6 @@ const enum {
 static bool Debugging, Informing, ShowingName;
 private static File CurrentFile;
 
-//TODO: https://wiki.openwrt.org/doc/techref/brcm63xx.imagetag
-//TODO: https://wiki.openwrt.org/doc/techref/header
-//TODO: http://skaya.enix.org/wiki/FirmwareFormat
-//TODO: https://wiki.multimedia.cx/index.php?title=Nintendo_Sound_Format (NES Soundtrack)
-//      http://kevtris.org/nes/nsfspec.txt
-//TODO: http://blog.kevtris.org/blogfiles/spc2_file_specification_v1.txt (SNES Soundtrack, SPC2)
-
 static int main(string[] args)
 {
     size_t l = args.length;
@@ -45,7 +38,7 @@ static int main(string[] args)
             writeln("Debugging mode turned on");
             break;
 
-        case "-s", "--ShowingName":
+        case "-s", "--showname":
             ShowingName = true;
             break;
 
@@ -194,6 +187,107 @@ static void scan_file(File file)
                     break;
             }    
         }
+        break;
+
+    case "NESM": {
+        char[1] b;
+        file.rawRead(b);
+
+        switch (b)
+        {
+            case x"1A": {
+                struct nesm_hdr {
+                    char[5] magic;
+                    ubyte version_, total_song, start_song;
+                    ushort load_add, init_add, play_add;
+                    char[32] song_name, song_artist, song_copyright;
+                    ushort ntsc_speed; // 1/1000000th sec ticks
+                    ubyte[8] init_values; // Bankswitch Init Values
+                    ushort pal_speed;
+                    ubyte flag; // NTSC/PAL
+                    ubyte chip;
+                }
+
+                nesm_hdr h;
+                {
+                    import core.stdc.string;
+                    ubyte[nesm_hdr.sizeof] buf;
+                    file.rewind();
+                    file.rawRead(buf);
+                    memcpy(&h, &buf, nesm_hdr.sizeof);
+                }
+
+                if (ShowingName)
+                    writef("%s: ");
+                
+                if (h.flag & 0b10)
+                    write("Dual NTSC/PAL");
+                else if (h.flag & 1)
+                    write("NSTC");
+                else
+                    write("PAL");
+
+                writef("Nintendo Sound Format file with %d songs, using ", h.total_song);
+
+                if (h.chip & 1)
+                    write("VRCVI");
+                else if (h.chip & 0b10)
+                    write("VRCVII");
+                else if (h.chip & 0b100)
+                    write("FDS");
+                else if (h.chip & 0b1000)
+                    write("MMC5");
+                else if (h.chip & 0b1_0000)
+                    write("Namco 106");
+                else if (h.chip & 0b10_0000)
+                    write("Sunsoft FME-07");
+                else
+                    write("no");
+
+                writefln(" extra chip\n%s - %s\nCopyrights:%s", h.song_artist, h.song_name, h.song_copyright);
+            }
+                break;
+            default:
+                report_unknown();
+                break;
+        }
+    }
+        break;
+
+    case "KSPC": {
+        char[1] b;
+        file.rawRead(b);
+
+        switch (b)
+        {
+            case x"1A": {
+                struct spc2_hdr {
+                    char[5] magic;
+                    ubyte majorver, minorver;
+                    ushort number;
+                }
+
+                spc2_hdr h;
+                {
+                    import core.stdc.string;
+                    char[spc2_hdr.sizeof] buf;
+                    file.rewind();
+                    file.rawRead(buf);
+                    memcpy(&h, &buf, spc2_hdr.sizeof);
+                }
+
+                if (ShowingName)
+                    writef("%s: ");
+
+                writefln("SNES SPC2 v%d.%d file with %d of SPC entries",
+                    h.majorver, h.minorver, h.number);
+            }
+                break;
+            default:
+                report_unknown();
+                break;
+        }
+    }
         break;
 
     case [0x00, 0x00, 0x01, 0x00]:
@@ -917,6 +1011,33 @@ static void scan_file(File file)
 
     case [0, 0, 0xFE, 0xFF]:
         report("UTF-32BE file");
+        break;
+
+    case "HDR0": {
+        struct trx_hdr {
+            uint magic;
+            uint length;
+            uint crc;
+            ushort flags;
+            ushort version_;
+        }
+
+        trx_hdr h;
+        {
+            import core.stdc.string;
+            ubyte[trx_hdr.sizeof] buf;
+            file.rawRead(buf);
+            memcpy(&h, &buf, trx_hdr.sizeof);
+        }
+
+        if (ShowingName)
+            writef("%s: ", file.name);
+
+        if (h.version_ == 1 || h.version_ == 2)
+            writefln("TRX v%d firmware (Length: %d, CRC32: %Xh)", h.version_, h.length, h.crc);
+        else
+            writeln("Firmware");
+    }
         break;
 
     default: {

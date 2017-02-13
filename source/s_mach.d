@@ -328,7 +328,7 @@ static void scan_mach(File file)
 
     if (ShowingName)
         writef("%s: ", file.name);
-        
+
     write("Mach-O ");
 
     final switch (sig)
