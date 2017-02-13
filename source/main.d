@@ -13,7 +13,7 @@ import s_unknown : scan_unknown;
 
 const enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.1.1"
+    PROJECT_VERSION = "0.2.0"
 }
 
 static bool Debugging, Informing, ShowingName;

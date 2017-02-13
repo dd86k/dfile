@@ -5,36 +5,43 @@
 module s_unknown;
 
 import std.stdio;
-import dfile;
+import dfile : report;
 
 private enum BYTE_LIMIT = 1024 * 16;
 
 static void scan_unknown(File file)
 {
+    import core.stdc.string;
     // Scan by offsets.
-    /*case "CD00": // Offset: 0x8001, 0x8801, 0x9001
+
+    file.seek(0x101); // Tar
+    {
+        enum Tar = "usta";
+        char[4] b;
+        file.rawRead(b);
+        if (b == Tar)
         {
-            char[1] b;
-            file.rawRead(b);
-            switch (b)
-            {
-                case ['1']:
-                    report("ISO9660 CD/DVD image file (ISO)");
-                    break;
-                default:
-                    report_unknown(file);
-                    break;
-            }
+            report("Tar");
+            return;
         }
-        break;*/
-
-    /*case "usta": // Tar offset 0x101
+    }
+    
+    {
+        enum ISO = "CD0001";
+        char[5] b0, b1, b2;
+        file.seek(0x8001);
+        file.rawRead(b);
+        file.seek(0x8801);
+        file.rawRead(b);
+        file.seek(0x9001);
+        file.rawRead(b);
+        if (b0 == ISO || b1 == ISO || b2 == ISO)
         {
-
+            report("ISO9660 CD/DVD image file (ISO)");
+            return;
         }
-        break;*/
+    }
 
-    // Scan for readable characters for n (16KB?) bytes and at least
-    // n (3?) readable characters
-    throw new Exception("TODO: scan_unknown");
+    //TODO: Scan for readable characters for n (16KB?) bytes and at least n
+    //      (3?) readable characters.
 }
