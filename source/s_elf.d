@@ -1,11 +1,11 @@
+/*
+ * s_elf.d : ELF format Scanner
+ */
+
 module s_elf;
 
 import std.stdio;
 import dfile;
-
-/**
- * ELF format Scanner
- */
 
 private const size_t EI_NIDENT = 16;
 private struct Elf32_Ehdr
@@ -65,7 +65,7 @@ private enum ELF_e_version : uint
 
 static void scan_elf(File file)
 {
-    if (_debug)
+    if (Debugging)
         writefln("L%04d: Started scanning ELF file", __LINE__);
 
     Elf32_Ehdr header;
@@ -77,7 +77,7 @@ static void scan_elf(File file)
         memcpy(&header, &buf, Elf32_Ehdr.sizeof);
     }
 
-    if (_debug)
+    if (Debugging)
     {
         write("e_ident: ");
         foreach (c; header.e_ident)
@@ -85,7 +85,7 @@ static void scan_elf(File file)
         writeln();
     }
 
-    if (_debug || _more)
+    if (Debugging || Informing)
     {
         writefln("type: %s", header.e_type);
         writefln("machine: %s", header.e_machine);
@@ -102,7 +102,7 @@ static void scan_elf(File file)
         writefln("shstrndx: %s", header.e_shstrndx);
     }
 
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
     
     write("ELF");
@@ -123,10 +123,10 @@ static void scan_elf(File file)
     switch (header.e_ident[5])
     {
     case 1:
-        write("LSB ");
+        write("LE ");
         break;
     case 2:
-        write("MSB ");
+        write("BE ");
         break;
     default:
         write(" ");
@@ -191,24 +191,26 @@ static void scan_elf(File file)
         write("(No file type)");
         break;
     case ELF_e_type.ET_REL:
-        write("Relocatable file");
+        write("Relocatable");
         break;
     case ELF_e_type.ET_EXEC:
-        write("Executable file");
+        write("Executable");
         break;
     case ELF_e_type.ET_DYN:
-        write("Shared object file");
+        write("Shared object");
         break;
     case ELF_e_type.ET_CORE:
-        write("Core file");
+        write("Core");
         break;
     case ELF_e_type.ET_LOPROC:
+        write("Professor-specific (LO)");
+        break;
     case ELF_e_type.ET_HIPROC:
-        write("Professor-specific file");
+        write("Professor-specific (HI)");
         break;
     }
 
-    write(" for ");
+    write(" file for ");
 
     switch (header.e_machine)
     {
@@ -255,7 +257,7 @@ static void scan_elf(File file)
         write("AArch64");
         break;
     default:
-        write("unknown");
+        write("Unknown");
         break;
     }
 

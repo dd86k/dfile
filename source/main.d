@@ -16,9 +16,8 @@ const enum {
     PROJECT_VERSION = "0.1.1"
 }
 
-static bool _debug, _more, _showname;
-
-static File current_file;
+static bool Debugging, Informing, ShowingName;
+private static File CurrentFile;
 
 //TODO: https://wiki.openwrt.org/doc/techref/brcm63xx.imagetag
 //TODO: https://wiki.openwrt.org/doc/techref/header
@@ -42,16 +41,16 @@ static int main(string[] args)
         switch (args[i])
         {
         case "-d", "--debug":
-            _debug = true;
+            Debugging = true;
             writeln("Debugging mode turned on");
             break;
 
-        case "-s", "--showname":
-            _showname = true;
+        case "-s", "--ShowingName":
+            ShowingName = true;
             break;
 
         case "-m", "--more":
-            _more = true;
+            Informing = true;
             break;
 
         case "-h":
@@ -78,17 +77,17 @@ static int main(string[] args)
             writefln("%s: Directory", filename);
         else
         {
-            if (_debug)
+            if (Debugging)
                 writefln("L%04d: Opening file..", __LINE__);
-            current_file = File(filename, "rb");
+            CurrentFile = File(filename, "rb");
             
-            if (_debug)
+            if (Debugging)
                 writefln("L%04d: Scaning file..", __LINE__);
-            scan_file(current_file);
+            scan_file(CurrentFile);
             
-            if (_debug)
+            if (Debugging)
                 writefln("L%04d: Closing file..", __LINE__);
-            current_file.close();
+            CurrentFile.close();
         }
     }
     else
@@ -112,7 +111,7 @@ static void print_help_full()
     writeln("Determine the nature of the file with the file signature.\n");
     writeln("  Switch          Description (Default value)");
     writeln("  -m, --more      Print more information. (False)");
-    writeln("  -s, --showname  Show filename alongside result. (False)");
+    writeln("  -s, --ShowingName  Show filename alongside result. (False)");
     writeln("  -d, --debug     Print debugging information. (False)");
     writeln("\n  -h, --help, /?  Print help and exit");
     writeln("  -v, --version   Print version and exit");
@@ -137,11 +136,11 @@ static void scan_file(File file)
     }
 
     char[4] sig; // UTF-8, ASCII compatible.
-    if (_debug)
+    if (Debugging)
         writefln("L%04d: Reading file..", __LINE__);
     file.rawRead(sig);
     
-    if (_debug)
+    if (Debugging)
     {
         writef("L%04d: Magic - ", __LINE__);
         foreach (b; sig)
@@ -559,7 +558,7 @@ static void scan_file(File file)
     case "%PDF":
         char[6] b;
         file.rawRead(b);
-        if (_showname)
+        if (ShowingName)
             writef("%s: ", file.name);
         writef("PDF%s document", b[0..4]);
         switch (b[5..6])
@@ -857,7 +856,7 @@ static void scan_file(File file)
     case "IWAD": {
         int[2] b; // Doom reads as int
         file.rawRead(b);
-        if (_showname)
+        if (ShowingName)
             writef("%s: ", file.name);
         writefln("%s holding %d entries at %Xh", sig, b[0], b[1]);
     }
@@ -999,16 +998,16 @@ static void scan_file(File file)
 
 static void report(string type)
 {
-    if (_showname)
-        writefln("%s: %s", current_file.name, type);
+    if (ShowingName)
+        writefln("%s: %s", CurrentFile.name, type);
     else
         writeln(type);
 }
 
 static void report_unknown()
 {
-    if (_showname)
-        writef("%s: ", current_file.name);
+    if (ShowingName)
+        writef("%s: ", CurrentFile.name);
 
     writeln("Unknown file format");
 }

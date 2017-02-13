@@ -1,11 +1,11 @@
+/*
+ * s_ne.d : New Executable format scanner
+ */
+
 module s_ne;
 
 import std.stdio;
 import dfile;
-
-/*
- * New Executable format scanner
- */
 
 // New .EXE header, found in newexe.h in the Word 1.1a source.
 private struct ne_hdr
@@ -60,7 +60,7 @@ static void scan_ne(File file)
         memcpy(&h, &buf, ne_hdr.sizeof);
     }
 
-    if (_debug || _more)
+    if (Debugging || Informing)
     {
         writefln("NE ne_magic       : %s", h.ne_magic);
         writefln("NE ne_ver         : %Xh", h.ne_ver);
@@ -96,7 +96,7 @@ static void scan_ne(File file)
         writeln();
     }
 
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
 
     write("NE ");
@@ -105,6 +105,8 @@ static void scan_ne(File file)
         write("DLL or driver");
     else
         write("Executable");
+
+    write(" file");
 
     if (h.ne_expver[0])
         writef(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);

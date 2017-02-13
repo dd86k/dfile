@@ -1,25 +1,25 @@
+/*
+ * LE/LX format scanner
+ */
+
 module s_le;
 
 import std.stdio;
 import dfile;
 
-/*
- * LE/LX format scanner
- */
-
 private struct e32_hdr
 {
     char[2] e32_magic; // "LX" or "LE"
-    ubyte e32_border; // Byte order
-    ubyte e32_worder; // Word order
-    uint e32_level;   // LE/LX Version
-    ushort e32_cpu;   // CPU
-    ushort e32_os;    // OS
-    uint e32_ver;     // Module version
-    uint e32_mflags;  // Module flags
-    uint e32_mpages;  // # Module pages
-    uint e32_startobj;// Object # for IP
-    uint e32_eip;     // Extended IP
+    ubyte e32_border;  // Byte order
+    ubyte e32_worder;  // Word order
+    uint e32_level;    // LE/LX Version
+    ushort e32_cpu;    // CPU
+    ushort e32_os;     // OS
+    uint e32_ver;      // Module version
+    uint e32_mflags;   // Module flags
+    uint e32_mpages;   // # Module pages
+    uint e32_startobj; // Object # for IP
+    uint e32_eip;      // Extended IP
     // And these are the most interesting parts.
 }
 
@@ -53,7 +53,7 @@ static void scan_le(File file)
         memcpy(&h, &buf, e32_hdr.sizeof);
     }
 
-    if (_debug || _more)
+    if (Debugging || Informing)
     {
         writefln("LE e32_magic : %s",  h.e32_magic);
         writefln("LE e32_border: %Xh", h.e32_border);
@@ -65,10 +65,29 @@ static void scan_le(File file)
         writefln("LE e32_mflags: %Xh", h.e32_mflags);  // Module flags
     }
 
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
 
     writef("%s ", h.e32_magic);
+
+    switch (h.e32_os)
+    {
+    default:
+        write("Unknown ");
+        break;
+    case OS2:
+        write("OS/2 ");
+        break;
+    case Windows:
+        write("Windows ");
+        break;
+    case DOS4:
+        write("DOS 4.x ");
+        break;
+    case Windows386:
+        write("Windows 386 ");
+        break;
+    }
 
     if (h.e32_mflags & Library)
         write("Libary module");
@@ -81,28 +100,7 @@ static void scan_le(File file)
     else
         write("Executable"); // Program module
 
-    write(" (");
-
-    switch (h.e32_os)
-    {
-    default:
-        write("Unknown");
-        break;
-    case OS2:
-        write("OS/2");
-        break;
-    case Windows:
-        write("Windows");
-        break;
-    case DOS4:
-        write("DOS 4.x");
-        break;
-    case Windows386:
-        write("Windows 386");
-        break;
-    }
-
-    write("), ");
+    write(" file for ");
 
     switch (h.e32_cpu)
     {
@@ -120,10 +118,12 @@ static void scan_le(File file)
         break;
     }
 
-    write(", ");
+    write(" machines, ");
 
-    write(h.e32_border ? "B-BE " : "B-LE ");
-    write(h.e32_worder ? "W-BE " : "W-LE ");
+    write(h.e32_border ? "BE" : "LE");
+    write(" Byte order, ");
+    write(h.e32_worder ? "BE" : "LE");
+    write(" Word order");
 
     writeln();
 }

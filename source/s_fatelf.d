@@ -1,3 +1,7 @@
+/*
+ * s_fatelf.d : FatELF file scanner
+ */
+
 module s_fatelf;
 
 import std.stdio;
@@ -6,28 +10,23 @@ import s_elf;
 
 private struct fat_header
 {
-    uint magic;
+    uint magic; // 0x1F0E70FA
     ushort version_;
     ubyte num_records;
     ubyte reserved0;
-    //fat_subheader_v1[0] records;
 }
 
 private struct fat_subheader_v1
 {
     ELF_e_machine machine; /* maps to e_machine. */
-    ubyte osabi;         /* maps to e_ident[EI_OSABI]. */ 
-    ubyte osabi_version; /* maps to e_ident[EI_ABIVERSION]. */
-    ubyte word_size;     /* maps to e_ident[EI_CLASS]. */
-    ubyte byte_order;    /* maps to e_ident[EI_DATA]. */
+    ubyte osabi;           /* maps to e_ident[EI_OSABI]. */ 
+    ubyte osabi_version;   /* maps to e_ident[EI_ABIVERSION]. */
+    ubyte word_size;       /* maps to e_ident[EI_CLASS]. */
+    ubyte byte_order;      /* maps to e_ident[EI_DATA]. */
     ubyte reserved0;
     ubyte reserved1;
     ulong offset;
     ulong size;
-}
-
-private enum {
-    magic = 0x1F0E70FA
 }
 
 void scan_fatelf(File file)
@@ -41,7 +40,7 @@ void scan_fatelf(File file)
         memcpy(&fh, &buf, fh.sizeof);
     }
 
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
 
     write("FatELF");
@@ -60,17 +59,19 @@ void scan_fatelf(File file)
                 memcpy(&fhv1, &buf, fhv1.sizeof);
             }
 
-            if (fhv1.word_size == 1)
-                write(" 32-bit");
-            else if (fhv1.word_size == 2)
-                write(" 64-bit");
+            switch (fhv1.word_size)
+            {
+                case 1: write("32 "); break;
+                case 2: write("64 "); break;
+                default: write(" ");  break;
+            }
 
-            if (fhv1.byte_order == 1)
-                write(" LSB");
-            else if (fhv1.word_size == 2)
-                write(" MSB");
-
-            write(" ");
+            switch (fhv1.byte_order)
+            {
+                case 1: write("LE "); break;
+                case 2: write("BE "); break;
+                default: write(" ");  break;
+            }
 
             switch (fhv1.osabi)
             {
@@ -168,11 +169,11 @@ void scan_fatelf(File file)
                 write("AArch64");
                 break;
             default:
-                write("unknown");
+                write("Unknown");
                 break;
             }
 
-            writeln(" machines");
+            write(" machines");
         }
             break;
     }

@@ -1,11 +1,11 @@
+/*
+ * s_pe.d : PE32 format Scanner
+ */
+
 module s_pe;
 
 import std.stdio;
 import dfile;
-
-/*
- * PE32 format Scanner
- */
 
 private struct PE_HEADER
 {
@@ -159,7 +159,7 @@ static void scan_pe(File file)
             memcpy(&peh, &buf, peh.sizeof);
         }
 
-        if (peh.SizeOfOptionalHeader)
+        if (peh.SizeOfOptionalHeader > 0)
         { // PE Optional Header
             ubyte[PE_OPTIONAL_HEADER.sizeof] buf;
             file.rawRead(buf);
@@ -174,7 +174,7 @@ static void scan_pe(File file)
         }
     }
 
-    if (_more || _debug)
+    if (Debugging || Informing)
     {
         writefln("Machine type : %s", peh.Machine);
         writefln("Number of sections : %s", peh.NumberOfSymbols);
@@ -193,7 +193,7 @@ static void scan_pe(File file)
         }
     }
     
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
 
     write("PE32");
@@ -249,6 +249,9 @@ static void scan_pe(File file)
     case PE_SUBSYSTEM.XBOX:
         write("XBOX ");
         break;
+    case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
+        write("Windows Boot Application ");
+        break;
     }
 
     if (dirs.CLRHeader)
@@ -257,13 +260,13 @@ static void scan_pe(File file)
     }
     
     if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
-        write("Executable file");
+        write("Executable");
     else if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
-        write("Library file");
+        write("Library");
     else
-        write("Unknown file");
+        write("Unknown");
 
-    write(" for ");
+    write(" file for ");
 
     switch (peh.Machine)
     {
@@ -336,18 +339,21 @@ static void scan_pe(File file)
         break;
     }
 
-    write(" systems");
+    write(" machines");
 
-    if (peh.Characteristics & PE_CHARACTERISTIC.RELOCS_STRIPPED)
-        write(", relocs stripped");
-    if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
-        write(", large addresses aware");
-    if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
-        write(", 16-bit based machine");
-    if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
-        write(", 32-bit based machine");
-    if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
-        write(", system file");
+    if (peh.Characteristics)
+    {
+        if (peh.Characteristics & PE_CHARACTERISTIC.RELOCS_STRIPPED)
+            write(", relocs stripped");
+        if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
+            write(", large addresses aware");
+        if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
+            write(", 16-bit based machine");
+        if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
+            write(", 32-bit based machine");
+        if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
+            write(", system file");
+    }
 
     writeln();
 }

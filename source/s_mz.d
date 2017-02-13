@@ -1,3 +1,7 @@
+/*
+ * s_mz.d : MZ format scanner
+ */
+
 module s_mz;
 
 import std.stdio;
@@ -5,10 +9,6 @@ import dfile;
 import s_pe;
 import s_le;
 import s_ne;
-
-/*
- * MZ format scanner
- */
 
 enum ERESWDS = 0x10;
 
@@ -35,7 +35,7 @@ private struct mz_hdr
 
 static void scan_mz(File file)
 {
-    if (_debug)
+    if (Debugging)
         writefln("L%04d: Started scanning MZ file", __LINE__);
 
     mz_hdr h;
@@ -47,10 +47,10 @@ static void scan_mz(File file)
         memcpy(&h, &buf, mz_hdr.sizeof);
     }
 
-    if (_debug || _more)
+    if (Debugging || Informing)
     {
         writefln("MZ e_magic   : %Xh", h.e_magic);
-        writefln("MZ e_cblp    : %Xh", h.e_magic);
+        writefln("MZ e_cblp    : %Xh", h.e_cblp);
         writefln("MZ e_cp      : %Xh", h.e_cp);
         writefln("MZ e_crlc    : %Xh", h.e_crlc);
         writefln("MZ e_cparh   : %Xh", h.e_cparh);
@@ -93,8 +93,9 @@ static void scan_mz(File file)
         }
     }
 
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
+
     write("MZ Executable");
 
     if (h.e_ovno)

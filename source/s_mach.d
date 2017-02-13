@@ -1,11 +1,11 @@
+/*
+ * s_mach.d : Mach-O format scanner
+ */
+
 module s_mach;
 
 import std.stdio;
 import dfile;
-
-/*
- * Mach-O format scanner
- */
 
 /*private enum {
     CPU_SUBTYPE_MULTIPLE = 0xFFFF_FFFF,
@@ -326,7 +326,7 @@ static void scan_mach(File file)
     cpu_type_t cpu_type;
     int cpu_subtype;
 
-    if (_showname)
+    if (ShowingName)
         writef("%s: ", file.name);
         
     write("Mach-O ");
@@ -357,9 +357,6 @@ static void scan_mach(File file)
             fat = true;
             break;
     }
-
-    if (_debug)
-        writefln("\nFat: %s, Reversed: %s", fat, reversed);
 
     if (fat) // Java prefers Fat files
     {
@@ -459,7 +456,7 @@ static void scan_mach(File file)
             write("Dynamic library stub");
             break;
         case filetype_t.MH_DSYM:
-            write("Companion file with only debug sections");
+            write("Companion file (w/ debug sections)");
             break;
         case filetype_t.MH_KEXT_BUNDLE:
             write("Kext bundle");
