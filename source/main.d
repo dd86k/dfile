@@ -113,7 +113,7 @@ static void print_help_full()
     writeln("  -s, --showname  Show filename alongside result. (False)");
     writeln("  -d, --debug     Print debugging information. (False)\n");
     writeln("  -h, --help, /?  Print help and exit");
-    writeln("  -v, --version   Print version and exit");;
+    writeln("  -v, --version   Print version and exit");
 }
 
 static void print_version()
