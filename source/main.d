@@ -9,6 +9,7 @@ import s_pe : scan_pe;
 import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
+import s_unknown : scan_unknown;
 
 const enum {
     PROJECT_NAME = "dfile",
@@ -19,11 +20,12 @@ static bool _debug, _more, _showname;
 
 static File current_file;
 
-//TODO: Fix .NET detection
-
-//TODO: Hex strings instead (x"00 A3")
 //TODO: https://wiki.openwrt.org/doc/techref/brcm63xx.imagetag
 //TODO: https://wiki.openwrt.org/doc/techref/header
+//TODO: http://skaya.enix.org/wiki/FirmwareFormat
+//TODO: https://wiki.multimedia.cx/index.php?title=Nintendo_Sound_Format (NES Soundtrack)
+//      http://kevtris.org/nes/nsfspec.txt
+//TODO: http://blog.kevtris.org/blogfiles/spc2_file_specification_v1.txt (SNES Soundtrack)
 
 static int main(string[] args)
 {
@@ -636,22 +638,6 @@ static void scan_file(File file)
     }
         break;
 
-    /*case "CD00": // Offset: 0x8001, 0x8801, 0x9001
-        {
-            char[1] b;
-            file.rawRead(b);
-            switch (b)
-            {
-                case ['1']:
-                    report("ISO9660 CD/DVD image file (ISO)");
-                    break;
-                default:
-                    report_unknown(file);
-                    break;
-            }
-        }
-        break;*/
-
     case "SIMP": {
         char[4] b;
         file.rawRead(b);
@@ -757,12 +743,6 @@ static void scan_file(File file)
         }
     }
         break;
-
-    /*case "usta": // Tar offset 0x101
-        {
-
-        }
-        break;*/
 
     case "TOX3":
         report("Open source portable voxel file");
@@ -1031,18 +1011,4 @@ static void report_unknown()
         writef("%s: ", current_file.name);
 
     writeln("Unknown file format");
-}
-
-/*
- * Etc.
- */
-
-const size_t BYTE_LIMIT = 1024 * 64;
-
-/// __ETC
-static void scan_unknown(File file)
-{
-    // Scan for readable characters for X(64KB?) bytes and at least
-    // Y(3?) readable characters
-    throw new Exception("TODO: scan_unknown");
 }
