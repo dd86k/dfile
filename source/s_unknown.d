@@ -47,28 +47,34 @@ static void scan_unknown(File file)
     { // Palm Database Format
         import s_mobi;
         enum { // 4 bytes for type, 4 bytes for creator
-            ADOBE = ".pdfADBE",
-            BOOKMOBI = "BOOKMOBI",
-            PALMDOC = "TEXtREAd",
-            BDICTY = "BVokBDIC",
-            DB = "DB99DBOS",
-            EREADER0 = "PNRdPPrs",
-            EREADER1 = "DataPPrs",
+            ADOBE =      ".pdfADBE",
+            BOOKMOBI =   "BOOKMOBI",
+            PALMDOC =    "TEXtREAd",
+            BDICTY =     "BVokBDIC",
+            DB =         "DB99DBOS",
+            EREADER0 =   "PNRdPPrs",
+            EREADER1 =   "DataPPrs",
             FIREVIEWER = "vIMGView",
-            HANDBASE = "PmDBPmDB",
-            INFOVIEW = "InfoINDB",
-            ISILO = "ToGoToGo",
-            ISILO3 = "SDocSilX",
-            JFILE = "JbDbJBas",
-            JFILEPRO = "JfDbJFil",
-            LIST = "DATALSdb",
-            MOBILEDB = "Mdb1Mdb1",
-            PLUCKER = "DataPlkr",
+            HANDBASE =   "PmDBPmDB",
+            INFOVIEW =   "InfoINDB",
+            ISILO =      "ToGoToGo",
+            ISILO3 =     "SDocSilX",
+            JFILE =      "JbDbJBas",
+            JFILEPRO =   "JfDbJFil",
+            LIST =       "DATALSdb",
+            MOBILEDB =   "Mdb1Mdb1",
+            PLUCKER =    "DataPlkr",
             QUICKSHEET = "DataSprd",
-            SUPERMEMO = "SM01SMem",
-            TEALDOC = "TEXtTlDc",
-            TEALINFO = "InfoTlIf",
-            
+            SUPERMEMO =  "SM01SMem",
+            TEALDOC =    "TEXtTlDc",
+            TEALINFO =   "InfoTlIf",
+            TEALMEAL =   "DataTlMl",
+            TEALPAINT =  "DataTlPt",
+            THINKDB =    "dataTDBP",
+            TIDES =      "TdatTide",
+            TOMERAIDER = "ToRaTRPW",
+            WEASEL =     "zTXTGPlm",
+            WORDSMITH =  "BDOCWrdS"
         }
         char[8] b;
         file.seek(0x3C);
@@ -76,15 +82,115 @@ static void scan_unknown(File file)
         switch (b)
         {
             case ADOBE:
-                report("Palm Database (Adobe Reader)");
+                report("Palm Database (Adobe Reader)", false);
+                palmdb_name(file);
                 break;
             case BOOKMOBI:
-                file.seek(0x3c);
                 scan_mobi(file);
                 return;
             case PALMDOC:
-                report("Palm Database (PalmDOC)");
+                report("Palm Database (PalmDOC)", false);
+                //TODO: scan_palmdoc
+                palmdb_name(file);
                 break;
+            case BDICTY:
+                report("Palm Database (BDicty)", false);
+                palmdb_name(file);
+                break;
+            case DB:
+                report("Palm Database (DB)", false);
+                palmdb_name(file);
+                break;
+            case EREADER0:
+            case EREADER1:
+                report("Palm Database (eReader)", false);
+                palmdb_name(file);
+                break;
+            case FIREVIEWER:
+                report("Palm Database (FireViewer)", false);
+                palmdb_name(file);
+                break;
+            case HANDBASE:
+                report("Palm Database (HanDBase)", false);
+                palmdb_name(file);
+                break;
+            case INFOVIEW:
+                report("Palm Database (InfoView)", false);
+                palmdb_name(file);
+                break;
+            case ISILO:
+                report("Palm Database (iSilo)", false);
+                palmdb_name(file);
+                break;
+            case ISILO3:
+                report("Palm Database (iSilo 3)", false);
+                palmdb_name(file);
+                break;
+            case JFILE:
+                report("Palm Database (JFile)", false);
+                palmdb_name(file);
+                break;
+            case JFILEPRO:
+                report("Palm Database (JFile Pro)", false);
+                palmdb_name(file);
+                break;
+            case LIST:
+                report("Palm Database (LIST)", false);
+                palmdb_name(file);
+                break;
+            case MOBILEDB:
+                report("Palm Database (MobileDB)", false);
+                palmdb_name(file);
+                break;
+            case PLUCKER:
+                report("Palm Database (Plucker)", false);
+                palmdb_name(file);
+                break;
+            case QUICKSHEET:
+                report("Palm Database (QuickSheet)", false);
+                palmdb_name(file);
+                break;
+            case SUPERMEMO:
+                report("Palm Database (SuperMemo)", false);
+                palmdb_name(file);
+                break;
+            case TEALDOC:
+                report("Palm Database (TealDoc)", false);
+                palmdb_name(file);
+                break;
+            case TEALINFO:
+                report("Palm Database (TealInfo)", false);
+                palmdb_name(file);
+                break;
+            case TEALMEAL:
+                report("Palm Database (TealMeal)", false);
+                palmdb_name(file);
+                break;
+            case TEALPAINT:
+                report("Palm Database (TailPaint)", false);
+                palmdb_name(file);
+                break;
+            case THINKDB:
+                report("Palm Database (ThinKDB)", false);
+                palmdb_name(file);
+                break;
+            case TIDES:
+                report("Palm Database (Tides)", false);
+                palmdb_name(file);
+                break;
+            case TOMERAIDER:
+                report("Palm Database (TomeRaider)", false);
+                palmdb_name(file);
+                break;
+            case WEASEL:
+                report("Palm Database (Weasel)", false);
+                palmdb_name(file);
+                break;
+            case WORDSMITH:
+                report("Palm Database (WordSmith)", false);
+                palmdb_name(file);
+                break;
+
             default: // Continue the journey
         }
     }

@@ -12,11 +12,10 @@ private struct palmdoc_hdr
     ushort Compression;
     ushort Reserved;
     uint TextLength;
-    ushort RecordCount;
-    ushort RecordSize;
+    ushort RecordCount, RecordSize;
     union {
         uint CurrentPosition;
-        struct Mobi {
+        struct {
             ushort Encryption, Reversed;
         }
     }
@@ -25,11 +24,7 @@ private struct palmdoc_hdr
 private struct mobi_hdr
 {
     char[4] Identifier; // "MOBI"
-    uint HeaderLength;
-    uint Type;
-    uint Encoding;
-    uint UniqueID;
-    uint FileVersion;
+    uint HeaderLength, Type, Encoding, UniqueID, FileVersion;
     // ...
 }
 
@@ -38,32 +33,39 @@ void palmdb_name(File file)
     char[32] name;
     file.rewind();
     file.rawRead(name);
-    writefln(` "%s"`, name);
+    char* p = name.ptr;
+    size_t n;
+    while (*p++ != '\0') ++n;
+    writefln(` "%s"`, name[0..n]);
 }
 
 void scan_mobi(File file)
 {
     palmdoc_hdr h;
+    mobi_hdr mh;
     {
         import core.stdc.string;
         ubyte[palmdoc_hdr.sizeof] b;
-        file.rewind();
+        ubyte[mobi_hdr.sizeof] b1;
+        file.seek(86);
         file.rawRead(b);
+        file.rawRead(b1);
         memcpy(&h, &b, palmdoc_hdr.sizeof);
+        memcpy(&mh, &b1, mobi_hdr.sizeof);
     }
 
     if (ShowingName)
         writef("%s: ", file.name);
 
-    write("MOBI ");
+    write("Mobipocket ");
 
-    /*switch (h.Type)
+    switch (mh.Type)
     {
         case 232, 2:
-            write("mobipocket book");
+            write("ebook");
             break;
         case 3:
-            write("PalmDoc book");
+            write("PalmDoc ebook");
             break;
         case 4:
             write("audio");
@@ -113,7 +115,7 @@ void scan_mobi(File file)
     if (h.Encryption == 1)
         write(", Legacy Mobipocket encrypted");
     else if (h.Encryption == 2)
-        write(", Mobipocket encrypted");*/
+        write(", Mobipocket encrypted");
 
-
+    palmdb_name(file);
 }
