@@ -89,9 +89,7 @@ static void scan_unknown(File file)
                 scan_mobi(file);
                 return;
             case PALMDOC:
-                report("Palm Database (PalmDOC)", false);
-                //TODO: scan_palmdoc
-                palmdb_name(file);
+                scan_palmdoc(file);
                 break;
             case BDICTY:
                 report("Palm Database (BDicty)", false);
@@ -194,11 +192,8 @@ static void scan_unknown(File file)
             default: // Continue the journey
         }
     }
-
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    writeln("Unknown file type.");
+    
+    report_unknown();
 
     //TODO: Scan for readable characters for n (16KB?) bytes and at least n
     //      (3?) readable characters.

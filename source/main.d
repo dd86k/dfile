@@ -613,7 +613,7 @@ static void scan_file(File file)
     }
         break;
 
-    case [0x7F, 'E', 'L', 'F']:
+    case "\x7FELF":
         scan_elf(file);
         break;
 
@@ -636,12 +636,12 @@ static void scan_file(File file)
     }
         break;
     
-    case [0xFE, 0xED, 0xFA, 0xCE]: // MH_MAGIC
-    case [0xFE, 0xED, 0xFA, 0xCF]: // MH_MAGIC_64
-    case [0xCE, 0xFA, 0xED, 0xFE]: // MH_CIGAM
-    case [0xCF, 0xFA, 0xED, 0xFE]: // MH_CIGAM_64
-    case [0xCA, 0xFE, 0xBA, 0xBE]: // FAT_MAGIC
-    case [0xBE, 0xBA, 0xFE, 0xCA]: // FAT_CIGAM
+    case [0xFE, 0xED, 0xFA, 0xCE]:
+    case [0xFE, 0xED, 0xFA, 0xCF]:
+    case [0xCE, 0xFA, 0xED, 0xFE]:
+    case [0xCF, 0xFA, 0xED, 0xFE]:
+    case [0xCA, 0xFE, 0xBA, 0xBE]:
+    case [0xBE, 0xBA, 0xFE, 0xCA]:
         scan_mach(file);
         break;
 
@@ -694,9 +694,8 @@ static void scan_file(File file)
         break;
 
     case "$SDI": {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case [0x30, 0x30, 0x30, 0x31]:
             report("System Deployment Image (Microsoft disk image)");
@@ -717,10 +716,9 @@ static void scan_file(File file)
         break;
 
     case "RIFF": {
-        char[4] b;
         file.seek(8);
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case "WAVE":
             report("Waveform Audio File (wav)");
@@ -736,9 +734,8 @@ static void scan_file(File file)
         break;
 
     case "SIMP": {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case "LE  ":
             report("Flexible Image Transport System (FITS)");
@@ -1111,7 +1108,7 @@ static void scan_file(File file)
                 break;
 
             default:
-                report_unknown();
+                scan_unknown(file);
                 break;
             }
             break; // 3 Byte signatures
@@ -1119,6 +1116,11 @@ static void scan_file(File file)
     }
     break; // Signature
     }
+}
+
+static void report_unknown()
+{
+    report("Unknown file type");
 }
 
 static void report(string type, bool nl = true)
@@ -1130,9 +1132,4 @@ static void report(string type, bool nl = true)
 
     if (nl)
         writeln();
-}
-
-static void report_unknown()
-{
-    scan_unknown(CurrentFile);
 }

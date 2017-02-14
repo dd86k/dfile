@@ -11,7 +11,7 @@ Currently, dfile recognizes quite a few signatures.
 Provide a fast cross-platform alternative to file.
 
 # Additional information
-dfile will provide extra information for:
+dfile (~master) will provide extra information for:
 - Exectuable files
   - MZ
   - NE
