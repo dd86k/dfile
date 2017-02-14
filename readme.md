@@ -8,7 +8,7 @@ Currently, dfile recognizes quite a few signatures.
 
 # Goal
 
-Provide a fast cross-platform alternative to file.
+Provide a fast cross-platform alternative to file in a small and easy-to-use package.
 
 # Additional information
 dfile (~master) will provide extra information for:

@@ -19,6 +19,9 @@ const enum {
 static bool Debugging, Informing, ShowingName;
 private static File CurrentFile;
 
+//TODO: Convert all if showingname to new report(..., false)
+//TODO: Other TODOs
+
 static int main(string[] args)
 {
     size_t l = args.length;

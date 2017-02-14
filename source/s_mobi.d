@@ -46,7 +46,7 @@ void scan_palmdoc(File file)
 {
     palmdoc_hdr h;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         ubyte[palmdoc_hdr.sizeof] b;
         file.seek(STARTPOS);
         file.rawRead(b);
@@ -55,9 +55,9 @@ void scan_palmdoc(File file)
 
     report("Palm Document", false);
 
-    if (h.Compression == 1)
+    if (h.Compression == 0x0100) // Big Endian
         write(", PalmDOC compressed");
-    else if (h.Compression == 17480)
+    else if (h.Compression == 0x4844) // 17480
         write(", HUFF/CDIC compressed");
 
     palmdb_name(file);
@@ -68,7 +68,7 @@ void scan_mobi(File file)
     palmdoc_hdr h;
     mobi_hdr mh;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         ubyte[palmdoc_hdr.sizeof] b;
         ubyte[mobi_hdr.sizeof] b1;
         file.seek(STARTPOS);
@@ -77,51 +77,49 @@ void scan_mobi(File file)
         memcpy(&h, &b, palmdoc_hdr.sizeof);
         memcpy(&mh, &b1, mobi_hdr.sizeof);
     }
+    
+    report("Mobipocket ", false);
 
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    write("Mobipocket ");
-
-    switch (mh.Type)
-    {
-        case 232, 2:
+    switch (mh.Type) // Big Endian
+    { // So we have to invert the values! (Per byte)
+      // Original value is commented.
+        case 0xE800_0000, 0x0200_0000: // 232, 2
             write("ebook");
             break;
-        case 3:
+        case 0x0300_0000: // 3
             write("PalmDoc ebook");
             break;
-        case 4:
+        case 0x0400_0000: // 4
             write("audio");
             break;
-        case 248:
+        case 0xF800_0000: // 248
             write("KF8");
             break;
-        case 257:
+        case 0x0101_0000: // 257
             write("News");
             break;
-        case 258:
+        case 0x0201_0000: // 258
             write("News feed");
             break;
-        case 259:
+        case 0x0301_0000: // 259
             write("News magazine");
             break;
-        case 513:
+        case 0x0102_0000: // 513
             write("PICS");
             break;
-        case 514:
+        case 0x0202_0000: // 514
             write("WORD");
             break;
-        case 515:
+        case 0x0302_0000: // 515
             write("XLS");
             break;
-        case 516:
+        case 0x0402_0000: // 516
             write("PPT");
             break;
-        case 517:
+        case 0x0502_0000: // 517:
             write("TEXT");
             break;
-        case 518:
+        case 0x0602_0000: // 518
             write("HTML");
             break;
         default:
@@ -131,14 +129,14 @@ void scan_mobi(File file)
 
     write(" file");
 
-    if (h.Compression == 1)
+    if (h.Compression == 0x0100) // Big Endian
         write(", PalmDOC compressed");
-    else if (h.Compression == 17480)
+    else if (h.Compression == 0x4844)
         write(", HUFF/CDIC compressed");
 
-    if (h.Encryption == 1)
+    if (h.Encryption == 0x0100) // Big Endian
         write(", Legacy Mobipocket encryption");
-    else if (h.Encryption == 2)
+    else if (h.Encryption == 0x0200)
         write(", Mobipocket encryption");
 
     palmdb_name(file);
