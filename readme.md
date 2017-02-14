@@ -23,6 +23,7 @@ dfile will provide extra information for:
   - SNES Sound Format (SPC2)
 - Document files
   - PDF
+  - Mobi
 - Firmware
   - TRX v1/2
 

@@ -588,7 +588,11 @@ static void scan_file(File file)
         report("lzip compressed file");
         break;
 
-    case ['P', 'K', 0x03, 0x04]:
+    case "PK\x03\x04":
+        report("EPUB document");
+        break;
+
+    //case ['P', 'K', 0x03, 0x04]: Conflicts with ZIP
     case ['P', 'K', 0x05, 0x06]:
     case ['P', 'K', 0x07, 0x08]:
         report("ZIP compressed file (or JAR, ODF, OOXML)");
@@ -1117,18 +1121,18 @@ static void scan_file(File file)
     }
 }
 
-static void report(string type)
+static void report(string type, bool nl = true)
 {
     if (ShowingName)
-        writefln("%s: %s", CurrentFile.name, type);
+        writef("%s: %s", CurrentFile.name, type);
     else
-        writeln(type);
+        write(type);
+
+    if (nl)
+        writeln();
 }
 
 static void report_unknown()
 {
-    if (ShowingName)
-        writef("%s: ", CurrentFile.name);
-
-    writeln("Unknown file format");
+    scan_unknown(CurrentFile);
 }
