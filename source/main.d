@@ -24,7 +24,6 @@ static bool Debugging, Informing, ShowingName;
 private static File CurrentFile;
 
 //TODO: Fix s_mach
-//TODO: Group signatures (comments)
 
 private static int main(string[] args)
 {
@@ -137,15 +136,13 @@ static void scan_file(File file)
     if (Debugging)
     {
         writef("L%04d: Magic - ", __LINE__);
-        foreach (b; sig)
-            writef("%X ", b);
+        foreach (b; sig) writef("%X ", b);
         writeln();
     }
 
     switch (sig)
     {
-    // Conflicts with Mach-O, need more data for these files
-    /*case [0xBE, 0xBA, 0xFE, 0xCA]:
+    /*case [0xBE, 0xBA, 0xFE, 0xCA]: // Conflicts with Mach-O
         report("Palm Desktop Calendar Archive (DBA)");
         break;*/
 
@@ -186,7 +183,7 @@ static void scan_file(File file)
                         report("Palm Desktop Data File (Access format)");
                 }
                 return;
-        }    
+        }
         }
 
     case "NESM": {
@@ -341,11 +338,11 @@ static void scan_file(File file)
         report("DVD Video Movie File or DVD MPEG2");
         return;
 
-    case ['M', 'M', 0, '*']:
+    case "MM\0*":
         report("Tagged Image File Format image (TIFF)");
         return;
 
-    case ['I', 'I', '*', 0]:
+    case "II*\0":
         {
             char[6] b;
             file.rawRead(b);

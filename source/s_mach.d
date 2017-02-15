@@ -295,7 +295,7 @@ private enum flag_t : uint // Reserved for future use
     MH_APP_EXTENSION_SAFE      = 0x02000000
 }
 
-private const enum : uint {
+private enum : uint {
     MH_MAGIC =    0xFEEDFACE,
     MH_MAGIC_64 = 0xFEEDFACF,
     MH_CIGAM =    0xCEFAEDFE,
@@ -361,6 +361,7 @@ static void scan_mach(File file)
         {
             import core.stdc.string : memcpy;
             ubyte[fat_header.sizeof] buf;
+            file.rewind();
             file.rawRead(buf);
             memcpy(&fh, &buf, fat_header.sizeof);
         }
@@ -398,6 +399,7 @@ static void scan_mach(File file)
         {
             import core.stdc.string : memcpy;
             ubyte[mach_header.sizeof] buf;
+            file.rewind();
             file.rawRead(buf);
             memcpy(&mh, &buf, mach_header.sizeof);
         }

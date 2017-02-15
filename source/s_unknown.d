@@ -14,8 +14,9 @@ static void scan_unknown(File file)
     import core.stdc.string : memcpy;
     // Scan by offsets.
 
-    //ulong fs = file.tell;
+    ulong fl = file.tell;
 
+    if (fl > 0x110)
     { // Tar files
         enum Tar = "usta";
         char[4] b;
@@ -28,6 +29,7 @@ static void scan_unknown(File file)
         }
     }
     
+    if (fl > 0x8006)
     { // ISO files
         enum ISO = "CD001";
         char[5] b0, b1, b2;
@@ -44,6 +46,7 @@ static void scan_unknown(File file)
         }
     }
 
+    if (fl > 0x40)
     { // Palm Database Format
         import s_mobi;
         enum { // 4 bytes for type, 4 bytes for creator
