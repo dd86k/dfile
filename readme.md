@@ -24,6 +24,7 @@ dfile (~master) will provide extra information for:
   - GTA Text files
   - RPF GTA archives
 - Audio files
+  - MIDI
   - NES Sound Format (NESM)
   - SNES Sound Format (SPC2)
 - Document files

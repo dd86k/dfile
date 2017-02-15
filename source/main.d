@@ -47,6 +47,9 @@ private static int main(string[] args)
         case "-m", "--more", "/m", "/more":
             Informing = true;
             break;
+        /*case "-t", "/t":
+
+            break;*/
         case "-h":
             print_help;
             return 0;
