@@ -691,17 +691,24 @@ static void scan_file(File file)
             memcpy(&h, &buf, midi_hdr.sizeof);
         }
 
-        report("MIDI, ", false);
-
-        switch (h.format)
+        switch (h.format) // Big Endian
         {
-            case 0: write("single track format"); break;
-            case 0x100: write("multiple track format"); break; // 1
-            case 0x200: write("multiple song format"); break;  // 2
-            default: write("unknown format"); break;
+            case 0: report("Single track MIDI", false); break;
+            case 0x100: report("Multiple track MIDI", false); break; // 1
+            case 0x200: report("multiple song format", false); break;  // 2
+            default: report("MIDI with unknown format"); return;
         }
 
-        writefln(", containing %d track chunks", h.number);
+        // Big Endian
+        h.number = cast(ushort)((h.number >> 8) | (h.number << 8));
+        h.division = cast(ushort)((h.division >> 8) | (h.division << 8));
+        writef(" using %d tracks at ", h.number);
+
+        if (h.division & 0x8000) // Negative, SMPTE units
+            writef("%d ticks per frame (SMPTE: %d)",
+                h.division & 0xFF, h.division >> 8 & 0xFF);
+        else // Ticks per beat
+            writef("%d ticks per quarter-note", h.division);
     }
         return;
 
