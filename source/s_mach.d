@@ -296,18 +296,12 @@ private enum flag_t : uint // Reserved for future use
 }
 
 private const enum : uint {
-    /*MH_MAGIC =    0xFEEDFACE,
+    MH_MAGIC =    0xFEEDFACE,
     MH_MAGIC_64 = 0xFEEDFACF,
     MH_CIGAM =    0xCEFAEDFE,
     MH_CIGAM_64 = 0xCFFAEDFE,
     FAT_MAGIC =   0xCAFEBABE,
-    FAT_CIGAM =   0xBEBAFECA*/
-    MH_MAGIC =    0xCEFAEDFE,
-    MH_MAGIC_64 = 0xCFFAEDFE,
-    MH_CIGAM =    0xFEEDFACE,
-    MH_CIGAM_64 = 0xFEEDFACF,
-    FAT_MAGIC =   0xBEBAFECA,
-    FAT_CIGAM =   0xCAFEBABE
+    FAT_CIGAM =   0xBEBAFECA
 }
 
 private uint reverse(uint t)

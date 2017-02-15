@@ -23,16 +23,8 @@ const enum {
 static bool Debugging, Informing, ShowingName;
 private static File CurrentFile;
 
-//TODO: Put in returns instead of breaks.
-//TODO: Other TODOs
-//TODO: Fix s_mach (Big Endian?)
-//TODO: Test PDF files
+//TODO: Fix s_mach
 //TODO: Group signatures (comments)
-
-/* Changelog
-- Added Windows-like CLI switches
-- Improved local imports
-*/
 
 private static int main(string[] args)
 {
@@ -52,27 +44,21 @@ private static int main(string[] args)
             Debugging = true;
             writeln("Debugging mode turned on");
             break;
-
         case "-s", "--showname", "/s", "/showname":
             ShowingName = true;
             break;
-
         case "-m", "--more", "/m", "/more":
             Informing = true;
             break;
-
         case "-h":
             print_help;
             return 0;
-
         case "--help", "/?":
             print_help_full;
             return 0;
-
         case "-v", "--version", "/ver", "/version":
             print_version;
             return 0;
-
         default:
         }
     }
@@ -165,44 +151,43 @@ static void scan_file(File file)
 
     case [0x00, 0x01, 0x42, 0x44]:
         report("Palm Desktop To Do Archive (DBA)");
-        break;
+        return;
 
     case [0x00, 0x01, 0x44, 0x54]:
         report("Palm Desktop Calendar Archive (TDA)");
-        break;
+        return;
 
-    case [0x00, 0x01, 0x00, 0x00]:
+    case [0x00, 0x01, 0x00, 0x00]: {
+        char[12] b;
+        file.rawRead(b);
+        switch (b[0..3])
         {
-            char[12] b;
-            file.rawRead(b);
-            switch (b[0..3])
-            {
-                case "MSIS":
-                    report("Microsoft Money file");
-                    break;
-                case "Stan":
-                    switch (b[8..11])
-                    {
-                        case " ACE":
-                            report("Microsoft Access 2007 file");
-                            break;
-                        case " Jet":
-                            report("Microsoft Access file");
-                            break;
-                        default:
-                    }
-                    break;
-                default:
-                    {
-                        if (b[0] == 0)
-                            report("TrueType font file");
-                        else
-                            report("Palm Desktop Data File (Access format)");
-                    }
-                    break;
-            }    
+            case "MSIS":
+                report("Microsoft Money file");
+                return;
+            case "Stan":
+                switch (b[8..11])
+                {
+                    case " ACE":
+                        report("Microsoft Access 2007 file");
+                        return;
+                    case " Jet":
+                        report("Microsoft Access file");
+                        return;
+                    default:
+                        report_unknown();
+                        return;
+                }
+            default:
+                {
+                    if (b[0] == 0)
+                        report("TrueType font file");
+                    else
+                        report("Palm Desktop Data File (Access format)");
+                }
+                return;
+        }    
         }
-        break;
 
     case "NESM": {
         char[1] b;
@@ -210,76 +195,74 @@ static void scan_file(File file)
 
         switch (b)
         {
-            case x"1A": {
-                struct nesm_hdr {
-                    char[5] magic;
-                    ubyte version_, total_song, start_song;
-                    ushort load_add, init_add, play_add;
-                    char[32] song_name, song_artist, song_copyright;
-                    ushort ntsc_speed; // 1/1000000th sec ticks
-                    ubyte[8] init_values; // Bankswitch Init Values
-                    ushort pal_speed;
-                    ubyte flag; // NTSC/PAL
-                    ubyte chip;
-                }
-
-                nesm_hdr h;
-                {
-                    ubyte[nesm_hdr.sizeof] buf;
-                    file.rewind();
-                    file.rawRead(buf);
-                    memcpy(&h, &buf, nesm_hdr.sizeof);
-                }
-                
-                if (h.flag & 0b10)
-                    report("Dual NTSC/PAL", false);
-                else if (h.flag & 1)
-                    report("NSTC", false);
-                else
-                    report("PAL", false);
-
-                writef(" Nintendo Sound Format file with %d songs, using ", h.total_song);
-
-                if (h.chip & 1)
-                    write("VRCVI");
-                else if (h.chip & 0b10)
-                    write("VRCVII");
-                else if (h.chip & 0b100)
-                    write("FDS");
-                else if (h.chip & 0b1000)
-                    write("MMC5");
-                else if (h.chip & 0b1_0000)
-                    write("Namco 106");
-                else if (h.chip & 0b10_0000)
-                    write("Sunsoft FME-07");
-                else
-                    write("no");
-
-                size_t s0, s1, s2;
-                char*
-                    p0 = h.song_name.ptr,
-                    p1 = h.song_artist.ptr,
-                    p2 = h.song_copyright.ptr;
-
-                while (*p0++ != '\0') ++s0;
-                while (*p1++ != '\0') ++s1;
-                while (*p2++ != '\0') ++s2;
-
-                writefln(" extra chip\n%s - %s\nCopyrights:%s",
-                    h.song_artist[0..s1], h.song_name[0..s0], h.song_copyright[0..s2]);
+        case x"1A": {
+            struct nesm_hdr {
+                char[5] magic;
+                ubyte version_, total_song, start_song;
+                ushort load_add, init_add, play_add;
+                char[32] song_name, song_artist, song_copyright;
+                ushort ntsc_speed; // 1/1000000th sec ticks
+                ubyte[8] init_values; // Bankswitch Init Values
+                ushort pal_speed;
+                ubyte flag; // NTSC/PAL
+                ubyte chip;
             }
-                break;
-            default:
-                report_unknown();
-                break;
+
+            nesm_hdr h;
+            {
+                ubyte[nesm_hdr.sizeof] buf;
+                file.rewind();
+                file.rawRead(buf);
+                memcpy(&h, &buf, nesm_hdr.sizeof);
+            }
+            
+            if (h.flag & 0b10)
+                report("Dual NTSC/PAL", false);
+            else if (h.flag & 1)
+                report("NSTC", false);
+            else
+                report("PAL", false);
+
+            writef(" Nintendo Sound Format file with %d songs, using ", h.total_song);
+
+            if (h.chip & 1)
+                write("VRCVI");
+            else if (h.chip & 0b10)
+                write("VRCVII");
+            else if (h.chip & 0b100)
+                write("FDS");
+            else if (h.chip & 0b1000)
+                write("MMC5");
+            else if (h.chip & 0b1_0000)
+                write("Namco 106");
+            else if (h.chip & 0b10_0000)
+                write("Sunsoft FME-07");
+            else
+                write("no");
+
+            size_t s0, s1, s2;
+            char*
+                p0 = h.song_name.ptr,
+                p1 = h.song_artist.ptr,
+                p2 = h.song_copyright.ptr;
+
+            while (*p0++ != '\0') ++s0;
+            while (*p1++ != '\0') ++s1;
+            while (*p2++ != '\0') ++s2;
+
+            writefln(" extra chip\n%s - %s\nCopyrights:%s",
+                h.song_artist[0..s1], h.song_name[0..s0], h.song_copyright[0..s2]);
+            }
+            return;
+        default:
+            report_unknown();
+            return;
         }
     }
-        break;
 
     case "KSPC": {
         char[1] b;
         file.rawRead(b);
-
         switch (b)
         {
             case x"1A": {
@@ -298,50 +281,43 @@ static void scan_file(File file)
                 }
 
                 report(format("SNES SPC2 v%d.%d file with %d of SPC entries",
-                    h.majorver, h.minorver, h.number), false);
+                    h.majorver, h.minorver, h.number));
             }
-                break;
+                return;
             default:
                 report_unknown();
-                break;
+                return;
         }
     }
-        break;
 
     case [0x00, 0x00, 0x01, 0x00]:
         report("Icon, ICO format");
-        break;
+        return;
 
     case [0, 1, 0, 8]:
         report("Ventura Publisher/GEM VDI Image Format Bitmap file");
-        break;
+        return;
 
     case "BACK":
+        file.rawRead(sig);
+        switch (sig)
         {
+        case "MIKE":
             file.rawRead(sig);
             switch (sig)
             {
-            case "MIKE":
-            {
-                file.rawRead(sig);
-                switch (sig)
-                {
-                case "DISK":
-                    report("AmiBack backup");
-                    break;
-                default:
-                    report_unknown();
-                    break;
-                }
-            }
-            break;
-
+            case "DISK":
+                report("AmiBack backup");
+                return;
             default:
                 report_unknown();
-                break;
+                return;
             }
+
+        default:
+            report_unknown();
+            return;
         }
-        break;
 
     case "GIF8":
         {
@@ -351,22 +327,23 @@ static void scan_file(File file)
             {
             case "7a":
                 report("GIF87a");
-                break;
+                return;
             case "9a":
                 report("GIF89a");
-                break;
+                return;
             default:
+                report_unknown();
+                return;
             }
         }
-        break;
 
     case [0, 0, 1, 0xBA]:
         report("DVD Video Movie File or DVD MPEG2");
-        break;
+        return;
 
     case ['M', 'M', 0, '*']:
         report("Tagged Image File Format image (TIFF)");
-        break;
+        return;
 
     case ['I', 'I', '*', 0]:
         {
@@ -376,79 +353,73 @@ static void scan_file(File file)
             {
             case [0x10, 0, 0, 0, 'C', 'R']:
                 report("Canon RAW Format Version 2 image (TIFF)");
-                break;
+                return;
 
             default:
                 report("Tagged Image File Format image (TIFF)");
-                break;
+                return;
             }
         }
-        break;
 
     case [0, 0, 0, 0xc]:
         report("Various JPEG-2000 image file formats");
-        break;
+        return;
 
     case [0x80, 0x2A, 0x5F, 0xD7]:
         report("Kodak Cineon image");
-        break;
+        return;
 
     case ['R', 'N', 'C', 0x01]:
     case ['R', 'N', 'C', 0x02]:
         report("Compressed file (Rob Northen Compression v" ~
             (sig[3] == 1 ? '1' : '2') ~ ")");
-        break;
+        return;
 
     case "SDPX":
     case "XPDS":
         report("SMPTE DPX image");
-        break;
+        return;
 
     case [0x76, 0x2F, 0x31, 0x01]:
         report("OpenEXR image");
-        break;
+        return;
 
     case "BPGû":
         report("Better Portable Graphics image (BPG)");
-        break;
+        return;
 
     case [0xFF, 0xD8, 0xFF, 0xDB]:
     case [0xFF, 0xD8, 0xFF, 0xE0]:
     case [0xFF, 0xD8, 0xFF, 0xE1]:
         report("Joint Photographic Experts Group image (JPEG)");
-        break;
+        return;
 
     case ['g', 0xA3, 0xA1, 0xCE]:
         report("IMG archive");
-        break;
-
-    case [0xA9, 0x4E, 0x2A, 0x52]: //TODO: Finish https://www.gtamodding.com/wiki/IMG_archive
-        report("IMG unencrypted archive");
-        break;
+        return;
 
     case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
-        writef("%s: GTA Text (GTA2+) file in ", file.name);
-        switch (sig[3])
+        report("%s: GTA Text (GTA2+) file in ", false);
+        final switch (sig[3])
         {
-        case 'E': write("English"); break;
-        case 'F': write("French"); break;
-        case 'G': write("German"); break;
-        case 'I': write("Italian"); break;
-        case 'S': write("Spanish"); break;
+        case 'E': write("English");  break;
+        case 'F': write("French");   break;
+        case 'G': write("German");   break;
+        case 'I': write("Italian");  break;
+        case 'S': write("Spanish");  break;
         case 'J': write("Japanese"); break;
-        default: write("Unknown"); break;
         }
         write(" language");
-        break;
+        return;
 
     case "2TXG": {
         ubyte[4] b;
         file.rawRead(b);
         report(format("GTA Text 2 file with %d entries",
             b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24 // Byte swapped
-            ), false);
+            ));
     }
-        break;
+        return;
 
     case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
         writef("%s: RPF", file.name);
@@ -459,28 +430,16 @@ static void scan_file(File file)
         write(" archive v" ~ sig[3] ~ " (");
         final switch (sig[3])
         {
-            case '0':
-                write("Table Tennis");
-                break;
-            case '2':
-                write("GTA IV");
-                break;
-            case '3':
-                write("GTA IV:A&MC:LA");
-                break;
-            case '4':
-                write("Max Payne 3");
-                break;
-            case '6':
-                write("Red Dead Redemption");
-                break;
-            case '7':
-                write("GTA V");
-                break;
+            case '0': write("Table Tennis"); break;
+            case '2': write("GTA IV"); break;
+            case '3': write("GTA IV:A&MC:LA"); break;
+            case '4': write("Max Payne 3"); break;
+            case '6': write("Red Dead Redemption"); break;
+            case '7': write("GTA V"); break;
         }
         writefln(") with %d entries", buf[1]);
     }
-    break;
+        return;
 
     case [0, 0, 0, 0x14]:
     case [0, 0, 0, 0x18]:
@@ -495,41 +454,38 @@ static void scan_file(File file)
             {
             case "isom":
                 report("ISO Base Media file (MPEG-4) v1");
-                break;
+                return;
             case "qt  ":
                 report("QuickTime movie file");
-                break;
+                return;
             case "3gp5":
                 report("MPEG-4 video files (MP4)");
-                break;
+                return;
             case "mp42":
                 report("MPEG-4 video/QuickTime file (MP4)");
-                break;
+                return;
             case "MSNV":
                 report("MPEG-4 video file (MP4)");
-                break;
+                return;
             case "M4A ":
                 report("Apple Lossless Audio Codec file (M4A)");
-                break;
+                return;
             default:
                 switch (b[4..6])
                 {
                 case "3gp":
                     report("3rd Generation Partnership Project multimedia file (3GP)");
-                    break;
+                    return;
                 default:
                     report_unknown();
-                    break;
+                    return;
                 }
-                break;
             }
-            break;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-        break;
 
     case "FORM": {
         char[4] b;
@@ -539,106 +495,99 @@ static void scan_file(File file)
         {
         case "ILBM":
             report("IFF Interleaved Bitmap Image");
-            break;
+            return;
         case "8SVX":
             report("IFF 8-Bit Sampled Voice");
-            break;
+            return;
         case "ACBM":
             report("Amiga Contiguous Bitmap");
-            break;
+            return;
         case "ANBM":
             report("IFF Animated Bitmap");
-            break;
+            return;
         case "ANIM":
             report("IFF CEL Animation");
-            break;
+            return;
         case "FAXX":
             report("IFF Facsimile Image");
-            break;
+            return;
         case "FTXT":
             report("IFF Formatted Text");
-            break;
+            return;
         case "SMUS":
             report("IFF Simple Musical Score");
-            break;
+            return;
         case "CMUS":
             report("IFF Musical Score");
-            break;
+            return;
         case "YUVN":
             report("IFF YUV Image");
-            break;
+            return;
         case "FANT":
             report("Amiga Fantavision Movie");
-            break;
+            return;
         case "AIFF":
             report("Audio Interchange File Format");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-        break;
 
     case [0, 0, 1, 0xB7]:
         report("MPEG video file");
-        break;
+        return;
 
     case "INDX":
         report("AmiBack backup index file");
-        break;
+        return;
 
     case "LZIP":
         report("lzip compressed file");
-        break;
+        return;
 
     case "PK\x03\x04":
         report("EPUB document");
-        break;
+        return;
 
-    //case ['P', 'K', 0x03, 0x04]: Conflicts with ZIP
+    //case ['P', 'K', 0x03, 0x04]: Conflicts with EPUB
     case ['P', 'K', 0x05, 0x06]:
     case ['P', 'K', 0x07, 0x08]:
         report("ZIP compressed file (or JAR, ODF, OOXML)");
-        break;
+        return;
 
-    case "Rar!": {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+    case "Rar!":
+        file.rawRead(sig);
+        switch (sig)
         {
         case [0x1A, 0x07, 0x01, 0x00]:
             report("RAR archive v5.0+");
-            break;
+            return;
         default:
             report("RAR archive v1.5+");
-            break;
+            return;
         }
-    }
-        break;
 
     case "\x7FELF":
         scan_elf(file);
-        break;
+        return;
 
     case [0xFA, 0x70, 0x0E, 0x01]: // FatELF - 0x1F0E70FA
         scan_fatelf(file);
-        break;
+        return;
 
-    case [0x89, 'P', 'N', 'G']: {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+    case [0x89, 'P', 'N', 'G']:
+        file.rawRead(sig);
+        switch (sig)
         {
         case [0x0D, 0x0A, 0x1A, 0x0A]:
             report("Portable Network Graphics image (PNG)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
     
     case [0xFE, 0xED, 0xFA, 0xCE]:
     case [0xFE, 0xED, 0xFA, 0xCF]:
@@ -647,39 +596,20 @@ static void scan_file(File file)
     case [0xCA, 0xFE, 0xBA, 0xBE]:
     case [0xBE, 0xBA, 0xFE, 0xCA]:
         scan_mach(file);
-        break;
+        return;
 
     case [0xFF, 0xFE, 0x00, 0x00]:
         report("UTF-32 text file (byte-order mark)");
-        break;
+        return;
 
     case "%!PS":
         report("PostScript document");
-        break;
+        return;
 
-    case "%PDF": {
-        char[6] b;
-        file.rawRead(b);
-        report(format("PDF%s document", b[0..4]), false);
-        switch (b[5..6])
-        {
-            case "\r\n":
-                writeln(", CRLF newline (Windows)");
-                break;
-            case "\n\r":
-                writeln(", LFCR newline");
-                break;
-            default:
-                if (b[5] == '\n')
-                    writeln(", NF newline (UNIX)");
-                else if (b[5] == '\r')
-                    writeln(", CR newline");
-                else
-                    writefln("%Xh newline", b[5]);
-                break;
-        }
-    }
-        break;
+    case "%PDF":
+        file.rawRead(sig);
+        report(format("PDF%s document", sig));
+        return;
 
     case [0x30, 0x26, 0xB2, 0x75]: {
         char[12] b;
@@ -688,111 +618,100 @@ static void scan_file(File file)
         {
         case [0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0, 0xAA, 0, 0x62, 0xCE, 0x6C]:
             report("Advanced Systems Format file (ASF, WMA, WMV)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-        break;
 
-    case "$SDI": {
+    case "$SDI":
         file.rawRead(sig);
         switch (sig)
         {
         case [0x30, 0x30, 0x30, 0x31]:
             report("System Deployment Image (Microsoft disk image)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
     case "OggS":
         report("Ogg audio file");
-        break;
+        return;
 
     case "8BPS":
         report("Photoshop native document file");
-        break;
+        return;
 
-    case "RIFF": {
+    case "RIFF":
         file.seek(8);
         file.rawRead(sig);
         switch (sig)
         {
         case "WAVE":
             report("Waveform Audio File (wav)");
-            break;
+            return;
         case "AVI ":
             report("Audio Video Interface video (avi)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
-    case "SIMP": {
+    case "SIMP":
         file.rawRead(sig);
         switch (sig)
         {
         case "LE  ":
             report("Flexible Image Transport System (FITS)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
     case "fLaC":
         report("Free Lossless Audio Codec audio file (FLAC)");
-        break;
+        return;
 
     case "MThd":
         report("MIDI file");
-        break;
+        return;
 
-    case [0xD0, 0xCF, 0x11, 0xE0]: {
+    case [0xD0, 0xCF, 0x11, 0xE0]:
         file.rawRead(sig);
         switch (sig)
         {
         case [0xA1, 0xB1, 0x1A, 0xE1]:
             report("Compound File Binary Format document (doc, xls, ppt)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
-    case ['d', 'e', 'x', 0x0A]: {
+    case ['d', 'e', 'x', 0x0A]:
         file.rawRead(sig);
         switch (sig)
         {
         case "035\0":
             report("Dalvik Executable");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
     case "Cr24":
         report("Google Chrome extension or packaged app (crx)");
-        break;
+        return;
 
     case "AGD3":
         report("FreeHand 8 document (fh8)");
-        break;
+        return;
 
     case [0x05, 0x07, 0x00, 0x00]: {
         char[6] b;
@@ -801,64 +720,59 @@ static void scan_file(File file)
         {
         case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
             report("AppleWorks 5 document (cwk)");
-            break;
+            return;
         case [0x4F, 0x42, 0x4F, 0x06, 0x07, 0xE1]:
             report("AppleWorks 6 document (cwk)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-        break;
 
     case ['E', 'R', 0x02, 0x00]:
         report("Roxio Toast disc image or DMG file (toast or dmg)");
-        break;
+        return;
 
     case ['x', 0x01, 's', 0x0D]:
         report("Apple Disk Image file (dmg)");
-        break;
+        return;
 
     case "xar!":
         report("eXtensible ARchive format (xar)");
-        break;
+        return;
 
-    case "PMOC": {
+    case "PMOC":
         file.rawRead(sig);
         switch (sig)
         {
         case "CMOC":
             report("USMT, Windows Files And Settings Transfer Repository (dat)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
     case "TOX3":
         report("Open source portable voxel file");
-        break;
+        return;
 
     case "MLVI":
         report("Magic Lantern Video file");
-        break;
+        return;
 
-    case "DCM\0": {
+    case "DCM\0":
         file.rawRead(sig);
         switch (sig)
         {
         case "PA30":
             report("Windows Update Binary Delta Compression file");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
     case [0x37, 0x7A, 0xBC, 0xAF]: {
         char[2] b;
@@ -867,69 +781,64 @@ static void scan_file(File file)
         {
         case [0x27, 0x1C]:
             report("7-Zip compressed file (7z)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-        break;
 
     case [0x04, 0x22, 0x4D, 0x18]:
         report("LZ4 Streaming Format (lz4)");
-        break;
+        return;
 
     case "MSCF":
         report("Microsoft Cabinet File (cab)");
-        break;
+        return;
 
     case "FLIF":
         report("Free Lossless Image Format image file (flif)");
-        break;
+        return;
 
     case [0x1A, 0x45, 0xDF, 0xA3]:
         report("Matroska media container (mkv, webm)");
-        break;
+        return;
 
     case "MIL ":
         report(`"SEAN : Session Analysis" Training file`);
-        break;
+        return;
 
-    case "AT&T": {
+    case "AT&T":
         file.rawRead(sig);
         switch (sig)
         {
-        case "FORM": {
+        case "FORM":
             file.seek(4, SEEK_CUR);
             file.rawRead(sig);
             switch (sig)
             {
             case "DJVU":
                 report("DjVu document, single page");
-                break;
+                return;
             case "DJVM":
                 report("DjVu document, multiple pages");
-                break;
+                return;
             default:
                 report_unknown();
-                break;
+                return;
             }
-        }
-        break;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break;
 
     case "wOFF":
         report("WOFF File Format 1.0 font (woff)");
-        break;
+        return;
 
     case "wOF2":
         report("WOFF File Format 2.0 font (woff)");
-        break;
+        return;
 
     case "<?xm": {
         char[2] b;
@@ -938,25 +847,24 @@ static void scan_file(File file)
         {
         case "l>":
             report("ASCII XML (xml)");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
-    }
-        break; // too lazy for utf-16/32
+    } // too lazy for utf-16/32
 
     case "PWAD":
     case "IWAD": {
         int[2] b; // Doom reads as int
         file.rawRead(b);
-        report(format("%s holding %d entries at %Xh", sig, b[0], b[1]), false);
+        report(format("%s holding %d entries at %Xh", sig, b[0], b[1]));
     }
-        break;
+        return;
 
     case "\0asm":
         report("WebAssembly file (wasm)");
-        break;
+        return;
 
     case "TRUE": {
         char[12] b;
@@ -965,17 +873,16 @@ static void scan_file(File file)
         {
         case "VISION-XFILE":
             report("Truevision Targa Graphic image file");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-    break;
 
     case [0, 0, 2, 0]:
         report("Lotus 1-2-3 spreadsheet (v1) file");
-        break;
+        return;
 
     case [0, 0, 0x1A, 0]: {
         char[3] b;
@@ -984,32 +891,31 @@ static void scan_file(File file)
         {
         case [0, 0x10, 4]:
             report("Lotus 1-2-3 spreadsheet (v3) file");
-            break;
+            return;
         case [2, 0x10, 4]:
             report("Lotus 1-2-3 spreadsheet (v4, v5) file");
-            break;
+            return;
         case [5, 0x10, 4]:
             report("Lotus 1-2-3 spreadsheet (v9) file");
-            break;
+            return;
         default:
             report_unknown();
-            break;
+            return;
         }
     }
-        break;
 
     case [0, 0, 3, 0xF3]:
         report("Amiga Hunk executable file");
-        break;    
+        return;    
 
     case "\0\0II":
     case "\0\0MM":
         report("Quark Express document");
-        break;
+        return;
 
     case [0, 0, 0xFE, 0xFF]:
-        report("UTF-32BE file");
-        break;
+        report("UTF-32BE BOM");
+        return;
 
     case "HDR0": {
         struct trx_hdr {
@@ -1030,87 +936,84 @@ static void scan_file(File file)
         if (h.version_ == 1 || h.version_ == 2)
             report(format(
                 "TRX v%d firmware (Length: %d, CRC32: %Xh)", h.version_, h.length, h.crc
-            ), false);
+            ));
         else
             report_unknown();
     }
-        break;
+        return;
 
-    default: {
+    default:
         switch (sig[0..2])
         {
         case [0x1F, 0x9D]:
             report("Lempel-Ziv-Welch compressed file (RAR/ZIP)");
-            break;
+            return;
 
         case [0x1F, 0xA0]:
             report("LZH compressed file (RAR/ZIP)");
-            break;
+            return;
 
         case "MZ":
             scan_mz(file);
-            break;
+            return;
 
         case [0xFF, 0xFE]:
             report("UTF-16 text file (Byte-Order mark)");
-            break;
+            return;
 
         case [0xFF, 0xFB]:
             report("MPEG-2 Audio Layer III audio file (MP3)");
-            break;
+            return;
 
         case "BM":
             report("Bitmap iamge file (BMP)");
-            break;
+            return;
 
         case [0x1F, 0x8B]:
             report("GZIP compressed file ([tar.]gz)");
-            break;
+            return;
 
         case [0x30, 0x82]:
             report("DER encoded X.509 certificate (der)");
-            break;
+            return;
 
         default:
             switch (sig[0..3])
             {
             case "BZh":
                 report("Bzip2 compressed file (BZh)");
-                break;
+                return;
 
             case [0xEF, 0xBB, 0xBF]:
                 report("UTF-8 text file with BOM");
-                break;
+                return;
 
             case "ID3":
                 report("MPEG-2 Audio Layer III audio file with ID3v2 container (MP3)");
-                break;
+                return;
 
             case "KDM":
                 report("VMware Disk K virtual disk file (VMDK)");
-                break;
+                return;
 
             case "NES":
                 report("Nintendo Entertainment System ROM file (nes)");
-                break;
+                return;
 
             case [0xCF, 0x84, 0x01]:
                 report("Lepton compressed JPEG image (lep)");
-                break;
+                return;
 
             case [0, 1, 1]:
                 report("OpenFlight 3D file");
-                break;
+                return;
 
             default:
                 scan_unknown(file);
-                break;
-            }
-            break; // 3 Byte signatures
+                return;
+            } // 3 Byte signatures
         } // 2 Byte signatures
-    }
-    break;
-    } // sig
+    } // sig (4 Byte)
 }
 
 static void report_unknown()
