@@ -41,20 +41,21 @@ private struct ne_hdr
     ubyte[2] ne_expver;      /* Expected Windows version number */
 }
 
-private const ushort
+private enum {
     NENOTP = 0x8000, /* Not a process */
     NENONC = 0x4000, /* Non-conforming program */
     NEIERR = 0x2000, /* Errors in image */
     NEPROT = 0x0008, /* Runs in protected mode */
     NEREAL = 0x0004, /* Runs in real mode */
     NEINST = 0x0002, /* Instance data */
-    NESOLO = 0x0001; /* Solo data */
+    NESOLO = 0x0001  /* Solo data */
+}
 
 static void scan_ne(File file)
 {
     ne_hdr h;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         ubyte[ne_hdr.sizeof] buf;
         file.rawRead(buf);
         memcpy(&h, &buf, ne_hdr.sizeof);
@@ -96,10 +97,7 @@ static void scan_ne(File file)
         writeln();
     }
 
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    write("NE ");
+    report("NE ", false);
 
     if (h.ne_flags & NENOTP)
         write("DLL or driver");

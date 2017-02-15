@@ -54,10 +54,8 @@ private struct PE_OPTIONAL_HEADER
     uint NumberOfRvaAndSizes;
 }
 
-//private enum IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16;
-
 private struct IMAGE_DATA_DIRECTORY
-{
+{ // IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16
     ulong ExportTable;
     ulong ImportTable;
     ulong ResourceTable;
@@ -151,7 +149,7 @@ static void scan_pe(File file)
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
 
         {
             ubyte[PE_HEADER.sizeof] buf;
@@ -188,15 +186,11 @@ static void scan_pe(File file)
         {
             writefln("Format    : %Xh", peoh.magic);
             writefln("Subsystem : %Xh", peoh.Subsystem);
-
             writefln("CLR Header : %Xh", dirs.CLRHeader);
         }
     }
-    
-    if (ShowingName)
-        writef("%s: ", file.name);
 
-    write("PE32");
+    report("PE32", false);
     
     switch (peoh.magic)
     {
@@ -348,9 +342,9 @@ static void scan_pe(File file)
         if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
             write(", large addresses aware");
         if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
-            write(", 16-bit based machine");
+            write(", 16-bit based machines");
         if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
-            write(", 32-bit based machine");
+            write(", 32-bit based machines");
         if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
             write(", system file");
     }

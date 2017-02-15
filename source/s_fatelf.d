@@ -6,7 +6,7 @@ module s_fatelf;
 
 import std.stdio;
 import dfile;
-import s_elf;
+import s_elf : ELF_e_machine;
 
 private struct fat_header
 {
@@ -33,17 +33,14 @@ void scan_fatelf(File file)
 {
     fat_header fh;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         ubyte[fh.sizeof] buf;
         file.rewind();
         file.rawRead(buf);
         memcpy(&fh, &buf, fh.sizeof);
     }
 
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    write("FatELF");
+    report("FatELF", false);
     
     switch (fh.version_)
     {
@@ -53,7 +50,7 @@ void scan_fatelf(File file)
         case 1: {
             fat_subheader_v1 fhv1;
             {
-                import core.stdc.string;
+                import core.stdc.string : memcpy;
                 ubyte[fhv1.sizeof] buf;
                 file.rawRead(buf);
                 memcpy(&fhv1, &buf, fhv1.sizeof);

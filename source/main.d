@@ -1,7 +1,10 @@
 module dfile;
 
-import std.stdio : write, writeln, writef, writefln, File;
+import std.stdio;
 import std.file : exists, isDir;
+import std.string : format;
+import core.stdc.string : memcpy;
+
 import s_elf : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz : scan_mz;
@@ -16,13 +19,22 @@ const enum {
     PROJECT_VERSION = "0.2.0"
 }
 
+/// Setting
 static bool Debugging, Informing, ShowingName;
 private static File CurrentFile;
 
-//TODO: Convert all if showingname to new report(..., false)
+//TODO: Put in returns instead of breaks.
 //TODO: Other TODOs
+//TODO: Fix s_mach (Big Endian?)
+//TODO: Test PDF files
+//TODO: Group signatures (comments)
 
-static int main(string[] args)
+/* Changelog
+- Added Windows-like CLI switches
+- Improved local imports
+*/
+
+private static int main(string[] args)
 {
     size_t l = args.length;
     
@@ -88,7 +100,7 @@ static int main(string[] args)
     }
     else
     {
-        writefln("File does not exist: %s", filename);
+        report("File does not exist");
         return 1;
     }
 
@@ -213,24 +225,20 @@ static void scan_file(File file)
 
                 nesm_hdr h;
                 {
-                    import core.stdc.string;
                     ubyte[nesm_hdr.sizeof] buf;
                     file.rewind();
                     file.rawRead(buf);
                     memcpy(&h, &buf, nesm_hdr.sizeof);
                 }
-
-                if (ShowingName)
-                    writef("%s: ");
                 
                 if (h.flag & 0b10)
-                    write("Dual NTSC/PAL");
+                    report("Dual NTSC/PAL", false);
                 else if (h.flag & 1)
-                    write("NSTC");
+                    report("NSTC", false);
                 else
-                    write("PAL");
+                    report("PAL", false);
 
-                writef("Nintendo Sound Format file with %d songs, using ", h.total_song);
+                writef(" Nintendo Sound Format file with %d songs, using ", h.total_song);
 
                 if (h.chip & 1)
                     write("VRCVI");
@@ -247,7 +255,18 @@ static void scan_file(File file)
                 else
                     write("no");
 
-                writefln(" extra chip\n%s - %s\nCopyrights:%s", h.song_artist, h.song_name, h.song_copyright);
+                size_t s0, s1, s2;
+                char*
+                    p0 = h.song_name.ptr,
+                    p1 = h.song_artist.ptr,
+                    p2 = h.song_copyright.ptr;
+
+                while (*p0++ != '\0') ++s0;
+                while (*p1++ != '\0') ++s1;
+                while (*p2++ != '\0') ++s2;
+
+                writefln(" extra chip\n%s - %s\nCopyrights:%s",
+                    h.song_artist[0..s1], h.song_name[0..s0], h.song_copyright[0..s2]);
             }
                 break;
             default:
@@ -272,18 +291,14 @@ static void scan_file(File file)
 
                 spc2_hdr h;
                 {
-                    import core.stdc.string;
                     char[spc2_hdr.sizeof] buf;
                     file.rewind();
                     file.rawRead(buf);
                     memcpy(&h, &buf, spc2_hdr.sizeof);
                 }
 
-                if (ShowingName)
-                    writef("%s: ");
-
-                writefln("SNES SPC2 v%d.%d file with %d of SPC entries",
-                    h.majorver, h.minorver, h.number);
+                report(format("SNES SPC2 v%d.%d file with %d of SPC entries",
+                    h.majorver, h.minorver, h.number), false);
             }
                 break;
             default:
@@ -381,7 +396,7 @@ static void scan_file(File file)
     case ['R', 'N', 'C', 0x01]:
     case ['R', 'N', 'C', 0x02]:
         report("Compressed file (Rob Northen Compression v" ~
-            (sig[3] == '\x01' ? '1' : '2') ~ ")");
+            (sig[3] == 1 ? '1' : '2') ~ ")");
         break;
 
     case "SDPX":
@@ -413,26 +428,15 @@ static void scan_file(File file)
 
     case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
         writef("%s: GTA Text (GTA2+) file in ", file.name);
-        final switch (sig[3])
+        switch (sig[3])
         {
-        case 'E':
-            write("English");
-            break;
-        case 'F':
-            write("French");
-            break;
-        case 'G':
-            write("German");
-            break;
-        case 'I':
-            write("Italian");
-            break;
-        case 'S':
-            write("Spanish");
-            break;
-        case 'J':
-            write("Japanese");
-            break;
+        case 'E': write("English"); break;
+        case 'F': write("French"); break;
+        case 'G': write("German"); break;
+        case 'I': write("Italian"); break;
+        case 'S': write("Spanish"); break;
+        case 'J': write("Japanese"); break;
+        default: write("Unknown"); break;
         }
         write(" language");
         break;
@@ -440,8 +444,9 @@ static void scan_file(File file)
     case "2TXG": {
         ubyte[4] b;
         file.rawRead(b);
-        int e = b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24; // Byte swapped
-        writef("%s: GTA Text 2 file with %d entries", file.name, e);
+        report(format("GTA Text 2 file with %d entries",
+            b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24 // Byte swapped
+            ), false);
     }
         break;
 
@@ -491,27 +496,21 @@ static void scan_file(File file)
             case "isom":
                 report("ISO Base Media file (MPEG-4) v1");
                 break;
-
             case "qt  ":
                 report("QuickTime movie file");
                 break;
-
             case "3gp5":
                 report("MPEG-4 video files (MP4)");
                 break;
-
             case "mp42":
                 report("MPEG-4 video/QuickTime file (MP4)");
                 break;
-
             case "MSNV":
                 report("MPEG-4 video file (MP4)");
                 break;
-
             case "M4A ":
                 report("Apple Lossless Audio Codec file (M4A)");
                 break;
-
             default:
                 switch (b[4..6])
                 {
@@ -575,6 +574,8 @@ static void scan_file(File file)
             report("Audio Interchange File Format");
             break;
         default:
+            report_unknown();
+            break;
         }
     }
         break;
@@ -656,12 +657,10 @@ static void scan_file(File file)
         report("PostScript document");
         break;
 
-    case "%PDF":
+    case "%PDF": {
         char[6] b;
         file.rawRead(b);
-        if (ShowingName)
-            writef("%s: ", file.name);
-        writef("PDF%s document", b[0..4]);
+        report(format("PDF%s document", b[0..4]), false);
         switch (b[5..6])
         {
             case "\r\n":
@@ -679,6 +678,7 @@ static void scan_file(File file)
                     writefln("%Xh newline", b[5]);
                 break;
         }
+    }
         break;
 
     case [0x30, 0x26, 0xB2, 0x75]: {
@@ -759,9 +759,8 @@ static void scan_file(File file)
         break;
 
     case [0xD0, 0xCF, 0x11, 0xE0]: {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case [0xA1, 0xB1, 0x1A, 0xE1]:
             report("Compound File Binary Format document (doc, xls, ppt)");
@@ -774,9 +773,8 @@ static void scan_file(File file)
         break;
 
     case ['d', 'e', 'x', 0x0A]: {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case "035\0":
             report("Dalvik Executable");
@@ -827,9 +825,8 @@ static void scan_file(File file)
         break;
 
     case "PMOC": {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case "CMOC":
             report("USMT, Windows Files And Settings Transfer Repository (dat)");
@@ -850,12 +847,11 @@ static void scan_file(File file)
         break;
 
     case "DCM\0": {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case "PA30":
-            report("Windows Update Binary Delta Compression");
+            report("Windows Update Binary Delta Compression file");
             break;
         default:
             report_unknown();
@@ -900,14 +896,13 @@ static void scan_file(File file)
         break;
 
     case "AT&T": {
-        char[4] b;
-        file.rawRead(b);
-        switch (b)
+        file.rawRead(sig);
+        switch (sig)
         {
         case "FORM": {
-            file.seek(8);
-            file.rawRead(b);
-            switch (b)
+            file.seek(4, SEEK_CUR);
+            file.rawRead(sig);
+            switch (sig)
             {
             case "DJVU":
                 report("DjVu document, single page");
@@ -931,6 +926,7 @@ static void scan_file(File file)
     case "wOFF":
         report("WOFF File Format 1.0 font (woff)");
         break;
+
     case "wOF2":
         report("WOFF File Format 2.0 font (woff)");
         break;
@@ -954,9 +950,7 @@ static void scan_file(File file)
     case "IWAD": {
         int[2] b; // Doom reads as int
         file.rawRead(b);
-        if (ShowingName)
-            writef("%s: ", file.name);
-        writefln("%s holding %d entries at %Xh", sig, b[0], b[1]);
+        report(format("%s holding %d entries at %Xh", sig, b[0], b[1]), false);
     }
         break;
 
@@ -1028,19 +1022,17 @@ static void scan_file(File file)
 
         trx_hdr h;
         {
-            import core.stdc.string;
             ubyte[trx_hdr.sizeof] buf;
             file.rawRead(buf);
             memcpy(&h, &buf, trx_hdr.sizeof);
         }
 
-        if (ShowingName)
-            writef("%s: ", file.name);
-
         if (h.version_ == 1 || h.version_ == 2)
-            writefln("TRX v%d firmware (Length: %d, CRC32: %Xh)", h.version_, h.length, h.crc);
+            report(format(
+                "TRX v%d firmware (Length: %d, CRC32: %Xh)", h.version_, h.length, h.crc
+            ), false);
         else
-            writeln("Firmware");
+            report_unknown();
     }
         break;
 
@@ -1117,8 +1109,8 @@ static void scan_file(File file)
             break; // 3 Byte signatures
         } // 2 Byte signatures
     }
-    break; // Signature
-    }
+    break;
+    } // sig
 }
 
 static void report_unknown()

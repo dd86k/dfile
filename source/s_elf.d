@@ -7,7 +7,6 @@ module s_elf;
 import std.stdio;
 import dfile;
 
-private const size_t EI_NIDENT = 16;
 private struct Elf32_Ehdr
 {
     public ubyte[EI_NIDENT] e_ident;
@@ -63,6 +62,8 @@ private enum ELF_e_version : uint
     EV_CURRENT = 1
 }
 
+private enum EI_NIDENT = 16;
+
 static void scan_elf(File file)
 {
     if (Debugging)
@@ -70,7 +71,7 @@ static void scan_elf(File file)
 
     Elf32_Ehdr header;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         ubyte[Elf32_Ehdr.sizeof] buf;
         file.rewind();
         file.rawRead(buf);
@@ -101,11 +102,8 @@ static void scan_elf(File file)
         writefln("shnum: %s", header.e_shnum);
         writefln("shstrndx: %s", header.e_shstrndx);
     }
-
-    if (ShowingName)
-        writef("%s: ", file.name);
     
-    write("ELF");
+    report("ELF", false);
 
     switch (header.e_ident[4])
     {

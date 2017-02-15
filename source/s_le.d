@@ -47,7 +47,7 @@ static void scan_le(File file)
 {
     e32_hdr h;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         ubyte[e32_hdr.sizeof] buf;
         file.rawRead(buf);
         memcpy(&h, &buf, e32_hdr.sizeof);
@@ -65,10 +65,10 @@ static void scan_le(File file)
         writefln("LE e32_mflags: %Xh", h.e32_mflags);  // Module flags
     }
 
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    writef("%s ", h.e32_magic);
+    {
+        import std.string : format;
+        report(format("%s ", h.e32_magic), false);
+    }
 
     switch (h.e32_os)
     {

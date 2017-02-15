@@ -296,12 +296,18 @@ private enum flag_t : uint // Reserved for future use
 }
 
 private const enum : uint {
-    MH_MAGIC =    0xFEEDFACE,
+    /*MH_MAGIC =    0xFEEDFACE,
     MH_MAGIC_64 = 0xFEEDFACF,
     MH_CIGAM =    0xCEFAEDFE,
     MH_CIGAM_64 = 0xCFFAEDFE,
     FAT_MAGIC =   0xCAFEBABE,
-    FAT_CIGAM =   0xBEBAFECA
+    FAT_CIGAM =   0xBEBAFECA*/
+    MH_MAGIC =    0xCEFAEDFE,
+    MH_MAGIC_64 = 0xCFFAEDFE,
+    MH_CIGAM =    0xFEEDFACE,
+    MH_CIGAM_64 = 0xFEEDFACF,
+    FAT_MAGIC =   0xBEBAFECA,
+    FAT_CIGAM =   0xCAFEBABE
 }
 
 private uint reverse(uint t)
@@ -326,10 +332,7 @@ static void scan_mach(File file)
     cpu_type_t cpu_type;
     int cpu_subtype;
 
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    write("Mach-O ");
+    report("Mach-O ", false);
 
     final switch (sig)
     {
@@ -362,7 +365,7 @@ static void scan_mach(File file)
     {
         fat_header fh;
         {
-            import core.stdc.string;
+            import core.stdc.string : memcpy;
             ubyte[fat_header.sizeof] buf;
             file.rawRead(buf);
             memcpy(&fh, &buf, fat_header.sizeof);
@@ -372,7 +375,7 @@ static void scan_mach(File file)
         {
             fat_arch fa;
             {
-                import core.stdc.string;
+                import core.stdc.string : memcpy;
                 ubyte[fat_arch.sizeof] buf;
                 file.rawRead(buf);
                 memcpy(&fa, &buf, fat_arch.sizeof);
@@ -399,7 +402,7 @@ static void scan_mach(File file)
     {
         mach_header mh;
         {
-            import core.stdc.string;
+            import core.stdc.string : memcpy;
             ubyte[mach_header.sizeof] buf;
             file.rawRead(buf);
             memcpy(&mh, &buf, mach_header.sizeof);
