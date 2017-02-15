@@ -14,7 +14,7 @@ import s_le : scan_le;
 import s_mach : scan_mach;
 import s_unknown : scan_unknown;
 
-const enum {
+enum {
     PROJECT_NAME = "dfile",
     PROJECT_VERSION = "0.2.0"
 }
@@ -22,8 +22,6 @@ const enum {
 /// Setting
 static bool Debugging, Informing, ShowingName;
 private static File CurrentFile;
-
-//TODO: Fix s_mach
 
 private static int main(string[] args)
 {
@@ -132,7 +130,7 @@ static void scan_file(File file)
     if (Debugging)
         writefln("L%04d: Reading file..", __LINE__);
     file.rawRead(sig);
-    
+
     if (Debugging)
     {
         writef("L%04d: Magic - ", __LINE__);
@@ -142,6 +140,10 @@ static void scan_file(File file)
 
     switch (sig)
     {
+    /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
+        write("LD2000 Frame file (LDS)");
+        break;*/
+
     /*case [0xBE, 0xBA, 0xFE, 0xCA]: // Conflicts with Mach-O
         report("Palm Desktop Calendar Archive (DBA)");
         break;*/
@@ -674,8 +676,33 @@ static void scan_file(File file)
         report("Free Lossless Audio Codec audio file (FLAC)");
         return;
 
-    case "MThd":
-        report("MIDI file");
+    case "MThd": {
+        struct midi_hdr {
+            char[4] magic;
+            uint length;
+            ushort format, number, division;
+        }
+
+        midi_hdr h;
+        {
+            ubyte[midi_hdr.sizeof] buf;
+            file.rewind();
+            file.rawRead(buf);
+            memcpy(&h, &buf, midi_hdr.sizeof);
+        }
+
+        report("MIDI, ", false);
+
+        switch (h.format)
+        {
+            case 0: write("single track format"); break;
+            case 0x100: write("multiple track format"); break; // 1
+            case 0x200: write("multiple song format"); break;  // 2
+            default: write("unknown format"); break;
+        }
+
+        writefln(", containing %d track chunks", h.number);
+    }
         return;
 
     case [0xD0, 0xCF, 0x11, 0xE0]:

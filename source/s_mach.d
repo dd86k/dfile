@@ -319,6 +319,7 @@ static void scan_mach(File file)
         uint[1] b;
         file.rewind();
         file.rawRead(b);
+        file.rewind();
         sig = b[0];
     }
 
@@ -361,7 +362,6 @@ static void scan_mach(File file)
         {
             import core.stdc.string : memcpy;
             ubyte[fat_header.sizeof] buf;
-            file.rewind();
             file.rawRead(buf);
             memcpy(&fh, &buf, fat_header.sizeof);
         }
@@ -399,7 +399,6 @@ static void scan_mach(File file)
         {
             import core.stdc.string : memcpy;
             ubyte[mach_header.sizeof] buf;
-            file.rewind();
             file.rawRead(buf);
             memcpy(&mh, &buf, mach_header.sizeof);
         }
