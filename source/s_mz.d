@@ -10,7 +10,7 @@ import s_pe;
 import s_le;
 import s_ne;
 
-enum ERESWDS = 0x10;
+private enum ERESWDS = 0x10;
 
 // DOS 1, 2, 3 .EXE header from newexe.h, Word 1.1a source.
 private struct mz_hdr
