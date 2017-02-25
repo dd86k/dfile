@@ -913,6 +913,101 @@ static void scan_file(File file)
             return;
         }
     }
+    
+    // http://www.cabextract.org.uk/libmspack/doc/szdd_kwaj_format.html
+    case "KWAJ": {
+        struct kwaj_hdr {
+            char[8] sig;
+            ushort method; // compressed method
+            ushort offset;
+            ushort header; // header flag
+        }
+
+        kwaj_hdr h;
+        {
+            enum size_t s = kwaj_hdr.sizeof;
+            ubyte[s] b;
+            file.rewind;
+            file.rawRead(b);
+            memcpy(&h, &b, s);
+        }
+
+        report("MS-DOS ", false);
+
+        switch (h.method)
+        {
+            case 0: write("Non-compressed"); break;
+            case 1: write("FFh-XORed data"); break;
+            case 2: write("Regular SZDD Compressed"); break;
+            case 3: write("LZ + Huffman \"Jeff Johnson\" Compressed"); break;
+            case 4: write("MS-ZIP Compressed"); break;
+            default: write("Unknown compression");
+        }
+
+        write(" file (KWAJ)");
+
+        if (h.offset)
+            writef(" (offset:%Xh)", h.offset);
+
+        enum { // Header flags
+            ULENGHT = 1, // 4 bytes, uncompressed data length
+            UNKNOWN = 2, // 2 bytes
+            DLENGHT = 4, // 2 bytes, data length?
+            NAME = 8,    // ASCIZ, filename
+            EXT = 0x10,  // ASCIZ, extension
+        }
+
+        int ext = h.header & EXT, name = h.header & NAME;
+
+        if (ext || name)
+        {
+            int offset;
+            if (h.header & ULENGHT) offset += 4;
+            if (h.header & UNKNOWN) offset += 2;
+            if (h.header & DLENGHT) offset += 2;
+
+            if (offset) file.seek(offset, SEEK_CUR);
+
+            write(" Out:");
+
+            if (name)
+                write(file.readln('\0'));
+            write('.');
+            if (ext)
+                write(file.readln('\0'));
+        }
+
+        writeln();
+    }
+        break;
+
+    case "SZDD": {
+        struct szdd_hdr {
+            char[8] sig;
+            ubyte compression; // compressed mode, only 'A' is valid
+            ubyte character; // filename end character (0=unknown)
+            uint length; // unpacked
+        }
+
+        szdd_hdr h;
+        {
+            enum size_t s = szdd_hdr.sizeof;
+            ubyte[s] b;
+            file.rewind;
+            file.rawRead(b);
+            memcpy(&h, &b, s);
+        }
+
+        report("MS-DOS ", false);
+
+        if (h.compression == 'A')
+            write("SZDD");
+        else
+            write("Non-valid SZDD");
+
+        writeln(" Compressed file (SZDD)");
+    }
+        break;
 
     case [0, 0, 2, 0]:
         report("Lotus 1-2-3 spreadsheet (v1) file");
