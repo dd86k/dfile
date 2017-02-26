@@ -77,7 +77,7 @@ private static int main(string[] args)
             
             if (Debugging)
                 writefln("L%04d: Scaning file..", __LINE__);
-            scan_file(CurrentFile);
+            scan(CurrentFile);
             
             if (Debugging)
                 writefln("L%04d: Closing file..", __LINE__);
@@ -121,7 +121,7 @@ static void print_version()
         __FILE__, __TIMESTAMP__, __VENDOR__, __VERSION__);
 }
 
-static void scan_file(File file)
+static void scan(File file)
 {
     if (file.size == 0)
     {
@@ -546,17 +546,96 @@ static void scan_file(File file)
         return;
 
     case "LZIP":
-        report("lzip compressed file");
+        report("LZIP Archive");
         return;
 
-    case "PK\x03\x04":
-        report("EPUB document");
-        return;
+    case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
+        struct zip_hdr {
+            uint magic;
+            ushort version_;
+            ushort flag;
+            ushort compression;
+            ushort time; // MS-DOS, 5-bit hours, 6-bit minutes, 5-bit seconds
+            ushort date; // MS-DOS, 1980-(7-bit) year, 4-bit month, 5-bit day
+            uint crc32;
+            uint csize; // compressed size
+            uint usize; // uncompressed size
+            ushort fnlength; // filename length
+            ushort eflength; // extra field length
+            // File name and extra field are variable sizes
+        }
 
-    //case ['P', 'K', 0x03, 0x04]: Conflicts with EPUB
-    case ['P', 'K', 0x05, 0x06]:
-    case ['P', 'K', 0x07, 0x08]:
-        report("ZIP compressed file (or JAR, ODF, OOXML)");
+        zip_hdr h;
+        {
+            enum s = zip_hdr.sizeof;
+            ubyte[s] b;
+            file.rewind();
+            file.rawRead(b);
+            memcpy(&h, &b, s);
+        }
+
+        if (Informing)
+        {
+            writeln("magic      : ", h.magic);
+            writeln("Version    : ", h.version_);
+            writeln("Flag       : ", h.flag);
+            writeln("Compression: ", h.compression);
+            writeln("Time       : ", h.time);
+            writeln("Date       : ", h.date);
+            writeln("CRC32      : ", h.crc32);
+            writeln("Size (Uncompressed): ", h.usize);
+            writeln("Size (Compressed)  : ", h.csize);
+            writeln("Filename Size      : ", h.fnlength);
+            writeln("Extra field Size   : ", h.eflength);
+        }
+
+        char[] filename;
+        if (h.fnlength)
+        {
+            filename = new char[h.fnlength];
+            file.rawRead(filename);
+        }
+
+        report("ZIP ", false); // JAR, ODF, OOXML, EPUB
+
+        switch (h.compression)
+        {
+            case 0: write("Uncompressed"); break;
+            case 1: write("Shrunk"); break;
+            case 2: .. // 2 to 5
+            case 5: write("Reduced Compression Factor of ", h.compression - 1); break;
+            case 6: write("Imploded"); break;
+            case 8: write("Deflated"); break;
+            case 9: write("Enhanced Deflated"); break;
+            case 10: write("DCL Imploded (PKWare)"); break;
+            case 12: write("BZIP2"); break;
+            case 14: write("LZMA"); break;
+            case 18: write("IBM TERSE"); break;
+            case 19: write("IBM LZ77 z"); break;
+            case 98: write("PPMd Version I, Rev 1"); break;
+            default: write("Unknown"); break;
+        }
+
+        write(" Archive (v", h.version_ / 10, ".", h.version_ % 10, " and up)");
+
+        if (filename)
+            writef(` "%s"`, filename);
+
+        enum {
+            ENCRYPTED = 1, // 1
+            ENHANCED_DEFLATION = 16, // 4
+            COMPRESSED_PATCH = 32, // 5, data
+            STRONG_ENCRYPTION = 64, // 6
+        }
+
+        if (h.flag & ENCRYPTED)
+            write(", Encrypted");
+
+        if (h.flag & STRONG_ENCRYPTION)
+            write(", Strongly encrypted");
+
+        writeln();
+    }
         return;
 
     case "Rar!":
@@ -577,7 +656,7 @@ static void scan_file(File file)
 
     case [0xFA, 0x70, 0x0E, 0x01]: // FatELF - 0x1F0E70FA
         scan_fatelf(file);
-        return;
+        return; 
 
     case [0x89, 'P', 'N', 'G']:
         file.rawRead(sig);
@@ -1118,7 +1197,7 @@ static void scan_file(File file)
                 return;
 
             case "ID3":
-                report("MPEG-2 Audio Layer III audio file with ID3v2 container (MP3)");
+                report("MPEG-2 Audio Layer III audio file with ID3v2 (MP3)");
                 return;
 
             case "KDM":
@@ -1142,18 +1221,26 @@ static void scan_file(File file)
                 return;
             } // 3 Byte signatures
         } // 2 Byte signatures
-    } // sig (4 Byte)
+    } // 4 Byte signatures
 }
 
-static void report_unknown()
+/// Report an unknown file type.
+// never inline
+pragma(inline, false) static void report_unknown()
 {
     report("Unknown file type");
 }
 
-static void report(string type, bool nl = true)
+/**
+ * Report to the user information.
+ *
+ * If the newline if false, the developper must end the information with a new
+ * line manually.
+ */
+pragma(inline, false) static void report(string type, bool nl = true)
 {
     if (ShowingName)
-        writef("%s: %s", CurrentFile.name, type);
+        write(CurrentFile.name, ": ", type);
     else
         write(type);
 

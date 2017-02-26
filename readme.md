@@ -1,4 +1,4 @@
-# dfile - Simple file scanner
+# dfile, Simple file scanner
 
 Don't know the nature of a file, or simply want to know more about it? dfile might help!
 
@@ -22,11 +22,14 @@ dfile (~master) will provide extra information for:
 - Game files
   - PWAD/IWAD
   - GTA Text files
-  - RPF GTA archives
+  - GTA RPF archives
 - Audio files
   - MIDI
   - NES Sound Format (NESM)
   - SNES Sound Format (SPC2)
+- Archives
+  - PKWare ZIP
+  - MS-DOS COMPACT/EXPAND KWAJ/SZDD
 - Document files
   - PDF
   - Mobibook
@@ -37,5 +40,4 @@ dfile (~master) will provide extra information for:
 Don't be shy to request more formats or more details to a format!
 
 # FAQ
-
 Nothing here yet!
