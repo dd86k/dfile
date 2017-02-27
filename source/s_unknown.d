@@ -14,7 +14,7 @@ static void scan_unknown(File file)
     import core.stdc.string : memcpy;
     // Scan by offsets.
 
-    ulong fl = file.tell;
+    ulong fl = file.size;
 
     if (fl > 0x110)
     { // Tar files
@@ -28,7 +28,7 @@ static void scan_unknown(File file)
             return;
         }
     }
-    
+
     if (fl > 0x8006)
     { // ISO files
         enum ISO = "CD001";
