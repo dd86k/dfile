@@ -97,7 +97,8 @@ private enum PE_MACHINE_TYPE : ushort
     SH4 = 0x1a6,
     SH5 = 0x1a8,
     THUMB = 0x1c2,
-    WCEMIPSV2 = 0x169
+    WCEMIPSV2 = 0x169,
+    CLR = 0xC0EE // https://en.wikibooks.org/wiki/X86_Disassembly/Windows_Executable_Files
 }
 
 private enum PE_CHARACTERISTIC : ushort
@@ -268,11 +269,20 @@ static void scan_pe(File file)
     case PE_MACHINE_TYPE.UNKNOWN:
         write("Unknown");
         break;
-    case PE_MACHINE_TYPE.AM33:
-        write("Matsushita AM33");
+    case PE_MACHINE_TYPE.I386:
+        write("x86");
         break;
     case PE_MACHINE_TYPE.AMD64:
         write("x86-64");
+        break;
+    case PE_MACHINE_TYPE.IA64:
+        write("IA64");
+        break;
+    case PE_MACHINE_TYPE.EBC:
+        write("EFI (Byte Code)");
+        break;
+    case PE_MACHINE_TYPE.CLR:
+        write("CLR (Pure MSIL)");
         break;
     case PE_MACHINE_TYPE.ARM:
         write("ARM (Little Endian)");
@@ -283,17 +293,11 @@ static void scan_pe(File file)
     case PE_MACHINE_TYPE.ARM64:
         write("ARMv8 (64-bit)");
         break;
-    case PE_MACHINE_TYPE.EBC:
-        write("EFI (Byte Code)");
-        break;
-    case PE_MACHINE_TYPE.I386:
-        write("x86");
-        break;
-    case PE_MACHINE_TYPE.IA64:
-        write("IA64");
-        break;
     case PE_MACHINE_TYPE.M32R:
         write("Mitsubishi M32R (Little endian)");
+        break;
+    case PE_MACHINE_TYPE.AM33:
+        write("Matsushita AM33");
         break;
     case PE_MACHINE_TYPE.MIPS16:
         write("MIPS16");
