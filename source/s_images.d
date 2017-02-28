@@ -7,7 +7,7 @@ module s_images;
 import dfile, std.stdio, utils;
 
 static void scan_png(File file) // Big Endian
-{
+{ // https://www.w3.org/TR/PNG-Chunks.html
     report("Portable Network Graphics image (PNG)");
 
     if (Informing)
@@ -31,7 +31,6 @@ static void scan_png(File file) // Big Endian
             ubyte[] data;
             uint crc;
         }
-
         enum { // Types
             IHDR = 0x52444849,
             pHYs = 0x73594870
@@ -42,7 +41,6 @@ static void scan_png(File file) // Big Endian
             import core.stdc.string : memcpy;
             enum s = ihdr_chunk_full.sizeof;
             ubyte[s] b;
-            file.seek(8);
             file.rawRead(b);
             memcpy(&h, &b, s);
         }
@@ -53,53 +51,53 @@ static void scan_png(File file) // Big Endian
             switch (color)
             {
                 case 0:
-                    write("Grayscale");
+                    write("Grayscale ");
                     switch (depth)
                     {
                         case 1, 2, 4, 8, 16:
-                            write(" ", depth * 3, "-bit depth");
+                            write(depth, "-bit depth");
                             break;
-                        default: write(" with invalid depth"); break;
+                        default: write("with invalid depth"); break;
                     }
                     break;
                 case 2:
-                    write("RGB");
+                    write("RGB ");
                     switch (depth)
                     {
                         case 8, 16:
-                            write(" ", depth * 3, "-bit depth");
+                            write(depth * 3, "-bit depth");
                             break;
-                        default: write(" with invalid depth"); break;
+                        default: write("with invalid depth"); break;
                     }
                     break;
                 case 3:
-                    write("PLTE Palette");
+                    write("PLTE Palette ");
                     switch (depth)
                     {
                         case 1, 2, 4, 8:
-                            write(" 8-bit depth");
+                            write("8-bit depth");
                             break;
-                        default: write(" with invalid depth"); break;
+                        default: write("with invalid depth"); break;
                     }
                     break;
                 case 4:
-                    write("Grayscale+Alpha");
+                    write("Grayscale+Alpha ");
                     switch (depth)
                     {
                         case 8, 16:
-                            write(" ", depth * 3, "-bit depth");
+                            write(depth, "-bit depth");
                             break;
-                        default: write(" with invalid depth"); break;
+                        default: write("with invalid depth"); break;
                     }
                     break;
                 case 6:
-                    write("RGBA");
+                    write("RGBA ");
                     switch (depth)
                     {
                         case 8, 16:
-                            write(" ", depth * 3, "-bit depth");
+                            write(depth * 3, "-bit depth");
                             break;
-                        default: write(" with invalid depth"); break;
+                        default: write("with invalid depth"); break;
                     }
                     break;
                 default: write("Invalid color type"); break;
