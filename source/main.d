@@ -13,10 +13,11 @@ import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
 import s_unknown : scan_unknown;
+import s_images : scan_png;
 
 enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.3.0-1"
+    PROJECT_VERSION = "0.3.1-dev"
 }
 
 /// Setting
@@ -663,7 +664,7 @@ static void scan(File file)
         switch (sig)
         {
         case [0x0D, 0x0A, 0x1A, 0x0A]:
-            report("Portable Network Graphics image (PNG)");
+            scan_png(file);
             return;
         default:
             report_unknown();

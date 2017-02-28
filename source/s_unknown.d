@@ -14,7 +14,7 @@ static void scan_unknown(File file)
     import core.stdc.string : memcpy;
     // Scan by offsets.
 
-    ulong fl = file.size;
+    const ulong fl = file.size;
 
     if (fl > 0x110)
     { // Tar files
@@ -48,7 +48,7 @@ static void scan_unknown(File file)
 
     if (fl > 0x40)
     { // Palm Database Format
-        import s_mobi;
+        import s_mobi : palmdb_name, scan_palmdoc, scan_mobi;
         enum { // 4 bytes for type, 4 bytes for creator
             ADOBE =      ".pdfADBE",
             BOOKMOBI =   "BOOKMOBI",
@@ -87,110 +87,109 @@ static void scan_unknown(File file)
             case ADOBE:
                 report("Palm Database (Adobe Reader)", false);
                 palmdb_name(file);
-                break;
+                return;
             case BOOKMOBI:
                 scan_mobi(file);
                 return;
             case PALMDOC:
                 scan_palmdoc(file);
-                break;
+                return;
             case BDICTY:
                 report("Palm Database (BDicty)", false);
                 palmdb_name(file);
-                break;
+                return;
             case DB:
                 report("Palm Database (DB)", false);
                 palmdb_name(file);
-                break;
-            case EREADER0:
-            case EREADER1:
+                return;
+            case EREADER0, EREADER1:
                 report("Palm Database (eReader)", false);
                 palmdb_name(file);
-                break;
+                return;
             case FIREVIEWER:
                 report("Palm Database (FireViewer)", false);
                 palmdb_name(file);
-                break;
+                return;
             case HANDBASE:
                 report("Palm Database (HanDBase)", false);
                 palmdb_name(file);
-                break;
+                return;
             case INFOVIEW:
                 report("Palm Database (InfoView)", false);
                 palmdb_name(file);
-                break;
+                return;
             case ISILO:
                 report("Palm Database (iSilo)", false);
                 palmdb_name(file);
-                break;
+                return;
             case ISILO3:
                 report("Palm Database (iSilo 3)", false);
                 palmdb_name(file);
-                break;
+                return;
             case JFILE:
                 report("Palm Database (JFile)", false);
                 palmdb_name(file);
-                break;
+                return;
             case JFILEPRO:
                 report("Palm Database (JFile Pro)", false);
                 palmdb_name(file);
-                break;
+                return;
             case LIST:
                 report("Palm Database (LIST)", false);
                 palmdb_name(file);
-                break;
+                return;
             case MOBILEDB:
                 report("Palm Database (MobileDB)", false);
                 palmdb_name(file);
-                break;
+                return;
             case PLUCKER:
                 report("Palm Database (Plucker)", false);
                 palmdb_name(file);
-                break;
+                return;
             case QUICKSHEET:
                 report("Palm Database (QuickSheet)", false);
                 palmdb_name(file);
-                break;
+                return;
             case SUPERMEMO:
                 report("Palm Database (SuperMemo)", false);
                 palmdb_name(file);
-                break;
+                return;
             case TEALDOC:
                 report("Palm Database (TealDoc)", false);
                 palmdb_name(file);
-                break;
+                return;
             case TEALINFO:
                 report("Palm Database (TealInfo)", false);
                 palmdb_name(file);
-                break;
+                return;
             case TEALMEAL:
                 report("Palm Database (TealMeal)", false);
                 palmdb_name(file);
-                break;
+                return;
             case TEALPAINT:
                 report("Palm Database (TailPaint)", false);
                 palmdb_name(file);
-                break;
+                return;
             case THINKDB:
                 report("Palm Database (ThinKDB)", false);
                 palmdb_name(file);
-                break;
+                return;
             case TIDES:
                 report("Palm Database (Tides)", false);
                 palmdb_name(file);
-                break;
+                return;
             case TOMERAIDER:
                 report("Palm Database (TomeRaider)", false);
                 palmdb_name(file);
-                break;
+                return;
             case WEASEL:
                 report("Palm Database (Weasel)", false);
                 palmdb_name(file);
-                break;
+                return;
             case WORDSMITH:
                 report("Palm Database (WordSmith)", false);
                 palmdb_name(file);
-                break;
+                return;
 
             default: // Continue the journey
         }

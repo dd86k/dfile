@@ -31,7 +31,7 @@ private struct mz_hdr
 	ushort e_ovno;         /* Overlay number */
 	ushort[ERESWDS] e_res; /* Reserved words */
 	uint   e_lfanew;       /* File address of new exe header, or @0x3c */
-};
+}
 
 static void scan_mz(File file)
 {
@@ -40,7 +40,7 @@ static void scan_mz(File file)
 
     mz_hdr h;
     {
-        import core.stdc.string;
+        import core.stdc.string : memcpy;
         byte[mz_hdr.sizeof] buf;
         file.rewind();
         file.rawRead(buf);
