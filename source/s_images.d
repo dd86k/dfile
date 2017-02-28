@@ -133,3 +133,47 @@ static void scan_png(File file) // Big Endian
     }
 }
 
+static void scan_gif(File file)
+{ // http://www.fileformat.info/format/gif/egff.htm
+    struct gif_header {
+        char[3] magic;
+        char[3] version_;
+        ushort width;
+        ushort height;
+        ubyte packed;
+        ubyte bgcolor;
+        ubyte aspect; // ratio
+    }
+
+    gif_header h;
+    {
+        import core.stdc.string : memcpy;
+        enum s = gif_header.sizeof;
+        ubyte[s] b;
+        file.rewind();
+        file.rawRead(b);
+        memcpy(&h, &b, s);
+    }
+
+    switch (h.version_[1])
+    { // 87a, 89a
+        case '7', '9':
+            report("GIF", false);
+            writeln(h.version_, " image");
+            break;
+        default: writeln("GIF with invalid version"); return;
+    }
+
+    if (Informing)
+    {
+        with (h) {
+            write(width, "x", height, " pixels");
+            /*if (aspect) {
+                float ratio = cast(float)((aspect+15)/64);
+                write(", ", ratio, " pixel ratio");
+            }*/
+        }
+    }
+
+    writeln();
+}

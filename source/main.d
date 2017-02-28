@@ -13,7 +13,7 @@ import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
 import s_unknown : scan_unknown;
-import s_images : scan_png;
+import s_images;
 
 enum {
     PROJECT_NAME = "dfile",
@@ -320,24 +320,6 @@ static void scan(File file)
         default:
             report_unknown();
             return;
-        }
-
-    case "GIF8":
-        {
-            char[2] b;
-            file.rawRead(b);
-            switch (b)
-            {
-            case "7a":
-                report("GIF87a");
-                return;
-            case "9a":
-                report("GIF89a");
-                return;
-            default:
-                report_unknown();
-                return;
-            }
         }
 
     case [0, 0, 1, 0xBA]:
@@ -1189,6 +1171,10 @@ static void scan(File file)
         default:
             switch (sig[0..3])
             {
+            case "GIF":
+                scan_gif(file);
+                break;
+
             case "BZh":
                 report("Bzip2 compressed file (BZh)");
                 return;
