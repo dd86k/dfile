@@ -6,6 +6,7 @@ module s_mach;
 
 import std.stdio;
 import dfile;
+import utils : invert;
 
 /*private enum {
     CPU_SUBTYPE_MULTIPLE = 0xFFFF_FFFF,
@@ -304,12 +305,6 @@ private enum : uint {
     FAT_CIGAM =   0xBEBAFECA
 }
 
-private uint reverse(uint t)
-{
-    ubyte* pt = cast(ubyte*)&t;
-    return (pt[0] | pt[1] << 8 | pt[2] << 16 | pt[3] << 24);
-}
-
 static void scan_mach(File file)
 {
     bool reversed, fat;
@@ -378,8 +373,8 @@ static void scan_mach(File file)
 
             if (reversed)
             {
-                cpu_type = cast(cpu_type_t)reverse(fa.cputype);
-                cpu_subtype = reverse(fa.cpusubtype);
+                cpu_type = cast(cpu_type_t)invert(fa.cputype);
+                cpu_subtype = invert(fa.cpusubtype);
             }
             else
             {
@@ -405,9 +400,9 @@ static void scan_mach(File file)
 
         if (reversed)
         {
-            filetype = cast(filetype_t)reverse(mh.filetype);
-            cpu_type = cast(cpu_type_t)reverse(mh.cputype);
-            cpu_subtype = reverse(mh.cpusubtype);
+            filetype = cast(filetype_t)invert(mh.filetype);
+            cpu_type = cast(cpu_type_t)invert(mh.cputype);
+            cpu_subtype = invert(mh.cpusubtype);
         }
         else
         {
