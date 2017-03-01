@@ -166,12 +166,26 @@ static void scan_gif(File file)
 
     if (Informing)
     {
+        enum {
+            GLOBAL_COLOR_TABLE = 0x80,
+            SORT_FLAG = 8,
+        }
+
         with (h) {
             write(width, "x", height, " pixels");
-            /*if (aspect) {
-                float ratio = cast(float)((aspect+15)/64);
-                write(", ", ratio, " pixel ratio");
-            }*/
+            if (packed & GLOBAL_COLOR_TABLE) {
+                write(", Global Color Table");
+                if (packed & 3)
+                    write(" of ", 2 ^^ ((packed & 3) + 1), " bytes");
+                if (packed & SORT_FLAG)
+                    write(", Sorted");
+                if (bgcolor)
+                    write(", BG Index of ", bgcolor);
+            }
+            write(", ", ((packed >> 4) & 3) + 1, "-bit Color Resolution");
+            if (aspect) {
+                write(", ", (cast(float)aspect + 15) / 64, " pixel ratio (approx)");
+            }
         }
     }
 
