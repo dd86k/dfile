@@ -8,11 +8,9 @@ import std.stdio;
 import utils;
 import dfile;
 
-/**
- * Search for signatures that's not at SEEK_SET.
- */
+/// Search for signatures that's not at the beginning of the file.
 static void scan_unknown(File file)
-{ // Gotos are only allowed here.
+{ // Goto instructions are only allowed here.
     import core.stdc.string : memcpy;
 
     const ulong fl = file.size;
@@ -165,7 +163,7 @@ static void scan_unknown(File file)
             default: // Continue the journey
         }
     }
-    else goto REPORT_UNKNOWN;
+    else goto CONTINUE;
 
     if (fl > 0x108)
     { // Tar files
@@ -223,29 +221,31 @@ static void scan_unknown(File file)
             return;
         }
     }
-    else goto REPORT_UNKNOWN;
+    else goto CONTINUE;
 
     if (fl > 0x8006)
     { // ISO files
         enum ISO = "CD001";
-        char[5] b0, b1, b2;
+        char[5] b;
         file.seek(0x8001);
-        file.rawRead(b0);
+        file.rawRead(b);
+        if (b == ISO) goto R_ISO;
+
         file.seek(0x8801);
-        file.rawRead(b1);
+        file.rawRead(b);
+        if (b == ISO) goto R_ISO;
+
         file.seek(0x9001);
-        file.rawRead(b2);
-        if (b0 == ISO || b1 == ISO || b2 == ISO)
-        {
-            report("ISO9660 CD/DVD image file (ISO)");
-            return;
-        }
+        file.rawRead(b);
+        if (b == ISO) goto R_ISO;
+        goto F_ISO;
+R_ISO:
+        report("ISO9660 CD/DVD image file (ISO)");
+        return;
+F_ISO:
     }
-    else goto REPORT_UNKNOWN;
+    else goto CONTINUE;
 
-REPORT_UNKNOWN:
+CONTINUE:
     report_unknown();
-
-    //TODO: Scan for readable characters for n (16KB?) bytes and at least n
-    //      (3?) readable characters.
 }
