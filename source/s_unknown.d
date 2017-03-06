@@ -206,7 +206,7 @@ static void scan_unknown(File file)
             {
                 switch (h.linkflag)
                 {
-                    case 0, '0': report("Normal", false); break;
+                    case 0,'0': report("Normal", false); break;
                     case '1': report("Link", false); break;
                     case '2': report("Syslink", false); break;
                     case '3': report("Character Special", false); break;
@@ -214,10 +214,9 @@ static void scan_unknown(File file)
                     case '5': report("Directory", false); break;
                     case '6': report("FIFO Special", false); break;
                     case '7': report("Contiguous", false); break;
-                    default: report("Unknown Type Tar archive"); return;
+                    default:  report("Unknown type Tar archive"); return;
                 }
                 writeln(" Tar archive, Reports ", tarstr(h.size), " Bytes");
-                writeln();
             }
             else
                 report("Tar archive");

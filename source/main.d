@@ -97,7 +97,7 @@ private static int main(string[] args)
 static void print_help()
 {
     writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
-    writefln("        %s [-h|--help|-v|--version]", PROJECT_NAME);
+    writefln("        %s {-h|--help|-v|--version}", PROJECT_NAME);
 }
 
 static void print_help_full()
@@ -114,7 +114,7 @@ static void print_help_full()
 
 static void print_version()
 {
-    writefln("%s - v%s", PROJECT_NAME, PROJECT_VERSION);
+    writeln(PROJECT_NAME, " - v", PROJECT_VERSION);
     writeln("Copyright (c) 2016-2017 dd86k");
     writeln("License: MIT");
     writeln("Project page: <https://github.com/dd86k/dfile>");
@@ -316,7 +316,6 @@ static void scan(File file)
                 report_unknown();
                 return;
             }
-
         default:
             report_unknown();
             return;
