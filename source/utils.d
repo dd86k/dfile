@@ -4,7 +4,12 @@
 
 module utils;
 
-
+string tarstr(char[] str)
+{
+    size_t p;
+    while (str[p] == '0') ++p;
+    return str[p .. $ - 1].idup;
+}
 
 uint invert(uint num) pure
 {

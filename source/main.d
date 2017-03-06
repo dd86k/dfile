@@ -987,7 +987,7 @@ static void scan(File file)
 
         kwaj_hdr h;
         {
-            enum size_t s = kwaj_hdr.sizeof;
+            enum s = kwaj_hdr.sizeof;
             ubyte[s] b;
             file.rewind;
             file.rawRead(b);
@@ -1053,7 +1053,7 @@ static void scan(File file)
 
         szdd_hdr h;
         {
-            enum size_t s = szdd_hdr.sizeof;
+            enum s = szdd_hdr.sizeof;
             ubyte[s] b;
             file.rewind;
             file.rawRead(b);

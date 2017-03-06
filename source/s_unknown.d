@@ -5,46 +5,17 @@
 module s_unknown;
 
 import std.stdio;
+import utils;
 import dfile;
 
-//private enum BYTE_LIMIT = 1024 * 16;
-
+/**
+ * Search for signatures that's not at SEEK_SET.
+ */
 static void scan_unknown(File file)
-{
+{ // Gotos are only allowed here.
     import core.stdc.string : memcpy;
-    // Scan by offsets.
 
     const ulong fl = file.size;
-
-    if (fl > 0x110)
-    { // Tar files
-        enum Tar = "usta";
-        char[4] b;
-        file.seek(0x101);
-        file.rawRead(b);
-        if (b == Tar)
-        {
-            report("Tar file");
-            return;
-        }
-    }
-
-    if (fl > 0x8006)
-    { // ISO files
-        enum ISO = "CD001";
-        char[5] b0, b1, b2;
-        file.seek(0x8001);
-        file.rawRead(b0);
-        file.seek(0x8801);
-        file.rawRead(b1);
-        file.seek(0x9001);
-        file.rawRead(b2);
-        if (b0 == ISO || b1 == ISO || b2 == ISO)
-        {
-            report("ISO9660 CD/DVD image file (ISO)");
-            return;
-        }
-    }
 
     if (fl > 0x40)
     { // Palm Database Format
@@ -194,7 +165,86 @@ static void scan_unknown(File file)
             default: // Continue the journey
         }
     }
-    
+    else goto REPORT_UNKNOWN;
+
+    if (fl > 0x108)
+    { // Tar files
+        enum Tar = "ustar\000";
+        enum GNUTar = "GNUtar\00";
+        char[Tar.length] b;
+        file.seek(0x101);
+        file.rawRead(b);
+        if (b == Tar || b == GNUTar)
+        { // http://www.fileformat.info/format/tar/corion.htm
+            enum NAMSIZ = 100;
+            enum TUNMLEN = 32, TGNMLEN = 32;
+            struct tar_hdr {
+                char[NAMSIZ] name;
+                char[8] mode;
+                char[8] uid;
+                char[8] gid;
+                char[12] size;
+                char[12] mtime;
+                char[8] chksum;
+                char    linkflag;
+                char[NAMSIZ] linkname;
+                char[8] magic;
+                char[TUNMLEN] uname;
+                char[TGNMLEN] gname;
+                char[8] devmajor;
+                char[8] devminor;
+            }
+            tar_hdr h;
+            {
+                enum s = tar_hdr.sizeof;
+                ubyte[s] buf;
+                file.rewind();
+                file.rawRead(buf);
+                memcpy(&h, &buf, s);
+            }
+            if (Informing)
+            {
+                switch (h.linkflag)
+                {
+                    case 0, '0': report("Normal", false); break;
+                    case '1': report("Link", false); break;
+                    case '2': report("Syslink", false); break;
+                    case '3': report("Character Special", false); break;
+                    case '4': report("Block Special", false); break;
+                    case '5': report("Directory", false); break;
+                    case '6': report("FIFO Special", false); break;
+                    case '7': report("Contiguous", false); break;
+                    default: report("Unknown Type Tar archive"); return;
+                }
+                writeln(" Tar archive, Reports ", tarstr(h.size), " Bytes");
+                writeln();
+            }
+            else
+                report("Tar archive");
+            return;
+        }
+    }
+    else goto REPORT_UNKNOWN;
+
+    if (fl > 0x8006)
+    { // ISO files
+        enum ISO = "CD001";
+        char[5] b0, b1, b2;
+        file.seek(0x8001);
+        file.rawRead(b0);
+        file.seek(0x8801);
+        file.rawRead(b1);
+        file.seek(0x9001);
+        file.rawRead(b2);
+        if (b0 == ISO || b1 == ISO || b2 == ISO)
+        {
+            report("ISO9660 CD/DVD image file (ISO)");
+            return;
+        }
+    }
+    else goto REPORT_UNKNOWN;
+
+REPORT_UNKNOWN:
     report_unknown();
 
     //TODO: Scan for readable characters for n (16KB?) bytes and at least n
