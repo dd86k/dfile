@@ -4,6 +4,22 @@
 
 module utils;
 
+import std.stdio;
+
+/**
+ * Read file with a struct.
+ */
+void structcpy(File file, void* s, size_t size, bool rewind = false)
+{
+    ubyte[] buf = new ubyte[size];
+    if (rewind) file.rewind();
+    file.rawRead(buf);
+    ubyte* sp = cast(ubyte*)s;
+    for (--size; size > 0; --size)
+        *(sp + size) = buf[size];
+    *(sp) = buf[0];
+}
+
 string asciz(char[] str)
 {
     if (str[0] == '\0') return null;

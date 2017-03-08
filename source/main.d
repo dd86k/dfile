@@ -932,13 +932,70 @@ static void scan(File file)
         switch (b)
         {
         case "l>":
-            report("ASCII XML (xml)");
+            report("ASCII/UTF-8 XML (xml)");
             return;
         default:
             report_unknown();
             return;
         }
     } // too lazy for utf-16/32
+
+    case "!<ar": { // Debian Package
+        struct deb_hdr { // Ignore fields in caps
+            char[8]  magic; // "!<arch>\n"
+            char[16] file_iden; // "debian-binary   "
+            char[12] timestamp;
+            char[6]  uid, gid;
+            char[8]  filemode;
+            char[10] filesize;
+            char[2]  END;
+            char[3]  version_;
+            char     ENDV;
+            char[16] ctl_file_ident;
+            char[12] ctl_timestamp;
+            char[6]  ctl_uid, ctl_gid;
+            char[8]  ctl_filemode;
+            char[10] ctl_filesize;
+            char[2]  CTL_END;
+        }
+        struct deb_data_hdr {
+            char[16] file_ident;
+            char[12] timestamp;
+            char[6]  uid, gid;
+            char[8]  filemode;
+            char[10] filesize;
+            char[2]  END;
+        }
+        enum DEBIANBIN = "debian-binary   ";
+        deb_hdr h;
+        structcpy(file, &h, h.sizeof, true);
+        if (h.file_iden != DEBIANBIN) {
+            report("Text file");
+            return;
+        }
+        deb_data_hdr dh;
+        int os, dos;
+        try
+        {
+            import std.conv : parse;
+            string dps = isostr(h.ctl_filesize);
+            os = parse!int(dps);
+            file.seek(os, SEEK_CUR);
+            structcpy(file, &dh, dh.sizeof, false);
+            string doss = isostr(dh.filesize);
+            dos = parse!int(doss);
+        }
+        catch (Throwable)
+        {
+            report("Text file");
+            return;
+        }
+        report("Debian Package v", false);
+        writeln(h.version_,
+            " \"", isostr(h.ctl_file_ident), "\":", os / 1024, " KB, \"",
+            isostr(dh.file_ident), "\":", dos / 1024, " KB");
+    }
+        return;
 
     case "PWAD":
     case "IWAD": {
