@@ -13,9 +13,10 @@ string tarstr(char[] str)
 
 string isostr(char[] str)
 {
-    size_t p;
-    while (str[p] != ' ') ++p;
-    return str[0 .. p].idup;
+    if (str[0] == ' ') return "";
+    size_t p = str.length - 1;
+    while (str[p] == ' ') --p;
+    return str[0 .. p + 1].idup;
 }
 
 uint invert(uint num) pure

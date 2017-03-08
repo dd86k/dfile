@@ -239,15 +239,8 @@ static void scan_unknown(File file)
         if (b == ISO) goto IS_ISO;
         goto NOT_ISO;
 IS_ISO:
-        report("ISO-9660 CD/DVD image", !Informing);
-        if (Informing)
         {
-            /*struct vol_hdr { // Basic
-                ubyte type;
-                char[5] magic; // CD001
-                ubyte ver; // version
-                // Data (2080 bytes)
-            }*/
+            report("ISO-9660 CD/DVD image", false);
             enum { // volume type
                 T_BOOT = 0,
                 T_PRIMARY_VOL_DESC,
@@ -256,50 +249,62 @@ IS_ISO:
                 T_VOL_TER = 255
             }
 
-            bool bootable;
 
-            enum s = 71;//vol_hdr.sizeof;
+            enum s = 2040; // Data, Virtual Sector - 8
+            int t;
             char[s] buf;
+            bool bootable;
+            string label,
+            // Informative strings
+                system, copyright, publisher, app;
+            
             file.seek(0x8000);
-            file.rawRead(buf);
-            if (buf[1..6] == ISO)
-                switch (buf[0])
-                {
-                    case T_BOOT: bootable = true; break;
-                    case T_PRIMARY_VOL_DESC:
-                        write(" \"", isostr(buf[40 .. $]), "\"");
-                        break;
-                    default:
-                }
+            goto ISO_READ;
+ISO_P0:
             file.seek(0x8800);
-            file.rawRead(buf);
-            if (buf[1..6] == ISO)
-                switch (buf[0])
-                {
-                    case T_BOOT: bootable = true; break;
-                    case T_PRIMARY_VOL_DESC:
-                        write(" \"", isostr(buf[40 .. $]), "\"");
-                        break;
-                    default:
-                }
+            goto ISO_READ;
+ISO_P1:
             file.seek(0x9000);
+ISO_READ:
             file.rawRead(buf);
             if (buf[1..6] == ISO)
                 switch (buf[0])
                 {
                     case T_BOOT: bootable = true; break;
                     case T_PRIMARY_VOL_DESC:
-                        write(" \"", isostr(buf[40 .. $]), "\"");
+                        label = isostr(buf[40 .. 71]);
+                        if (Informing)
+                        {
+                            system = isostr(buf[8 .. 40]);
+                            publisher = isostr(buf[318 .. 446]);
+                            app = isostr(buf[574 .. 702]);
+                            copyright = isostr(buf[702 .. 739]);
+                        }
                         break;
                     default:
                 }
-
+            switch (t++) // Dumb system but hey, good stuff.
+            {
+                case 0:  goto ISO_P0;
+                case 1:  goto ISO_P1;
+                default: goto ISO_END;
+            }
+ISO_END:
+            if (label)
+                write(" \"", label, "\"");
             if (bootable)
                 write(", Bootable");
-
             writeln();
+
+            if (Informing)
+            {
+                writeln("System: ", system);
+                writeln("Publisher: ", publisher);
+                writeln("Copyrights: ", copyright);
+                writeln("Application: ", app);
+            }
+            return;
         }
-        return;
 NOT_ISO:
     }
     else goto CONTINUE;
