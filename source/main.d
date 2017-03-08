@@ -13,7 +13,7 @@ import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
 import s_images;
-import Etc;
+import Etc, utils;
 
 enum {
     PROJECT_NAME = "dfile",
@@ -57,7 +57,7 @@ private static int main(string[] args)
         case "--help", "/?":
             print_help_full;
             return 0;
-        case "-v", "--version", "/ver", "/version":
+        case "-v", "--version", "/v":
             print_version;
             return 0;
         default:
@@ -73,15 +73,15 @@ private static int main(string[] args)
         else
         {
             if (Debugging)
-                writefln("L%04d: Opening file..", __LINE__);
+                writefln("L%04d: Opening file...", __LINE__);
             CurrentFile = File(filename, "rb");
             
             if (Debugging)
-                writefln("L%04d: Scaning file..", __LINE__);
+                writefln("L%04d: Scanning...", __LINE__);
             scan(CurrentFile);
             
             if (Debugging)
-                writefln("L%04d: Closing file..", __LINE__);
+                writefln("L%04d: Closing file...", __LINE__);
             CurrentFile.close();
         }
     }
@@ -102,7 +102,7 @@ static void print_help()
 
 static void print_help_full()
 {
-    writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
+    writeln(" Usage: ", PROJECT_NAME, " [<Options>] <File>");
     writeln("Determine the nature of the file with the file signature.");
     writeln("  Option           Description (Default value)\n");
     writeln("  -m, --more       Print all information if available. (False)");
@@ -182,7 +182,7 @@ static void scan(File file)
                 }
             default:
                 {
-                    if (b[0] == 0)
+                    if (b[0] == 0) //TODO: Need more information
                         report("TrueType font file");
                     else
                         report("Palm Desktop Data File (Access format)");
@@ -242,18 +242,10 @@ static void scan(File file)
             else
                 write("no");
 
-            size_t s0, s1, s2;
-            char*
-                p0 = h.song_name.ptr,
-                p1 = h.song_artist.ptr,
-                p2 = h.song_copyright.ptr;
-
-            while (*p0++ != '\0') ++s0;
-            while (*p1++ != '\0') ++s1;
-            while (*p2++ != '\0') ++s2;
-
             writefln(" extra chip\n%s - %s\nCopyrights:%s",
-                h.song_artist[0..s1], h.song_name[0..s0], h.song_copyright[0..s2]);
+                asciz(h.song_artist),
+                asciz(h.song_name),
+                asciz(h.song_copyright));
             }
             return;
         default:
