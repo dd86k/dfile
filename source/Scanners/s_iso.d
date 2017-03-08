@@ -17,7 +17,7 @@ void scan_iso(File file)
         VOL_PART_DESC,
         VOL_TER = 255
     }
-    enum s = 2040; // Data, Virtual Sector - 8
+    enum s = 1024; // Half the data
     int t;
     char[s] buf;
     bool bootable;
