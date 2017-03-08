@@ -13,7 +13,8 @@ string tarstr(char[] str)
 
 string isostr(char[] str)
 {
-    if (str[0] == ' ') return "";
+    if (str[0] == ' ') return null;
+    if (str[$-1] != ' ') return str.idup;
     size_t p = str.length - 1;
     while (str[p] == ' ') --p;
     return str[0 .. p + 1].idup;

@@ -23,7 +23,8 @@ void scan_iso(File file)
     bool bootable;
     string label,
     // Informative strings
-        system, copyright, publisher, app;
+        system, copyright, publisher, app, abst, biblio,
+        ctime, mtime, etime, eftime;
     
     file.seek(0x8000);
     goto ISO_READ;
@@ -46,6 +47,12 @@ ISO_READ:
                     publisher = isostr(buf[318 .. 446]);
                     app = isostr(buf[574 .. 702]);
                     copyright = isostr(buf[702 .. 739]);
+                    abst = isostr(buf[739 .. 776]);
+                    biblio = isostr(buf[776 .. 813]);
+                    ctime = isostr(buf[813 .. 830]);
+                    mtime = isostr(buf[830 .. 847]);
+                    etime = isostr(buf[847 .. 864]);
+                    eftime = isostr(buf[864 .. 881]);
                 }
                 break;
             default:
@@ -70,5 +77,23 @@ ISO_END:
         writeln("Publisher: ", publisher);
         writeln("Copyrights: ", copyright);
         writeln("Application: ", app);
+        writeln("Abstract Identifier: ", abst);
+        writeln("Bibliographic: ", biblio);
+        writeln("Created: ",
+            ctime[0..4], "/", ctime[4..6], "/", ctime[6..8], " ",
+            ctime[8..10], ":", ctime[10..12], ":", ctime[12..14], ".",
+            ctime[14..16], "+", ctime[16] * 15);
+        writeln("Modified: ",
+            mtime[0..4], "/", mtime[4..6], "/", mtime[6..8],
+            mtime[8..10], ":", mtime[10..12], ":", mtime[12..14], ".",
+            mtime[14..16], "+", mtime[16] * 15);
+        writeln("Expires: ",
+            etime[0..4], "/", etime[4..6], "/", etime[6..8],
+            etime[8..10], ":", etime[10..12], ":", etime[12..14], ".",
+            etime[14..16], "+", etime[16] * 15);
+        writeln("Effective at: ",
+            eftime[0..4], "/", eftime[4..6], "/", eftime[6..8],
+            eftime[8..10], ":", eftime[10..12], ":", eftime[12..14], ".",
+            eftime[14..16], "+", eftime[16] * 15);
     }
 }
