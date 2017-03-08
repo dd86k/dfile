@@ -1017,14 +1017,14 @@ static void scan(File file)
         switch (h.type)
         {
             case 0: write("Binary"); break;
-            case 1: write("Source"); break;
+            case 0x100: write("Source"); break;
             default: write("Unknown type"); break;
         }
         write(" Package v");
         write(h.major, ".", h.minor, " \"", asciz(h.name), "\" for ");
         switch (h.osnum)
         {
-            case 1: write("linux"); break;
+            case 0x100:  write("linux"); break;
             default: write("other"); break;
         }
         writeln(" platforms");
