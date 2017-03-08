@@ -12,7 +12,7 @@ import s_pe : scan_pe;
 import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
-import s_unknown : scan_unknown;
+import Etc : scan_etc;
 import s_images;
 
 enum {
@@ -103,11 +103,11 @@ static void print_help()
 static void print_help_full()
 {
     writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
-    writeln("Determine the nature of the file with the file signature.\n");
-    writeln("  Switch          Description (Default value)");
-    writeln("  -m, --more      Print all information if available. (False)");
-    writeln("  -s, --showname  Show filename alongside result. (False)");
-    writeln("  -d, --debug     Print debugging information. (False)");
+    writeln("Determine the nature of the file with the file signature.");
+    writeln("  Option           Description (Default value)\n");
+    writeln("  -m, --more       Print all information if available. (False)");
+    writeln("  -s, --showname   Show filename before result. (False)");
+    writeln("  -d, --debug      Print debugging information. (False)");
     writeln("\n  -h, --help, /?  Print help and exit");
     writeln("  -v, --version   Print version and exit");
 }
@@ -1203,7 +1203,7 @@ static void scan(File file)
                 return;
 
             default:
-                scan_unknown(file);
+                scan_etc(file);
                 return;
             } // 3 Byte signatures
         } // 2 Byte signatures

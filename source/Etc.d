@@ -2,14 +2,14 @@
  * s_unknown.d : Unknown file formats (with offset)
  */
 
-module s_unknown;
+module Etc;
 
 import std.stdio;
 import utils;
 import dfile;
 
 /// Search for signatures that's not at the beginning of the file.
-static void scan_unknown(File file)
+static void scan_etc(File file)
 { // Goto instructions are only allowed here.
     import core.stdc.string : memcpy;
 
