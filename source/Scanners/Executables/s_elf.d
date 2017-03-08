@@ -6,6 +6,7 @@ module s_elf;
 
 import std.stdio;
 import dfile;
+import utils;
 
 private struct Elf32_Ehdr
 {
@@ -70,13 +71,7 @@ static void scan_elf(File file)
         writefln("L%04d: Started scanning ELF file", __LINE__);
 
     Elf32_Ehdr header;
-    {
-        import core.stdc.string : memcpy;
-        ubyte[Elf32_Ehdr.sizeof] buf;
-        file.rewind();
-        file.rawRead(buf);
-        memcpy(&header, &buf, Elf32_Ehdr.sizeof);
-    }
+    structcpy(file, &header, header.sizeof, true);
 
     if (Debugging)
     {

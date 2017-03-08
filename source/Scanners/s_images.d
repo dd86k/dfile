@@ -37,13 +37,7 @@ static void scan_png(File file) // Big Endian
         }*/
 
         ihdr_chunk_full h;
-        {
-            import core.stdc.string : memcpy;
-            enum s = ihdr_chunk_full.sizeof;
-            ubyte[s] b;
-            file.rawRead(b);
-            memcpy(&h, &b, s);
-        }
+        structcpy(file, &h, h.sizeof);
 
         with (h) {
             write(invert(width), "x", invert(height), " pixels, ");
@@ -146,14 +140,7 @@ static void scan_gif(File file)
     }
 
     gif_header h;
-    {
-        import core.stdc.string : memcpy;
-        enum s = gif_header.sizeof;
-        ubyte[s] b;
-        file.rewind();
-        file.rawRead(b);
-        memcpy(&h, &b, s);
-    }
+    structcpy(file, &h, h.sizeof, true);
 
     switch (h.version_[1])
     { // 87a, 89a

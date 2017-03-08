@@ -6,6 +6,7 @@ module s_pe;
 
 import std.stdio;
 import dfile;
+import utils;
 
 private struct PE_HEADER
 {
@@ -149,27 +150,14 @@ static void scan_pe(File file)
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
+    structcpy(file, &peh, peh.sizeof);
     {
-        import core.stdc.string : memcpy;
-
-        {
-            ubyte[PE_HEADER.sizeof] buf;
-            file.rawRead(buf);
-            memcpy(&peh, &buf, peh.sizeof);
-        }
-
         if (peh.SizeOfOptionalHeader > 0)
         { // PE Optional Header
-            ubyte[PE_OPTIONAL_HEADER.sizeof] buf;
-            file.rawRead(buf);
-            memcpy(&peoh, &buf, peoh.sizeof);
-
+            structcpy(file, &peoh, peoh.sizeof);
             if (peoh.magic == PE_FORMAT.HDR64)
                 file.seek(16, SEEK_CUR);
-
-            ubyte[IMAGE_DATA_DIRECTORY.sizeof] dirbuf;
-            file.rawRead(dirbuf);
-            memcpy(&dirs, &dirbuf, dirs.sizeof);
+            structcpy(file, &dirs, dirs.sizeof);
         }
     }
 

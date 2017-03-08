@@ -6,7 +6,7 @@ module s_mach;
 
 import std.stdio;
 import dfile;
-import utils : invert;
+import utils;
 
 /*private enum {
     CPU_SUBTYPE_MULTIPLE = 0xFFFF_FFFF,
@@ -354,22 +354,12 @@ static void scan_mach(File file)
     if (fat) // Java prefers Fat files
     {
         fat_header fh;
-        {
-            import core.stdc.string : memcpy;
-            ubyte[fat_header.sizeof] buf;
-            file.rawRead(buf);
-            memcpy(&fh, &buf, fat_header.sizeof);
-        }
+        structcpy(file, &fh, fh.sizeof);
 
         if (fh.nfat_arch)
         {
             fat_arch fa;
-            {
-                import core.stdc.string : memcpy;
-                ubyte[fat_arch.sizeof] buf;
-                file.rawRead(buf);
-                memcpy(&fa, &buf, fat_arch.sizeof);
-            }
+            structcpy(file, &fa, fa.sizeof);
 
             if (reversed)
             {
@@ -391,12 +381,7 @@ static void scan_mach(File file)
     else
     {
         mach_header mh;
-        {
-            import core.stdc.string : memcpy;
-            ubyte[mach_header.sizeof] buf;
-            file.rawRead(buf);
-            memcpy(&mh, &buf, mach_header.sizeof);
-        }
+        structcpy(file, &mh, mh.sizeof);
 
         if (reversed)
         {

@@ -6,6 +6,7 @@ module s_le;
 
 import std.stdio;
 import dfile;
+import utils;
 
 private struct e32_hdr
 {
@@ -46,12 +47,7 @@ private const enum : uint {
 static void scan_le(File file)
 {
     e32_hdr h;
-    {
-        import core.stdc.string : memcpy;
-        ubyte[e32_hdr.sizeof] buf;
-        file.rawRead(buf);
-        memcpy(&h, &buf, e32_hdr.sizeof);
-    }
+    structcpy(file, &h, h.sizeof);
 
     if (Debugging || Informing)
     {

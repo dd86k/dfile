@@ -6,6 +6,7 @@ module s_mobi;
 
 import std.stdio;
 import dfile;
+import utils;
 
 private struct palmdoc_hdr
 {
@@ -67,16 +68,9 @@ void scan_mobi(File file)
 {
     palmdoc_hdr h;
     mobi_hdr mh;
-    {
-        import core.stdc.string : memcpy;
-        ubyte[palmdoc_hdr.sizeof] b;
-        ubyte[mobi_hdr.sizeof] b1;
-        file.seek(STARTPOS);
-        file.rawRead(b);
-        file.rawRead(b1);
-        memcpy(&h, &b, palmdoc_hdr.sizeof);
-        memcpy(&mh, &b1, mobi_hdr.sizeof);
-    }
+    file.seek(STARTPOS);
+    structcpy(file, &h, h.sizeof);
+    structcpy(file, &mh, mh.sizeof);
     
     report("Mobipocket ", false);
 

@@ -32,13 +32,8 @@ void scan_tar(File file)
     }
 
     tar_hdr h;
-    {
-        enum s = tar_hdr.sizeof;
-        ubyte[s] buf;
-        file.rewind();
-        file.rawRead(buf);
-        memcpy(&h, &buf, s);
-    }
+    structcpy(file, &h, h.sizeof, true);
+
     if (Informing)
     {
         switch (h.linkflag)
@@ -56,5 +51,4 @@ void scan_tar(File file)
         writeln(" Tar archive, Reports ", tarstr(h.size), " Bytes");
     }
     else report("Tar archive");
-    return;
 }

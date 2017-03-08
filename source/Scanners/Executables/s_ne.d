@@ -6,6 +6,7 @@ module s_ne;
 
 import std.stdio;
 import dfile;
+import utils;
 
 // New .EXE header, found in newexe.h in the Word 1.1a source.
 private struct ne_hdr
@@ -54,12 +55,7 @@ private enum {
 static void scan_ne(File file)
 {
     ne_hdr h;
-    {
-        import core.stdc.string : memcpy;
-        ubyte[ne_hdr.sizeof] buf;
-        file.rawRead(buf);
-        memcpy(&h, &buf, ne_hdr.sizeof);
-    }
+    structcpy(file, &h, h.sizeof);
 
     if (Debugging || Informing)
     {
