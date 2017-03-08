@@ -12,12 +12,12 @@ import s_pe : scan_pe;
 import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
-import Etc : scan_etc;
 import s_images;
+import Etc;
 
 enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.3.1-dev"
+    PROJECT_VERSION = "0.4.0-dev"
 }
 
 /// Setting
@@ -114,12 +114,11 @@ static void print_help_full()
 
 static void print_version()
 {
-    writeln(PROJECT_NAME, " - v", PROJECT_VERSION);
-    writeln("Copyright (c) 2016-2017 dd86k");
-    writeln("License: MIT");
+    writeln(PROJECT_NAME, " - v", PROJECT_VERSION, " (", __TIMESTAMP__, ")");
+    writeln("Copyright (c) 2016-2017 dd86k, MIT License");
     writeln("Project page: <https://github.com/dd86k/dfile>");
-    writefln("Compiled %s on %s with %s v%s",
-        __FILE__, __TIMESTAMP__, __VENDOR__, __VERSION__);
+    writefln("Compiled %s with %s v%s",
+        __FILE__, __VENDOR__, __VERSION__);
 }
 
 static void scan(File file)
