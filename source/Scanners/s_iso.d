@@ -11,11 +11,11 @@ enum ISO = "CD001";
 void scan_iso(File file)
 {
     enum { // volume type
-        T_BOOT = 0,
-        T_PRIMARY_VOL_DESC,
-        T_SUPP_VOL_DESC,
-        T_VOL_PART_DESC,
-        T_VOL_TER = 255
+        BOOT = 0,
+        PRIMARY_VOL_DESC,
+        SUPP_VOL_DESC,
+        VOL_PART_DESC,
+        VOL_TER = 255
     }
     enum s = 2040; // Data, Virtual Sector - 8
     int t;
@@ -38,8 +38,8 @@ ISO_READ:
     if (buf[1..6] == ISO)
         switch (buf[0])
         {
-            case T_BOOT: bootable = true; break;
-            case T_PRIMARY_VOL_DESC:
+            case BOOT: bootable = true; break;
+            case PRIMARY_VOL_DESC:
                 label = isostr(buf[40 .. 71]);
                 if (Informing)
                 {
