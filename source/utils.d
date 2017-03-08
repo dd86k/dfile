@@ -11,6 +11,13 @@ string tarstr(char[] str)
     return str[p .. $ - 1].idup;
 }
 
+string isostr(char[] str)
+{
+    size_t p;
+    while (str[p] != ' ') ++p;
+    return str[0 .. p].idup;
+}
+
 uint invert(uint num) pure
 {
     ubyte* p = cast(ubyte*)&num;

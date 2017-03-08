@@ -216,33 +216,91 @@ static void scan_unknown(File file)
                 }
                 writeln(" Tar archive, Reports ", tarstr(h.size), " Bytes");
             }
-            else
-                report("Tar archive");
+            else report("Tar archive");
             return;
         }
     }
     else goto CONTINUE;
 
-    if (fl > 0x8006)
+    if (fl > 0x9007)
     { // ISO files
         enum ISO = "CD001";
         char[5] b;
         file.seek(0x8001);
         file.rawRead(b);
-        if (b == ISO) goto R_ISO;
+        if (b == ISO) goto IS_ISO;
 
         file.seek(0x8801);
         file.rawRead(b);
-        if (b == ISO) goto R_ISO;
+        if (b == ISO) goto IS_ISO;
 
         file.seek(0x9001);
         file.rawRead(b);
-        if (b == ISO) goto R_ISO;
-        goto F_ISO;
-R_ISO:
-        report("ISO9660 CD/DVD image file (ISO)");
+        if (b == ISO) goto IS_ISO;
+        goto NOT_ISO;
+IS_ISO:
+        report("ISO-9660 CD/DVD image", !Informing);
+        if (Informing)
+        {
+            /*struct vol_hdr { // Basic
+                ubyte type;
+                char[5] magic; // CD001
+                ubyte ver; // version
+                // Data (2080 bytes)
+            }*/
+            enum { // volume type
+                T_BOOT = 0,
+                T_PRIMARY_VOL_DESC,
+                T_SUPP_VOL_DESC,
+                T_VOL_PART_DESC,
+                T_VOL_TER = 255
+            }
+
+            bool bootable;
+
+            enum s = 71;//vol_hdr.sizeof;
+            char[s] buf;
+            file.seek(0x8000);
+            file.rawRead(buf);
+            if (buf[1..6] == ISO)
+                switch (buf[0])
+                {
+                    case T_BOOT: bootable = true; break;
+                    case T_PRIMARY_VOL_DESC:
+                        write(" \"", isostr(buf[40 .. $]), "\"");
+                        break;
+                    default:
+                }
+            file.seek(0x8800);
+            file.rawRead(buf);
+            if (buf[1..6] == ISO)
+                switch (buf[0])
+                {
+                    case T_BOOT: bootable = true; break;
+                    case T_PRIMARY_VOL_DESC:
+                        write(" \"", isostr(buf[40 .. $]), "\"");
+                        break;
+                    default:
+                }
+            file.seek(0x9000);
+            file.rawRead(buf);
+            if (buf[1..6] == ISO)
+                switch (buf[0])
+                {
+                    case T_BOOT: bootable = true; break;
+                    case T_PRIMARY_VOL_DESC:
+                        write(" \"", isostr(buf[40 .. $]), "\"");
+                        break;
+                    default:
+                }
+
+            if (bootable)
+                write(", Bootable");
+
+            writeln();
+        }
         return;
-F_ISO:
+NOT_ISO:
     }
     else goto CONTINUE;
 
