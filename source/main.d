@@ -973,27 +973,61 @@ static void scan(File file)
             report("Text file");
             return;
         }
-        deb_data_hdr dh;
-        int os, dos;
-        try
-        {
-            import std.conv : parse;
-            string dps = isostr(h.ctl_filesize);
-            os = parse!int(dps);
-            file.seek(os, SEEK_CUR);
-            structcpy(file, &dh, dh.sizeof, false);
-            string doss = isostr(dh.filesize);
-            dos = parse!int(doss);
-        }
-        catch (Throwable)
-        {
-            report("Text file");
-            return;
-        }
         report("Debian Package v", false);
-        writeln(h.version_,
-            " \"", isostr(h.ctl_file_ident), "\":", os / 1024, " KB, \"",
-            isostr(dh.file_ident), "\":", dos / 1024, " KB");
+        writeln(h.version_);
+        if (Informing)
+        {
+            deb_data_hdr dh;
+            int os, dos;
+            try
+            {
+                import std.conv : parse;
+                string dps = isostr(h.ctl_filesize);
+                os = parse!int(dps);
+                file.seek(os, SEEK_CUR);
+                structcpy(file, &dh, dh.sizeof, false);
+                string doss = isostr(dh.filesize);
+                dos = parse!int(doss);
+            }
+            catch (Throwable)
+            {
+                report("Text file");
+                return;
+            }
+            writeln(isostr(h.ctl_file_ident), " - ", os / 1024, " KB");
+            writeln(isostr(dh.file_ident), " - ", dos / 1024, " KB");
+        }
+    }
+        return;
+
+    case x"ED AB EE DB": { // RPM Package
+        struct rpm_hdr {
+            char[4] magic;
+            ubyte major, minor;
+            ushort type;
+            ushort archnum;
+            char[66] name;
+            ushort osnum;
+            ushort signature_type;
+            //char reserved[16];
+        }
+        rpm_hdr h;
+        structcpy(file, &h, h.sizeof, true);
+        report("RPM ", false);
+        switch (h.type)
+        {
+            case 0: write("Binary"); break;
+            case 1: write("Source"); break;
+            default: write("Unknown type"); break;
+        }
+        write(" Package v");
+        write(h.major, ".", h.minor, " \"", asciz(h.name), "\" for ");
+        switch (h.osnum)
+        {
+            case 1: write("linux"); break;
+            default: write("other"); break;
+        }
+        writeln(" platforms");
     }
         return;
 
