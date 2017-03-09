@@ -98,20 +98,21 @@ private static int main(string[] args)
 
 static void print_help()
 {
-    writefln(" Usage: %s [<Options>] <File>", PROJECT_NAME);
-    writefln("        %s {-h|--help|-v|--version}", PROJECT_NAME);
+    writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
+    writefln("         %s {-h|--help|-v|--version}", PROJECT_NAME);
 }
 
 static void print_help_full()
 {
-    writeln(" Usage: ", PROJECT_NAME, " [<Options>] <File>");
-    writeln("Determine the nature of the file with the file signature.");
+    writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
+    writeln("Determine the file type.");
     writeln("  Option           Description (Default value)\n");
     writeln("  -m, --more       Print all information if available. (False)");
     writeln("  -s, --showname   Show filename before result. (False)");
     writeln("  -d, --debug      Print debugging information. (False)");
-    writeln("\n  -h, --help, /?  Print help and exit");
-    writeln("  -v, --version   Print version and exit");
+    writeln();
+    writeln("  -h, --help, /?   Print help and exit");
+    writeln("  -v, --version    Print version and exit");
 }
 
 static void print_version()
