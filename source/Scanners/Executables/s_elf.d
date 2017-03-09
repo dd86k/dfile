@@ -93,7 +93,7 @@ static void scan_elf(File file)
         writefln("shnum: %s", h.e_shnum);
         writefln("shstrndx: %s", h.e_shstrndx);
     }
-    
+
     report("ELF", false);
     elf_print_class(h.e_ident[EI_CLASS]);
     elf_print_data(h.e_ident[EI_DATA]);
