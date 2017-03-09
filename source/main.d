@@ -16,7 +16,7 @@ import Etc, utils;
 
 enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.4.0-dev"
+    PROJECT_VERSION = "0.4.0"
 }
 
 /// Setting
@@ -68,7 +68,10 @@ private static int main(string[] args)
     if (exists(filename))
     {
         if (isDir(filename))
-            writefln("%s: Directory", filename);
+        {
+            report("Directory");
+            return 0;
+        }
         else
         {
             if (Debugging)
@@ -113,8 +116,11 @@ static void print_help_full()
 
 static void print_version()
 {
-    writeln(PROJECT_NAME, " - v", PROJECT_VERSION, " (", __TIMESTAMP__, ")");
-    writeln("Copyright (c) 2016-2017 dd86k, MIT License");
+    debug
+        writeln(PROJECT_NAME, " ", PROJECT_VERSION, "-debug (", __TIMESTAMP__, ")");
+    else
+        writeln(PROJECT_NAME, " ", PROJECT_VERSION, "  (", __TIMESTAMP__, ")");
+    writeln("MIT License: Copyright (c) 2016-2017 dd86k");
     writeln("Project page: <https://github.com/dd86k/dfile>");
     writefln("Compiled %s with %s v%s",
         __FILE__, __VENDOR__, __VERSION__);
