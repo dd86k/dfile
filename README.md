@@ -23,14 +23,17 @@ dfile (~master) will provide extra information for:
 - Images
   - PNG
   - GIF
+- Documents
+  - PalmDoc
+  - Mobibook
 - Archive and compressed files
   - PKWare ZIP
   - KWAJ/SZDD (MS-DOS COMPACT/EXPAND)
   - ISO-9660 (CD images)
   - Tar
-- Documents
-  - PalmDoc
-  - Mobibook
+- Packages
+  - Debian
+  - RPM
 - Firmwares
   - TRX v1/v2
 
