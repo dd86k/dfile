@@ -904,20 +904,6 @@ static void scan(File file)
         report("WOFF File Format 2.0 font (woff)");
         return;
 
-    case "<?xm": {
-        char[2] b;
-        file.rawRead(b);
-        switch (b)
-        {
-        case "l>":
-            report("ASCII/UTF-8 XML (xml)");
-            return;
-        default:
-            report_unknown();
-            return;
-        }
-    } // too lazy for utf-16/32
-
     case "!<ar": { // Debian Package
         struct deb_hdr { // Ignore fields in caps
             char[8]  magic; // "!<arch>\n"
@@ -969,7 +955,6 @@ static void scan(File file)
             }
             catch (Throwable)
             {
-                report("Text file");
                 return;
             }
             writeln(isostr(h.ctl_file_ident), " - ", os / 1024, " KB");
