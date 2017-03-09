@@ -3,7 +3,6 @@ module dfile;
 import std.stdio;
 import std.file : exists, isDir;
 import std.string : format;
-import core.stdc.string : memcpy;
 
 import s_elf : scan_elf;
 import s_fatelf : scan_fatelf;
@@ -211,12 +210,7 @@ static void scan(File file)
             }
 
             nesm_hdr h;
-            {
-                ubyte[nesm_hdr.sizeof] buf;
-                file.rewind();
-                file.rawRead(buf);
-                memcpy(&h, &buf, nesm_hdr.sizeof);
-            }
+            structcpy(file, &h, h.sizeof, true);
             
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
@@ -267,12 +261,7 @@ static void scan(File file)
                 }
 
                 spc2_hdr h;
-                {
-                    char[spc2_hdr.sizeof] buf;
-                    file.rewind();
-                    file.rawRead(buf);
-                    memcpy(&h, &buf, spc2_hdr.sizeof);
-                }
+                structcpy(file, &h, h.sizeof, true);
 
                 report(format("SNES SPC2 v%d.%d file with %d of SPC entries",
                     h.majorver, h.minorver, h.number));
@@ -539,13 +528,7 @@ static void scan(File file)
         }
 
         zip_hdr h;
-        {
-            enum s = zip_hdr.sizeof;
-            ubyte[s] b;
-            file.rewind();
-            file.rawRead(b);
-            memcpy(&h, &b, s);
-        }
+        structcpy(file, &h, h.sizeof, true);
 
         if (Informing)
         {
@@ -739,12 +722,7 @@ static void scan(File file)
         }
 
         midi_hdr h;
-        {
-            ubyte[midi_hdr.sizeof] buf;
-            file.rewind();
-            file.rawRead(buf);
-            memcpy(&h, &buf, midi_hdr.sizeof);
-        }
+        structcpy(file, &h, h.sizeof, true);
 
         switch (h.format) // Big Endian
         {
@@ -1067,13 +1045,7 @@ static void scan(File file)
         }
 
         kwaj_hdr h;
-        {
-            enum s = kwaj_hdr.sizeof;
-            ubyte[s] b;
-            file.rewind;
-            file.rawRead(b);
-            memcpy(&h, &b, s);
-        }
+        structcpy(file, &h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1133,13 +1105,7 @@ static void scan(File file)
         }
 
         szdd_hdr h;
-        {
-            enum s = szdd_hdr.sizeof;
-            ubyte[s] b;
-            file.rewind;
-            file.rawRead(b);
-            memcpy(&h, &b, s);
-        }
+        structcpy(file, &h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1199,11 +1165,7 @@ static void scan(File file)
         }
 
         trx_hdr h;
-        {
-            ubyte[trx_hdr.sizeof] buf;
-            file.rawRead(buf);
-            memcpy(&h, &buf, trx_hdr.sizeof);
-        }
+        structcpy(file, &h, h.sizeof);
 
         if (h.version_ == 1 || h.version_ == 2)
             report(format(
