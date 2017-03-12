@@ -188,7 +188,7 @@ static void scan(File file)
                 }
             default:
                 {
-                    if (b[0] == 0) //TODO: Need more information
+                    if (b[0] == 0)
                         report("TrueType font file");
                     else
                         report("Palm Desktop Data File (Access format)");
@@ -1306,7 +1306,7 @@ static void scan(File file)
         return;
 
     case "With": { // WithoutFreeSpace -- Parallels HDD
-    //TODO: more checking
+    //TODO: more checking with parallels hdd
         report("Parallels HDD disk image");
     }
         return;
