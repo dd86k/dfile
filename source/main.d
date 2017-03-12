@@ -1503,6 +1503,8 @@ static void scan(File file)
             ulong autoclear_features;
             ulong l1_table_offset;
             ulong image_size;
+            uint backing_filename_offset;
+            uint backing_filename_size;
         }
         enum {
             QED_F_BACKING_FILE = 1,
@@ -1513,6 +1515,22 @@ static void scan(File file)
         qed_hdr h;
         structcpy(file, &h, h.sizeof, true);
         write(formatsize(h.image_size));
+
+        if (h.features & QED_F_BACKING_FILE) {
+            char[] bfn = new char[h.backing_filename_size];
+            file.seek(h.backing_filename_offset);
+            file.rawRead(bfn);
+            write(", ");
+            if (h.features & QED_F_BACKING_FORMAT_NO_PROBE)
+                write("raw ");
+            write("backing file: ", bfn);
+
+        }
+
+        if (h.features & QED_F_NEED_CHECK)
+            write(", check needed");
+        
+        writeln();
     }
         return;
 
