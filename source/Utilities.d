@@ -83,8 +83,40 @@ string formatsize(ulong size)
 }
 
 /// Invert endian.
+ushort invert(ushort num) pure
+{
+    version (LittleEndian)
+    {
+        ubyte* p = cast(ubyte*)&num;
+        return p[1] | p[0] << 8;
+    }
+    else return num;
+}
+
+/// Invert endian.
 uint invert(uint num) pure
 {
-    ubyte* p = cast(ubyte*)&num;
-    return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+    version (LittleEndian)
+    {
+        ubyte* p = cast(ubyte*)&num;
+        return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+    }
+    else return num;
+}
+
+/// Invert endian.
+ulong invert(ulong num) pure
+{
+    version (LittleEndian)
+    {
+        ubyte* p = cast(ubyte*)&num;
+        ubyte c;
+        for (int a, b = 7; b > 3; ++a, --b) {
+            c = *(p + b);
+            *(p + b) = *(p + a);
+            *(p + a) = c;
+        }
+        return num;
+    }
+    else return num;
 }

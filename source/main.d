@@ -941,7 +941,7 @@ static void scan(File file)
         deb_hdr h;
         structcpy(file, &h, h.sizeof, true);
         if (h.file_iden != DEBIANBIN) {
-            report("Text file");
+            report_text();
             return;
         }
         report("Debian Package v", false);
@@ -1189,13 +1189,13 @@ static void scan(File file)
             ushort compressAlgorithm;
             //ubyte[433] pad;
         }
+        enum {
+            COMPRESSED = 1 << 16
+        }
 
         SparseExtentHeader h;
         structcpy(file, &h, h.sizeof, true);
 
-        enum {
-            COMPRESSED = 1 << 16
-        }
         report("VMware VMDK disk image v", false);
         write(h.version_/*,
             ", ",
@@ -1251,19 +1251,119 @@ static void scan(File file)
             uint savedGeneration;
             char[8] reserved;
             uint uncleanShutdown;
-            //char [396]padding;
+            //char[396] padding;
         }*/
         report("ESXi COW disk image");
     }
         return;
 
-    case "cone": { // conectix
-    //TODO: VHD
-        report("Microsoft VHD Disk image");
+    case "cone": { // conectix, VHD, values in big endian
+        enum {
+            VHDMAGIC = "conectix",
+            OS_WINDOWS = "Wi2k",
+            OS_MAC = "Mac ",
+        }
+        enum {
+            F_TEMPORARY = 1,
+            F_RES = 2, // reserved, always 1
+            D_FIXED = 2,
+            D_DYNAMIC = 3,
+            D_DIFF = 4,
+        }
+        struct vhd_hdr {
+            uint features;
+            ushort major;
+            ushort minor;
+            ulong offset;
+            uint timestamp;
+            char[4] creator_app;
+            ushort creator_major;
+            ushort creator_minor;
+            char[4] creator_os;
+            ulong size_original;
+            ulong size_current;
+            ushort cylinders;
+            ubyte heads;
+            ubyte sectors;
+            uint disk_type;
+            uint checksum;
+            ubyte[16] uuid;
+            ubyte savedState;
+            //ubyte[427] reserved;
+        }
+        file.rawRead(sig);
+        if (sig != VHDMAGIC[4..$])
+        {
+            report_text();
+            return;
+        }
+        vhd_hdr h;
+        structcpy(file, &h, h.sizeof);
+        h.features = invert(h.features);
+        if ((h.features & F_RES) == 0)
+        {
+            report_text();
+            return;
+        }
+        report("Microsoft VHD disk image v", false);
+        write(invert(h.major), ".", invert(h.minor));
+
+        h.disk_type = invert(h.disk_type);
+        switch(h.disk_type)
+        {
+            case D_FIXED: write(", Fixed"); break;
+            case D_DYNAMIC: write(", Dynamic"); break;
+            case D_DIFF: write(", Differencing"); break;
+            default:
+                if (h.disk_type < 7)
+                    write(", Reserved (deprecated)");
+                else
+                    write(", Invalid type");
+                break;
+        }
+
+        write(", ", h.creator_app, " v",
+            invert(h.creator_major), ".", invert(h.creator_minor));
+
+        switch (h.creator_os)
+        {
+            case OS_WINDOWS: write(" on Windows"); break;
+            case OS_MAC:     write(" on macOS"); break;
+            default: break;
+        }
+
+        h.size_current = invert(h.size_current);
+        h.size_original = invert(h.size_original);
+        if (h.size_current && h.size_original)
+        {
+            write(", ", formatsize(h.size_current), "/",
+                formatsize(h.size_original), " used");
+        }
+
+        if (h.features & F_TEMPORARY)
+            write(", Temporary");
+        
+        if (h.savedState)
+            write(", Saved State");
+
+        writeln();
+
+        if (Informing)
+        {
+            write("UUID: ");
+            writef("%02X", h.uuid[0]);
+            for (uint i = 1; i < h.uuid.length; ++i)
+                writef("-%02X", h.uuid[i]);
+            writeln();
+            writeln("Cylinders: ", h.cylinders);
+            writeln("Heads: ", h.heads);
+            writeln("Sectors: ", h.sectors);
+        }
     }
         return;
 
-    case "<<< ": { //TODO: VDI
+    case "<<< ": { // VDI
+    //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
         enum {
             VDI_OLDER = "Sun xVM VirtualBox Disk Image >>>",
             VDI = "Oracle VM VirtualBox Disk Image >>>"
@@ -1296,19 +1396,18 @@ static void scan(File file)
             ubyte[16] parent_uuid;
         }
         string magic = file.readln()[0..$-1];
-        //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
         switch (magic)
         {
             case VDI, VDI_OLDER: break;
             default:
-                report("Text file"); // Coincidence
+                report_text(); // Coincidence
                 return;
         }
         vdi_hdr h;
         file.seek(0x40);
         structcpy(file, &h, h.sizeof);
         if (h.magic != VDIMAGIC) {
-            report("Text file"); // Coincidence
+            report_text(); // Coincidence
             return;
         }
         svdi_hdr sh;
@@ -1318,9 +1417,9 @@ static void scan(File file)
         write(h.majorv, ".", h.minorv, ", ");
         switch (h.type)
         {
-            case 1: write("dynamic"); break;
-            case 2: write("static"); break;
-            default: write("unknown type"); break;
+            case 1: write("Dynamic"); break;
+            case 2: write("Static"); break;
+            default: write("Unknown type"); break;
         }
         writeln(", ", formatsize(sh.diskSize));
         if (Informing)
@@ -1352,30 +1451,23 @@ static void scan(File file)
     case "QFI\xFB": { //TODO: QCOW2
     //https://people.gnome.org/~markmc/qcow-image-format.html
     //http://git.qemu-project.org/?p=qemu.git;a=blob;f=docs/specs/qcow2.txt
-    /*
         struct QCowHeader {
-            uint32_t magic;
-            uint32_t version;
-
-            uint64_t backing_file_offset;
-            uint32_t backing_file_size;
-
-            uint32_t cluster_bits;
-            uint64_t size; // in bytes
-            uint32_t crypt_method;
-
-            uint32_t l1_size;
-            uint64_t l1_table_offset;
-
-            uint64_t refcount_table_offset;
-            uint32_t refcount_table_clusters;
-
-            uint32_t nb_snapshots;
-            uint64_t snapshots_offset;
+            uint magic;
+            uint version;
+            ulong backing_file_offset;
+            uint backing_file_size;
+            uint cluster_bits;
+            ulong size; // in bytes
+            uint crypt_method;
+            uint l1_size;
+            ulong l1_table_offset;
+            ulong refcount_table_offset;
+            uint refcount_table_clusters;
+            uint nb_snapshots;
+            ulong snapshots_offset;
         }
-    */
 
-        report("QEMU QCOW2 disk image");
+        report("QEMU QCOW2 disk image", false);
     }
         return;
 
@@ -1474,6 +1566,11 @@ static void scan(File file)
 pragma(inline, false) static void report_unknown()
 {
     report("Unknown file type");
+}
+
+pragma(inline, false) static void report_text()
+{
+    report("Text file");
 }
 
 /**
