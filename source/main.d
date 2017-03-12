@@ -1264,8 +1264,88 @@ static void scan(File file)
         return;
 
     case "<<< ": { //TODO: VDI
-    //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
-        report("VirtualBox VDI disk image");
+        enum {
+            VDI_OLDER = "Sun xVM VirtualBox Disk Image >>>",
+            VDI = "Oracle VM VirtualBox Disk Image >>>"
+        }
+        enum VDIMAGIC = 0xBEDA107F;
+        struct vdi_hdr {
+            uint magic;
+            ushort majorv;
+            ushort minorv;
+            uint hdrsize;
+            uint type;
+            uint flags;
+            char[28] description;
+        }
+        struct svdi_hdr { // SEEK 0x150
+            uint offsetBlock;
+            uint offsetData;
+            uint cylinders;
+            uint heads;
+            uint sectors;
+            uint sectorSize;
+            uint reserved;
+            ulong diskSize;
+            uint blockSize;
+            uint extraBlockData;
+            uint blocksInHDD;
+            uint blocksAllocated;
+            ubyte[16] vdi_uuid;
+            ubyte[16] lastsnap_uuid;
+            ubyte[16] parent_uuid;
+        }
+        string magic = file.readln()[0..$-1];
+        //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
+        switch (magic)
+        {
+            case VDI, VDI_OLDER: break;
+            default:
+                report("Text file"); // Coincidence
+                return;
+        }
+        vdi_hdr h;
+        file.seek(0x40);
+        structcpy(file, &h, h.sizeof);
+        if (h.magic != VDIMAGIC) {
+            report("Text file"); // Coincidence
+            return;
+        }
+        svdi_hdr sh;
+        file.seek(0x150);
+        structcpy(file, &sh, sh.sizeof);
+        report("VirtualBox VDI disk image v", false);
+        write(h.majorv, ".", h.minorv, ", ");
+        switch (h.type)
+        {
+            case 1: write("dynamic"); break;
+            case 2: write("static"); break;
+            default: write("unknown type"); break;
+        }
+        writeln(", ", formatsize(sh.diskSize));
+        if (Informing)
+        {
+            write("VDI UUID     : ");
+            writef("%02X", sh.vdi_uuid[0]);
+            for (uint i = 1; i < sh.vdi_uuid.length; ++i)
+                writef("-%02X", sh.vdi_uuid[i]);
+            writeln();
+            write("LASTSNAP UUID: ");
+            writef("%02X", sh.lastsnap_uuid[0]);
+            for (uint i = 1; i < sh.lastsnap_uuid.length; ++i)
+                writef("-%02X", sh.lastsnap_uuid[i]);
+            writeln();
+            write("PARENT UUID  : ");
+            writef("%02X", sh.parent_uuid[0]);
+            for (uint i = 1; i < sh.parent_uuid.length; ++i)
+                writef("-%02X", sh.parent_uuid[i]);
+            writeln();
+            writeln("Cylinders: ", sh.cylinders);
+            writeln("Heads: ", sh.heads);
+            writeln("Sectors: ", sh.sectors);
+            writeln("Sector size: ", sh.sectorSize);
+            writeln("Block size: ", sh.blockSize);
+        }
     }
         return;
 

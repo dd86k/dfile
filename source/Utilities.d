@@ -6,9 +6,11 @@ module utils;
 
 import std.stdio;
 
-/**
- * Read file with a struct.
+/*
+ * File utilities.
  */
+
+/// Read file with a struct.
 void structcpy(File file, void* s, size_t size, bool rewind = false)
 {
     ubyte[] buf = new ubyte[size];
@@ -20,7 +22,14 @@ void structcpy(File file, void* s, size_t size, bool rewind = false)
     *(sp) = buf[0];
 }
 
-string asciz(char[] str)
+//TODO: structcpy_reverse
+
+/*
+ * String utilities.
+ */
+
+/// Get a null-terminated string.
+string asciz(char[] str) pure
 {
     if (str[0] == '\0') return null;
     char* p, ip; p = ip = &str[0];
@@ -28,14 +37,16 @@ string asciz(char[] str)
     return str[0 .. p - ip].idup;
 }
 
-string tarstr(char[] str)
+/// Get a Tar-like string ('0' padded).
+string tarstr(char[] str) pure
 {
     size_t p;
     while (str[p] == '0') ++p;
     return str[p .. $ - 1].idup;
 }
 
-string isostr(char[] str)
+/// Get a ISO-like string (' ' padded).
+string isostr(char[] str) pure
 {
     if (str[0] == ' ') return null;
     if (str[$ - 1] != ' ') return str.idup;
@@ -44,6 +55,34 @@ string isostr(char[] str)
     return str[0 .. p + 1].idup;
 }
 
+/*
+ * Number utilities.
+ */
+
+/// Get byte size, formatted.
+string formatsize(ulong size)
+{
+    import std.format : format;
+    enum : ulong {
+        KB = 1024,
+        MB = KB * 1024,
+        GB = MB * 1024,
+        TB = GB * 1024
+    }
+
+    if (size < KB)
+        return format("%d B", size);
+    else if (size < MB)
+        return format("%d KB", size / KB);
+    else if (size < GB)
+        return format("%d MB", size / MB);
+    else if (size < TB)
+        return format("%d GB", size / GB);
+    else
+        return format("%d TB", size / TB);
+}
+
+/// Invert endian.
 uint invert(uint num) pure
 {
     ubyte* p = cast(ubyte*)&num;
