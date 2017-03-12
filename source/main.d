@@ -1448,12 +1448,12 @@ static void scan(File file)
     }
         return;
 
-    case "QFI\xFB": { //TODO: QCOW2
+    case "QFI\xFB": { // QCOW2, big endian
     //https://people.gnome.org/~markmc/qcow-image-format.html
     //http://git.qemu-project.org/?p=qemu.git;a=blob;f=docs/specs/qcow2.txt
-        struct QCowHeader {
+        struct QCowHeader { //v1/v2, v3 has extra fields
             uint magic;
-            uint version;
+            uint version_;
             ulong backing_file_offset;
             uint backing_file_size;
             uint cluster_bits;
@@ -1466,14 +1466,53 @@ static void scan(File file)
             uint nb_snapshots;
             ulong snapshots_offset;
         }
+        enum {
+            C_AES = 1,
+        }
 
-        report("QEMU QCOW2 disk image", false);
+        QCowHeader h;
+        structcpy(file, &h, h.sizeof, true);
+
+        report("QEMU QCOW2 disk image v", false);
+        write(invert(h.version_), ", ", formatsize(invert(h.size)));
+
+        switch (invert(h.crypt_method))
+        {
+            case C_AES: write(", AES encrypted"); break;
+            default: break;
+        }
+
+        writeln();
+
+        if (Informing)
+        {
+            writeln("Snapshots: ",  invert(h.nb_snapshots));
+        }
     }
         return;
 
-    case "QED\0": { //TODO: QED
+    case "QED\0": { // QED
     //http://wiki.qemu-project.org/Features/QED/Specification
-        report("QEMU QED disk image");
+        struct qed_hdr {
+            uint magic;
+            uint cluster_size;
+            uint table_size;
+            uint header_size;
+            ulong features;
+            ulong compat_features;
+            ulong autoclear_features;
+            ulong l1_table_offset;
+            ulong image_size;
+        }
+        enum {
+            QED_F_BACKING_FILE = 1,
+            QED_F_NEED_CHECK = 2,
+            QED_F_BACKING_FORMAT_NO_PROBE = 4,
+        }
+        report("QEMU QED disk image, ", false);
+        qed_hdr h;
+        structcpy(file, &h, h.sizeof, true);
+        write(formatsize(h.image_size));
     }
         return;
 

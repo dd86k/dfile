@@ -63,6 +63,7 @@ string isostr(char[] str) pure
 string formatsize(ulong size)
 {
     import std.format : format;
+
     enum : ulong {
         KB = 1024,
         MB = KB * 1024,
@@ -85,38 +86,50 @@ string formatsize(ulong size)
 /// Invert endian.
 ushort invert(ushort num) pure
 {
-    version (LittleEndian)
+    if (num)
     {
-        ubyte* p = cast(ubyte*)&num;
-        return p[1] | p[0] << 8;
+        version (LittleEndian)
+        {
+            ubyte* p = cast(ubyte*)&num;
+            return p[1] | p[0] << 8;
+        }
     }
-    else return num;
+    
+    return num;
 }
 
 /// Invert endian.
 uint invert(uint num) pure
 {
-    version (LittleEndian)
+    if (num)
     {
-        ubyte* p = cast(ubyte*)&num;
-        return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+        version (LittleEndian)
+        {
+            ubyte* p = cast(ubyte*)&num;
+            return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+        }
     }
-    else return num;
+    
+    return num;
 }
 
 /// Invert endian.
 ulong invert(ulong num) pure
 {
-    version (LittleEndian)
+    if (num)
     {
-        ubyte* p = cast(ubyte*)&num;
-        ubyte c;
-        for (int a, b = 7; b > 3; ++a, --b) {
-            c = *(p + b);
-            *(p + b) = *(p + a);
-            *(p + a) = c;
+        version (LittleEndian)
+        {
+            ubyte* p = cast(ubyte*)&num;
+            ubyte c;
+            for (int a, b = 7; a < 4; ++a, --b) {
+                c = *(p + b);
+                *(p + b) = *(p + a);
+                *(p + a) = c;
+            }
+            return num;
         }
-        return num;
     }
-    else return num;
+    
+    return num;
 }
