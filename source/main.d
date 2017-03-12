@@ -16,7 +16,7 @@ import Etc, utils;
 
 enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.4.0"
+    PROJECT_VERSION = "0.5.0"
 }
 
 /// Setting
@@ -1165,6 +1165,149 @@ static void scan(File file)
             ));
         else
             report_unknown();
+    }
+        return;
+
+    case "KDMV": { //TODO: details on VMDK disk images
+        struct SparseExtentHeader { // technote
+            uint magicNumber;
+            uint version_;
+            uint flags;
+            ulong capacity;
+            ulong grainSize;
+            ulong descriptorOffset;
+            ulong descriptorSize;
+            uint numGTEsPerGT;
+            ulong rgdOffset;
+            ulong gdOffset;
+            ulong overHead;
+            ubyte uncleanShutdown; // "Bool"
+            char singleEndLineChar;
+            char nonEndLineChar;
+            char doubleEndLineChar1;
+            char doubleEndLineChar2;
+            ushort compressAlgorithm;
+            //ubyte[433] pad;
+        }
+
+        SparseExtentHeader h;
+        structcpy(file, &h, h.sizeof, true);
+
+        enum {
+            COMPRESSED = 1 << 16
+        }
+        report("VMware VMDK disk image v", false);
+        write(h.version_/*,
+            ", ",
+            ((((2 ^^ h.grainSize) * 512) * h.capacity) / 1024 / 1024),
+            " KB"*/);
+        
+        if (h.flags & COMPRESSED)
+        {
+            write(" using ");
+            switch (h.compressAlgorithm)
+            {
+            case 0: write("no"); break;
+            case 1: write("DEFLATE"); break;
+            default: write("unknown"); break;
+            }
+            write(" compression");
+        }
+
+        if (h.uncleanShutdown)
+            write(", unclean shutdown");
+        
+        writeln();
+    }
+        return;
+
+    case "COWD": { //TODO: Get an EXSi COW vdisk
+        /*enum COWDISK_MAX_PARENT_FILELEN = 1024;
+        enum COWDISK_MAX_NAME_LEN = 60;
+        enum COWDISK_MAX_DESC_LEN = 512;
+        struct COWDisk_Header {
+            uint magicNumber;
+            uint version_;
+            uint flags;
+            uint numSectors;
+            uint grainSize;
+            uint gdOffset;
+            uint numGDEntries;
+            uint freeSector;
+            union u {
+                struct root {
+                    uint cylinders;
+                    uint heads;
+                    uint sectors;
+                }
+                struct child {
+                    char[COWDISK_MAX_PARENT_FILELEN] parentFileName;
+                    uint parentGeneration;
+                }
+            }
+            uint generation;
+            char[COWDISK_MAX_NAME_LEN] name;
+            char[COWDISK_MAX_DESC_LEN] description;
+            uint savedGeneration;
+            char[8] reserved;
+            uint uncleanShutdown;
+            //char [396]padding;
+        }*/
+        report("ESXi COW disk image");
+    }
+        return;
+
+    case "cone": { // conectix
+    //TODO: VHD
+        report("Microsoft VHD Disk image");
+    }
+        return;
+
+    case "<<< ": { //TODO: VDI
+    //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
+        report("VirtualBox VDI disk image");
+    }
+        return;
+
+    case "QFI\xFB": { //TODO: QCOW2
+    //https://people.gnome.org/~markmc/qcow-image-format.html
+    //http://git.qemu-project.org/?p=qemu.git;a=blob;f=docs/specs/qcow2.txt
+    /*
+        struct QCowHeader {
+            uint32_t magic;
+            uint32_t version;
+
+            uint64_t backing_file_offset;
+            uint32_t backing_file_size;
+
+            uint32_t cluster_bits;
+            uint64_t size; // in bytes
+            uint32_t crypt_method;
+
+            uint32_t l1_size;
+            uint64_t l1_table_offset;
+
+            uint64_t refcount_table_offset;
+            uint32_t refcount_table_clusters;
+
+            uint32_t nb_snapshots;
+            uint64_t snapshots_offset;
+        }
+    */
+
+        report("QEMU QCOW2 disk image");
+    }
+        return;
+
+    case "QED\0": { //TODO: QED
+    //http://wiki.qemu-project.org/Features/QED/Specification
+        report("QEMU QED disk image");
+    }
+        return;
+
+    case "With": { // WithoutFreeSpace -- Parallels HDD
+    //TODO: more checking
+        report("Parallels HDD disk image");
     }
         return;
 
