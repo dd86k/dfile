@@ -5,7 +5,6 @@
 module dfile;
 
 import std.stdio;
-import std.string : format;
 
 import s_elf : scan_elf;
 import s_fatelf : scan_fatelf;
@@ -46,8 +45,8 @@ static void scan(File file)
 
     debug
     {
-        writef("L%04d: Magic - ", __LINE__);
-        foreach (b; sig) writef("%X ", b);
+        writef("L%04d: Magic: ", __LINE__);
+        foreach (b; sig) writef("%02X ", b);
         writeln();
     }
 
@@ -72,13 +71,13 @@ static void scan(File file)
     case [0x00, 0x01, 0x00, 0x00]: {
         char[12] b;
         file.rawRead(b);
-        switch (b[0..3])
+        switch (b[0..4])
         {
             case "MSIS":
                 report("Microsoft Money file");
                 return;
             case "Stan":
-                switch (b[8..11])
+                switch (b[8..12])
                 {
                     case " ACE":
                         report("Microsoft Access 2007 file");
@@ -174,8 +173,9 @@ static void scan(File file)
                 spc2_hdr h;
                 structcpy(file, &h, h.sizeof, true);
 
-                report(format("SNES SPC2 v%d.%d file with %d of SPC entries",
-                    h.majorver, h.minorver, h.number));
+                report("SNES SPC2 v", false);
+                writeln(h.majorver, ".", h.minorver, " file with",
+                    h.number, " of SPC entries");
             }
                 return;
             default:
@@ -288,21 +288,20 @@ static void scan(File file)
         return;
 
     case "2TXG": {
-        ubyte[4] b;
+        uint[1] b;
         file.rawRead(b);
-        report(format("GTA Text 2 file with %d entries",
-            b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24 // Byte swapped
-            ));
+        report("GTA Text 2 file with", false);
+        writeln(invert(b[0]), "entries");  // Byte swapped
     }
         return;
 
     case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
-        writef("%s: RPF", file.name);
+        report("RPF", false);
         int[4] buf; // Table of Contents Size, Number of Entries, ?, Encryted
         file.rawRead(buf);
         if (buf[3])
             write(" encrypted");
-        write(" archive v" ~ sig[3] ~ " (");
+        write(" archive v", sig[3], " (");
         final switch (sig[3])
         {
             case '0': write("Table Tennis"); break;
@@ -322,10 +321,10 @@ static void scan(File file)
     case [0, 0, 0, 0x20]: {
         char[8] b;
         file.rawRead(b);
-        switch (b[0..3])
+        switch (b[0..4])
         {
         case "ftyp":
-            switch (b[4..7])
+            switch (b[4..8])
             {
             case "isom":
                 report("ISO Base Media file (MPEG-4) v1");
@@ -346,7 +345,7 @@ static void scan(File file)
                 report("Apple Lossless Audio Codec file (M4A)");
                 return;
             default:
-                switch (b[4..6])
+                switch (b[4..7])
                 {
                 case "3gp":
                     report("3rd Generation Partnership Project multimedia file (3GP)");
@@ -455,13 +454,8 @@ static void scan(File file)
             writeln("Filename Size      : ", h.fnlength);
             writeln("Extra field Size   : ", h.eflength);
         }
-
-        char[] filename;
-        if (h.fnlength)
-        {
-            filename = new char[h.fnlength];
-            file.rawRead(filename);
-        }
+        
+        debug writefln("FNLENGTH: %X", h.fnlength);
 
         report("ZIP ", false); // JAR, ODF, OOXML, EPUB
 
@@ -470,7 +464,7 @@ static void scan(File file)
             case 0: write("Uncompressed"); break;
             case 1: write("Shrunk"); break;
             case 2: .. // 2 to 5
-            case 5: write("Reduced Compression Factor of ", h.compression - 1); break;
+            case 5: write("Reduced by ", h.compression - 1); break;
             case 6: write("Imploded"); break;
             case 8: write("Deflated"); break;
             case 9: write("Enhanced Deflated"); break;
@@ -483,10 +477,15 @@ static void scan(File file)
             default: write("Unknown"); break;
         }
 
-        write(" Archive (v", h.version_ / 10, ".", h.version_ % 10, " and up)");
+        write(" Archive (v", h.version_ / 10, ".", h.version_ % 10, "), ",
+            formatsize(h.csize), "/", formatsize(h.usize));
 
-        if (filename)
-            writef(` "%s"`, filename);
+        if (h.fnlength)
+        {
+            char[] filename = new char[h.fnlength];
+            file.rawRead(filename);
+            write(` "`, filename, `"`);
+        }
 
         enum {
             ENCRYPTED = 1, // 1
@@ -523,7 +522,7 @@ static void scan(File file)
 
     case [0xFA, 0x70, 0x0E, 0x01]: // FatELF - 0x1F0E70FA
         scan_fatelf(file);
-        return; 
+        return;
 
     case [0x89, 'P', 'N', 'G']:
         file.rawRead(sig);
@@ -556,7 +555,8 @@ static void scan(File file)
 
     case "%PDF":
         file.rawRead(sig);
-        report(format("PDF%s document", sig));
+        report("PDF", false);
+        writeln(sig, " document");
         return;
 
     case [0x30, 0x26, 0xB2, 0x75]: {
@@ -621,11 +621,11 @@ static void scan(File file)
             return;
         }
 
-    case "fLaC":
+    case "fLaC": //TODO: FLAC extra
         report("Free Lossless Audio Codec audio file (FLAC)");
         return;
 
-    case "MThd": {
+    case "MThd": { // Big Endian
         struct midi_hdr {
             char[4] magic;
             uint length;
@@ -635,24 +635,23 @@ static void scan(File file)
         midi_hdr h;
         structcpy(file, &h, h.sizeof, true);
 
-        switch (h.format) // Big Endian
+        switch (invert(h.format))
         {
             case 0: report("Single track MIDI", false); break;
-            case 0x100: report("Multiple track MIDI", false); break; // 1
-            case 0x200: report("multiple song format", false); break;  // 2
+            case 1: report("Multiple track MIDI", false); break;
+            case 2: report("multiple song format", false); break;
             default: report("MIDI with unknown format"); return;
         }
 
-        // Big Endian
-        h.number = cast(ushort)((h.number >> 8) | (h.number << 8));
-        h.division = cast(ushort)((h.division >> 8) | (h.division << 8));
+        h.number = invert(h.number);
+        h.division = invert(h.division);
         writef(" using %d tracks at ", h.number);
 
         if (h.division & 0x8000) // Negative, SMPTE units
-            writef("%d ticks per frame (SMPTE: %d)",
+            writef("%d ticks/frame (SMPTE: %d)",
                 h.division & 0xFF, h.division >> 8 & 0xFF);
         else // Ticks per beat
-            writef("%d ticks per quarter-note", h.division);
+            writef("%d ticks/quarter-note", h.division);
     }
         return;
 
@@ -909,7 +908,8 @@ static void scan(File file)
     case "IWAD": {
         int[2] b; // Doom reads as int
         file.rawRead(b);
-        report(format("%s holding %d entries at %Xh", sig, b[0], b[1]));
+        report(sig.idup, false);
+        writefln(" holding %d entries at %Xh", b[0], b[1]);
     }
         return;
 
@@ -1063,10 +1063,11 @@ static void scan(File file)
         trx_hdr h;
         structcpy(file, &h, h.sizeof);
 
-        if (h.version_ == 1 || h.version_ == 2)
-            report(format(
-                "TRX v%d firmware (Length: %d, CRC32: %Xh)", h.version_, h.length, h.crc
-            ));
+        if (h.version_ == 1 || h.version_ == 2) {
+            report("TRX v", false);
+            writefln("%d firmware (Length: %d, CRC32: %Xh)",
+                h.version_, h.length, h.crc);
+        }
         else
             report_unknown();
     }
