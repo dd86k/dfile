@@ -422,8 +422,8 @@ static void scan(File file)
         return;
 
     case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
-        struct zip_hdr { //TODO: Fix zip
-            uint magic;
+        struct pkzip_hdr { //TODO: Fix zip
+            //uint magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -436,8 +436,8 @@ static void scan(File file)
             ushort eflength; // extra field length
         }
 
-        zip_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        pkzip_hdr h;
+        scpy(file, &h, h.sizeof);
 
         if (More)
         {
@@ -882,7 +882,7 @@ static void scan(File file)
             char[66] name;
             ushort osnum;
             ushort signature_type;
-            //char reserved[16];
+            //char[16] reserved;
         }
         rpm_hdr h;
         scpy(file, &h, h.sizeof, true);
@@ -897,7 +897,7 @@ static void scan(File file)
         write(h.major, ".", h.minor, " \"", asciz(h.name), "\" for ");
         switch (h.osnum)
         {
-            case 0x100:  write("linux"); break;
+            case 0x100: write("linux"); break;
             default: write("other"); break;
         }
         writeln(" platforms");
