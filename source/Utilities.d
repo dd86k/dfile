@@ -13,14 +13,11 @@ import std.stdio;
 /// Read file with a struct.
 void scpy(File file, void* s, size_t size, bool rewind = false)
 {
-    ubyte[] buf = new ubyte[size];
     if (rewind) file.rewind();
+    ubyte[] buf = new ubyte[size];
     file.rawRead(buf);
     ubyte* sp = cast(ubyte*)s, bp = &buf[0];
-    debug writeln("[scpy] struct size : ", size);
-    debug writeln("[scpy] buffer size : ", buf.length);
-    do *(sp + size) = *(bp + size);
-    while (size--);
+    do *sp++ = *bp++; while (size--);
 }
 
 //TODO: scpy_reverse

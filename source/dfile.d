@@ -422,8 +422,8 @@ static void scan(File file)
         return;
 
     case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
-        struct zip_hdr {
-            //uint magic;
+        struct zip_hdr { //TODO: Fix zip
+            uint magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -437,7 +437,7 @@ static void scan(File file)
         }
 
         zip_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(file, &h, h.sizeof, true);
 
         if (More)
         {
@@ -451,7 +451,7 @@ static void scan(File file)
             writeln("Size (Uncompressed): ", h.usize);
             writeln("Size (Compressed)  : ", h.csize);
             writeln("Filename Size      : ", h.fnlength);
-            writeln("Extra field Size   : ", h.eflength);
+            //writeln("Extra field Size   : ", h.eflength);
         }
 
         debug writefln("FNLENGTH: %X", h.fnlength);
@@ -482,6 +482,7 @@ static void scan(File file)
         if (h.fnlength)
         {
             char[] filename = new char[h.fnlength];
+            //file.seek(h.sizeof);
             file.rawRead(filename);
             write(` "`, filename, `"`);
         }
