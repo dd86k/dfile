@@ -1,4 +1,6 @@
-
+/*
+ * main.d : CLI Main entry point.
+ */
 
 module main;
 
@@ -24,14 +26,14 @@ private static int main(string[] args)
     {
         switch (args[i])
         {
-        case "-d", "--debug", "/d", "/debug":
+        case "-d", "--debug":
             Debugging = true;
             writeln("Debugging mode turned on");
             break;
-        case "-s", "--showname", "/s", "/showname":
+        case "-s", "--showname":
             ShowingName = true;
             break;
-        case "-m", "--more", "/m", "/more":
+        case "-m", "--more":
             Informing = true;
             break;
         /*case "-t", "/t":
@@ -43,7 +45,7 @@ private static int main(string[] args)
         case "--help", "/?":
             print_help_full;
             return 0;
-        case "-v", "--version", "/v":
+        case "-v", "--version":
             print_version;
             return 0;
         default:
@@ -60,19 +62,7 @@ private static int main(string[] args)
             return 0;
         }
         else
-        {
-            if (Debugging)
-                writefln("L%04d: Opening file...", __LINE__);
-            CurrentFile = File(filename, "rb");
-            
-            if (Debugging)
-                writefln("L%04d: Scanning...", __LINE__);
-            scan(CurrentFile);
-            
-            if (Debugging)
-                writefln("L%04d: Closing file...", __LINE__);
-            CurrentFile.close();
-        }
+            scan(filename);
     }
     else
     {

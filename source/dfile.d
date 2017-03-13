@@ -14,12 +14,26 @@ import s_pe : scan_pe;
 import s_ne : scan_ne;
 import s_le : scan_le;
 import s_mach : scan_mach;
-import s_images;
-import Etc, utils;
+import s_images, Etc, utils;
 
 /// Setting
 static bool Debugging, Informing, ShowingName;
-static File CurrentFile;
+private static File CurrentFile;
+
+static void scan(string path)
+{
+    if (Debugging)
+        writefln("L%04d: Opening file...", __LINE__);
+    CurrentFile = File(path, "rb");
+    
+    if (Debugging)
+        writefln("L%04d: Scanning...", __LINE__);
+    scan(CurrentFile);
+    
+    if (Debugging)
+        writefln("L%04d: Closing file...", __LINE__);
+    CurrentFile.close();
+}
 
 static void scan(File file)
 {
