@@ -635,23 +635,24 @@ static void scan(File file)
         midi_hdr h;
         scpy(file, &h, h.sizeof, true);
 
+        report("MIDI, ", false);
+
         switch (invert(h.format))
         {
-            case 0: report("Single track MIDI", false); break;
-            case 1: report("Multiple track MIDI", false); break;
-            case 2: report("multiple song format", false); break;
-            default: report("MIDI with unknown format"); return;
+            case 0: report("Single track", false); break;
+            case 1: report("Multiple tracks", false); break;
+            case 2: report("Multiple songs", false); break;
+            default: report("Unknown format"); return;
         }
 
         h.number = invert(h.number);
         h.division = invert(h.division);
-        writef(" using %d tracks at ", h.number);
-
+        writef(": %d tracks at ", h.number);
         if (h.division & 0x8000) // Negative, SMPTE units
-            writef("%d ticks/frame (SMPTE: %d)",
+            writefln("%d ticks/frame (SMPTE: %d)",
                 h.division & 0xFF, h.division >> 8 & 0xFF);
         else // Ticks per beat
-            writef("%d ticks/quarter-note", h.division);
+            writefln("%d ticks/quarter-note", h.division);
     }
         return;
 
