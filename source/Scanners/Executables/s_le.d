@@ -47,7 +47,7 @@ private const enum : uint {
 static void scan_le(File file)
 {
     e32_hdr h;
-    structcpy(file, &h, h.sizeof);
+    scpy(file, &h, h.sizeof);
 
     if (More)
     {

@@ -11,18 +11,19 @@ import std.stdio;
  */
 
 /// Read file with a struct.
-void structcpy(File file, void* s, size_t size, bool rewind = false)
+void scpy(File file, void* s, size_t size, bool rewind = false)
 {
     ubyte[] buf = new ubyte[size];
     if (rewind) file.rewind();
     file.rawRead(buf);
-    ubyte* sp = cast(ubyte*)s;
-    for (--size; size > 0; --size)
-        *(sp + size) = buf[size];
-    *(sp) = buf[0];
+    ubyte* sp = cast(ubyte*)s, bp = &buf[0];
+    debug writeln("[scpy] struct size : ", size);
+    debug writeln("[scpy] buffer size : ", buf.length);
+    do *(sp + size) = *(bp + size);
+    while (size--);
 }
 
-//TODO: structcpy_reverse
+//TODO: scpy_reverse
 
 /*
  * String utilities.

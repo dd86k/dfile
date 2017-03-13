@@ -32,7 +32,7 @@ void scan_tar(File file)
     }
 
     tar_hdr h;
-    structcpy(file, &h, h.sizeof, true);
+    scpy(file, &h, h.sizeof, true);
 
     if (More)
     {

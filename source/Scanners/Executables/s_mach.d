@@ -354,12 +354,12 @@ static void scan_mach(File file)
     if (fat) // Java prefers Fat files
     {
         fat_header fh;
-        structcpy(file, &fh, fh.sizeof);
+        scpy(file, &fh, fh.sizeof);
 
         if (fh.nfat_arch)
         {
             fat_arch fa;
-            structcpy(file, &fa, fa.sizeof);
+            scpy(file, &fa, fa.sizeof);
 
             if (reversed)
             {
@@ -381,7 +381,7 @@ static void scan_mach(File file)
     else
     {
         mach_header mh;
-        structcpy(file, &mh, mh.sizeof);
+        scpy(file, &mh, mh.sizeof);
 
         if (reversed)
         {

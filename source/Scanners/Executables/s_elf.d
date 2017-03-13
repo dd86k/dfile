@@ -67,7 +67,7 @@ static void scan_elf(File file)
     debug writefln("L%04d: Started scanning ELF file", __LINE__);
 
     Elf32_Ehdr h;
-    structcpy(file, &h, h.sizeof, true);
+    scpy(file, &h, h.sizeof, true);
 
     debug
     {

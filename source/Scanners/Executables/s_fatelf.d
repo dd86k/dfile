@@ -33,7 +33,7 @@ private struct fat_subheader_v1
 void scan_fatelf(File file)
 {
     fat_header fh;
-    structcpy(file, &fh, fh.sizeof, true);
+    scpy(file, &fh, fh.sizeof, true);
 
     report("FatELF", false);
     
@@ -44,7 +44,7 @@ void scan_fatelf(File file)
             break;
         case 1: {
             fat_subheader_v1 fhv1;
-            structcpy(file, &fhv1, fhv1.sizeof);
+            scpy(file, &fhv1, fhv1.sizeof);
 
             elf_print_class(fhv1.word_size);
             elf_print_data(fhv1.byte_order);

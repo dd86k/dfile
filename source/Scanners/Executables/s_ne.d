@@ -55,7 +55,7 @@ private enum {
 static void scan_ne(File file)
 {
     ne_hdr h;
-    structcpy(file, &h, h.sizeof);
+    scpy(file, &h, h.sizeof);
 
     if (More)
     {

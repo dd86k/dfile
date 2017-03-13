@@ -150,14 +150,14 @@ static void scan_pe(File file)
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
-    structcpy(file, &peh, peh.sizeof);
+    scpy(file, &peh, peh.sizeof);
     {
         if (peh.SizeOfOptionalHeader > 0)
         { // PE Optional Header
-            structcpy(file, &peoh, peoh.sizeof);
+            scpy(file, &peoh, peoh.sizeof);
             if (peoh.magic == PE_FORMAT.HDR64)
                 file.seek(16, SEEK_CUR);
-            structcpy(file, &dirs, dirs.sizeof);
+            scpy(file, &dirs, dirs.sizeof);
         }
     }
 

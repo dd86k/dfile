@@ -120,7 +120,7 @@ static void scan(File file)
             }
 
             nesm_hdr h;
-            structcpy(file, &h, h.sizeof, true);
+            scpy(file, &h, h.sizeof, true);
             
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
@@ -171,7 +171,7 @@ static void scan(File file)
                 }
 
                 spc2_hdr h;
-                structcpy(file, &h, h.sizeof, true);
+                scpy(file, &h, h.sizeof, true);
 
                 report("SNES SPC2 v", false);
                 writeln(h.majorver, ".", h.minorver, " file with",
@@ -423,7 +423,7 @@ static void scan(File file)
 
     case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
         struct zip_hdr {
-            uint magic;
+            //uint magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -434,27 +434,26 @@ static void scan(File file)
             uint usize; // uncompressed size
             ushort fnlength; // filename length
             ushort eflength; // extra field length
-            // File name and extra field are variable sizes
         }
 
         zip_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof);
 
         if (More)
         {
-            writeln("magic      : ", h.magic);
+            //writeln("magic      : ", h.magic);
             writeln("Version    : ", h.version_);
             writeln("Flag       : ", h.flag);
             writeln("Compression: ", h.compression);
-            writeln("Time       : ", h.time);
-            writeln("Date       : ", h.date);
+            //writeln("Time       : ", h.time);
+            //writeln("Date       : ", h.date);
             writeln("CRC32      : ", h.crc32);
             writeln("Size (Uncompressed): ", h.usize);
             writeln("Size (Compressed)  : ", h.csize);
             writeln("Filename Size      : ", h.fnlength);
             writeln("Extra field Size   : ", h.eflength);
         }
-        
+
         debug writefln("FNLENGTH: %X", h.fnlength);
 
         report("ZIP ", false); // JAR, ODF, OOXML, EPUB
@@ -633,7 +632,7 @@ static void scan(File file)
         }
 
         midi_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
 
         switch (invert(h.format))
         {
@@ -842,7 +841,7 @@ static void scan(File file)
         }
         enum DEBIANBIN = "debian-binary   ";
         deb_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
         if (h.file_iden != DEBIANBIN) {
             report_text();
             return;
@@ -859,7 +858,7 @@ static void scan(File file)
                 string dps = isostr(h.ctl_filesize);
                 os = parse!int(dps);
                 file.seek(os, SEEK_CUR);
-                structcpy(file, &dh, dh.sizeof, false);
+                scpy(file, &dh, dh.sizeof, false);
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
             }
@@ -885,7 +884,7 @@ static void scan(File file)
             //char reserved[16];
         }
         rpm_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
         report("RPM ", false);
         switch (h.type)
         {
@@ -941,7 +940,7 @@ static void scan(File file)
         }
 
         kwaj_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1001,7 +1000,7 @@ static void scan(File file)
         }
 
         szdd_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1061,7 +1060,7 @@ static void scan(File file)
         }
 
         trx_hdr h;
-        structcpy(file, &h, h.sizeof);
+        scpy(file, &h, h.sizeof);
 
         if (h.version_ == 1 || h.version_ == 2) {
             report("TRX v", false);
@@ -1099,7 +1098,7 @@ static void scan(File file)
         }
 
         SparseExtentHeader h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
 
         report("VMware VMDK disk image v", false);
         write(h.version_/*,
@@ -1203,7 +1202,7 @@ static void scan(File file)
             return;
         }
         vhd_hdr h;
-        structcpy(file, &h, h.sizeof);
+        scpy(file, &h, h.sizeof);
         h.features = invert(h.features);
         if ((h.features & F_RES) == 0)
         {
@@ -1310,14 +1309,14 @@ static void scan(File file)
         }
         vdi_hdr h;
         file.seek(0x40);
-        structcpy(file, &h, h.sizeof);
+        scpy(file, &h, h.sizeof);
         if (h.magic != VDIMAGIC) {
             report_text(); // Coincidence
             return;
         }
         svdi_hdr sh;
         file.seek(0x150);
-        structcpy(file, &sh, sh.sizeof);
+        scpy(file, &sh, sh.sizeof);
         report("VirtualBox VDI disk image v", false);
         write(h.majorv, ".", h.minorv, ", ");
         switch (h.type)
@@ -1376,7 +1375,7 @@ static void scan(File file)
         }
 
         QCowHeader h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
 
         report("QEMU QCOW2 disk image v", false);
         write(invert(h.version_), ", ", formatsize(invert(h.size)));
@@ -1418,7 +1417,7 @@ static void scan(File file)
         }
         report("QEMU QED disk image, ", false);
         qed_hdr h;
-        structcpy(file, &h, h.sizeof, true);
+        scpy(file, &h, h.sizeof, true);
         write(formatsize(h.image_size));
 
         if (h.features & QED_F_BACKING_FILE) {

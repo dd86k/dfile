@@ -37,7 +37,7 @@ static void scan_png(File file) // Big Endian
         }*/
 
         ihdr_chunk_full h;
-        structcpy(file, &h, h.sizeof);
+        scpy(file, &h, h.sizeof);
 
         with (h) {
             write(invert(width), "x", invert(height), " pixels, ");
@@ -140,7 +140,7 @@ static void scan_gif(File file)
     }
 
     gif_header h;
-    structcpy(file, &h, h.sizeof, true);
+    scpy(file, &h, h.sizeof, true);
 
     switch (h.version_[1])
     { // 87a, 89a
