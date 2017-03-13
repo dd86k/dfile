@@ -64,34 +64,33 @@ enum : ushort // Public for FatELF
 
 static void scan_elf(File file)
 {
-    if (Debugging)
-        writefln("L%04d: Started scanning ELF file", __LINE__);
+    debug writefln("L%04d: Started scanning ELF file", __LINE__);
 
     Elf32_Ehdr h;
     structcpy(file, &h, h.sizeof, true);
 
-    if (Debugging)
+    debug
     {
         write("e_ident: ");
         foreach (c; h.e_ident) writef("%02X ", c);
         writeln();
     }
 
-    if (Debugging || Informing)
+    if (More)
     {
-        writefln("type: %s", h.e_type);
-        writefln("machine: %s", h.e_machine);
-        writefln("version: %s", h.e_version);
-        writefln("entry: %s", h.e_entry);
-        writefln("phoff: %s", h.e_phoff);
-        writefln("shoff: %s", h.e_shoff);
-        writefln("flags: %s", h.e_flags);
-        writefln("ehsize: %s", h.e_ehsize);
-        writefln("phentsize: %s", h.e_phentsize);
-        writefln("phnum: %s", h.e_phnum);
-        writefln("shentsize: %s", h.e_shentsize);
-        writefln("shnum: %s", h.e_shnum);
-        writefln("shstrndx: %s", h.e_shstrndx);
+        writefln("e_type: %s", h.e_type);
+        writefln("e_machine: %s", h.e_machine);
+        writefln("e_version: %s", h.e_version);
+        writefln("e_entry: %s", h.e_entry);
+        writefln("e_phoff: %s", h.e_phoff);
+        writefln("e_shoff: %s", h.e_shoff);
+        writefln("e_flags: %s", h.e_flags);
+        writefln("e_ehsize: %s", h.e_ehsize);
+        writefln("e_phentsize: %s", h.e_phentsize);
+        writefln("e_phnum: %s", h.e_phnum);
+        writefln("e_shentsize: %s", h.e_shentsize);
+        writefln("e_shnum: %s", h.e_shnum);
+        writefln("e_shstrndx: %s", h.e_shstrndx);
     }
 
     report("ELF", false);

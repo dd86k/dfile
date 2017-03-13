@@ -34,7 +34,7 @@ void scan_tar(File file)
     tar_hdr h;
     structcpy(file, &h, h.sizeof, true);
 
-    if (Informing)
+    if (More)
     {
         switch (h.linkflag)
         {

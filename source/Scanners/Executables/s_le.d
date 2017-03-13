@@ -49,16 +49,16 @@ static void scan_le(File file)
     e32_hdr h;
     structcpy(file, &h, h.sizeof);
 
-    if (Debugging || Informing)
+    if (More)
     {
-        writefln("LE e32_magic : %s",  h.e32_magic);
-        writefln("LE e32_border: %Xh", h.e32_border);
-        writefln("LE e32_worder: %Xh", h.e32_worder);
-        writefln("LE e32_level : %Xh", h.e32_level);
-        writefln("LE e32_cpu   : %Xh", h.e32_cpu);
-        writefln("LE e32_os    : %Xh", h.e32_os);
-        writefln("LE e32_ver   : %Xh", h.e32_ver);
-        writefln("LE e32_mflags: %Xh", h.e32_mflags);  // Module flags
+        writefln("e32_magic : %s",  h.e32_magic);
+        writefln("e32_border: %Xh", h.e32_border);
+        writefln("e32_worder: %Xh", h.e32_worder);
+        writefln("e32_level : %Xh", h.e32_level);
+        writefln("e32_cpu   : %Xh", h.e32_cpu);
+        writefln("e32_os    : %Xh", h.e32_os);
+        writefln("e32_ver   : %Xh", h.e32_ver);
+        writefln("e32_mflags: %Xh", h.e32_mflags);  // Module flags
     }
 
     {

@@ -10,7 +10,7 @@ static void scan_png(File file) // Big Endian
 { // https://www.w3.org/TR/PNG-Chunks.html
     report("Portable Network Graphics image (PNG)");
 
-    if (Informing)
+    if (More)
     {
         struct ihdr_chunk_full { // Yeah.. Blame PNG
             uint length;
@@ -151,7 +151,7 @@ static void scan_gif(File file)
         default: writeln("GIF with invalid version"); return;
     }
 
-    if (Informing)
+    if (More)
     {
         enum {
             GLOBAL_COLOR_TABLE = 0x80,

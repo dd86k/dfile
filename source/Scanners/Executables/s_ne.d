@@ -57,37 +57,37 @@ static void scan_ne(File file)
     ne_hdr h;
     structcpy(file, &h, h.sizeof);
 
-    if (Debugging || Informing)
+    if (More)
     {
-        writefln("NE ne_magic       : %s", h.ne_magic);
-        writefln("NE ne_ver         : %Xh", h.ne_ver);
-        writefln("NE ne_rev         : %Xh", h.ne_rev);
-        writefln("NE ne_enttab      : %Xh", h.ne_enttab);
-        writefln("NE ne_cbenttab    : %Xh", h.ne_cbenttab);
-        writefln("NE ne_crc         : %Xh", h.ne_crc);
-        writefln("NE ne_flags       : %Xh", h.ne_flags);
-        writefln("NE ne_autodata    : %Xh", h.ne_autodata);
-        writefln("NE ne_heap        : %Xh", h.ne_heap);
-        writefln("NE ne_stack       : %Xh", h.ne_stack);
-        writefln("NE ne_csip        : %Xh", h.ne_csip);
-        writefln("NE ne_sssp        : %Xh", h.ne_sssp);
-        writefln("NE ne_cseg        : %Xh", h.ne_cseg);
-        writefln("NE ne_cmod        : %Xh", h.ne_cmod);
-        writefln("NE ne_cbnrestab   : %Xh", h.ne_cbnrestab);
-        writefln("NE ne_segtab      : %Xh", h.ne_segtab);
-        writefln("NE ne_rsrctab     : %Xh", h.ne_rsrctab);
-        writefln("NE ne_restab      : %Xh", h.ne_restab);
-        writefln("NE ne_modtab      : %Xh", h.ne_modtab);
-        writefln("NE ne_imptab      : %Xh", h.ne_imptab);
-        writefln("NE ne_nrestab     : %Xh", h.ne_nrestab);
-        writefln("NE ne_cmovent     : %Xh", h.ne_cmovent);
-        writefln("NE ne_align       : %Xh", h.ne_align);
-        writefln("NE ne_cres        : %Xh", h.ne_cres);
-        writefln("NE ne_psegcsum    : %Xh", h.ne_psegcsum);
-        writefln("NE ne_pretthunks  : %Xh", h.ne_pretthunks);
-        writefln("NE ne_psegrefbytes: %Xh", h.ne_psegrefbytes);
-        writefln("NE ne_swaparea    : %Xh", h.ne_swaparea);
-        write("NE ne_expver      : ");
+        writefln("ne_magic       : %s", h.ne_magic);
+        writefln("ne_ver         : %Xh", h.ne_ver);
+        writefln("ne_rev         : %Xh", h.ne_rev);
+        writefln("ne_enttab      : %Xh", h.ne_enttab);
+        writefln("ne_cbenttab    : %Xh", h.ne_cbenttab);
+        writefln("ne_crc         : %Xh", h.ne_crc);
+        writefln("ne_flags       : %Xh", h.ne_flags);
+        writefln("ne_autodata    : %Xh", h.ne_autodata);
+        writefln("ne_heap        : %Xh", h.ne_heap);
+        writefln("ne_stack       : %Xh", h.ne_stack);
+        writefln("ne_csip        : %Xh", h.ne_csip);
+        writefln("ne_sssp        : %Xh", h.ne_sssp);
+        writefln("ne_cseg        : %Xh", h.ne_cseg);
+        writefln("ne_cmod        : %Xh", h.ne_cmod);
+        writefln("ne_cbnrestab   : %Xh", h.ne_cbnrestab);
+        writefln("ne_segtab      : %Xh", h.ne_segtab);
+        writefln("ne_rsrctab     : %Xh", h.ne_rsrctab);
+        writefln("ne_restab      : %Xh", h.ne_restab);
+        writefln("ne_modtab      : %Xh", h.ne_modtab);
+        writefln("ne_imptab      : %Xh", h.ne_imptab);
+        writefln("ne_nrestab     : %Xh", h.ne_nrestab);
+        writefln("ne_cmovent     : %Xh", h.ne_cmovent);
+        writefln("ne_align       : %Xh", h.ne_align);
+        writefln("ne_cres        : %Xh", h.ne_cres);
+        writefln("ne_psegcsum    : %Xh", h.ne_psegcsum);
+        writefln("ne_pretthunks  : %Xh", h.ne_pretthunks);
+        writefln("ne_psegrefbytes: %Xh", h.ne_psegrefbytes);
+        writefln("ne_swaparea    : %Xh", h.ne_swaparea);
+        write("ne_expver      : ");
         foreach (b; h.ne_expver)
             writef("%X ", b);
         writeln();

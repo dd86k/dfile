@@ -161,7 +161,7 @@ static void scan_pe(File file)
         }
     }
 
-    if (Debugging || Informing)
+    if (More)
     {
         writefln("Machine type : %s", peh.Machine);
         writefln("Number of sections : %s", peh.NumberOfSymbols);

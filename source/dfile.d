@@ -17,21 +17,18 @@ import s_mach : scan_mach;
 import s_images, Etc, utils;
 
 /// Setting
-static bool Debugging, Informing, ShowingName;
+static bool More, ShowingName;
 private static File CurrentFile;
 
 static void scan(string path)
 {
-    if (Debugging)
-        writefln("L%04d: Opening file...", __LINE__);
+    debug writefln("L%04d: Opening file...", __LINE__);
     CurrentFile = File(path, "rb");
     
-    if (Debugging)
-        writefln("L%04d: Scanning...", __LINE__);
+    debug writefln("L%04d: Scanning...", __LINE__);
     scan(CurrentFile);
     
-    if (Debugging)
-        writefln("L%04d: Closing file...", __LINE__);
+    debug writefln("L%04d: Closing file...", __LINE__);
     CurrentFile.close();
 }
 
@@ -44,11 +41,10 @@ static void scan(File file)
     }
 
     char[4] sig; // UTF-8, ASCII compatible.
-    if (Debugging)
-        writefln("L%04d: Reading file..", __LINE__);
+    debug writefln("L%04d: Reading file..", __LINE__);
     file.rawRead(sig);
 
-    if (Debugging)
+    debug
     {
         writef("L%04d: Magic - ", __LINE__);
         foreach (b; sig) writef("%X ", b);
@@ -445,7 +441,7 @@ static void scan(File file)
         zip_hdr h;
         structcpy(file, &h, h.sizeof, true);
 
-        if (Informing)
+        if (More)
         {
             writeln("magic      : ", h.magic);
             writeln("Version    : ", h.version_);
@@ -854,7 +850,7 @@ static void scan(File file)
         }
         report("Debian Package v", false);
         writeln(h.version_);
-        if (Informing)
+        if (More)
         {
             deb_data_hdr dh;
             int os, dos;
@@ -1256,7 +1252,7 @@ static void scan(File file)
 
         writeln();
 
-        if (Informing)
+        if (More)
         {
             write("UUID: ");
             writef("%02X", h.uuid[0]);
@@ -1330,7 +1326,7 @@ static void scan(File file)
             default: write("Unknown type"); break;
         }
         writeln(", ", formatsize(sh.diskSize));
-        if (Informing)
+        if (More)
         {
             write("VDI UUID     : ");
             writef("%02X", sh.vdi_uuid[0]);
@@ -1392,7 +1388,7 @@ static void scan(File file)
 
         writeln();
 
-        if (Informing)
+        if (More)
         {
             writeln("Snapshots: ",  invert(h.nb_snapshots));
         }

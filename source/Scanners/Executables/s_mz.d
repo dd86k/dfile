@@ -35,8 +35,7 @@ private struct mz_hdr
 
 static void scan_mz(File file)
 {
-    if (Debugging)
-        writefln("L%04d: Started scanning MZ file", __LINE__);
+    debug writefln("L%04d: Started scanning MZ file", __LINE__);
 
     mz_hdr h;
     {
@@ -47,23 +46,23 @@ static void scan_mz(File file)
         memcpy(&h, &buf, mz_hdr.sizeof);
     }
 
-    if (Debugging || Informing)
+    if (More)
     {
-        writefln("MZ e_magic   : %Xh", h.e_magic);
-        writefln("MZ e_cblp    : %Xh", h.e_cblp);
-        writefln("MZ e_cp      : %Xh", h.e_cp);
-        writefln("MZ e_crlc    : %Xh", h.e_crlc);
-        writefln("MZ e_cparh   : %Xh", h.e_cparh);
-        writefln("MZ e_minalloc: %Xh", h.e_minalloc);
-        writefln("MZ e_maxalloc: %Xh", h.e_maxalloc);
-        writefln("MZ e_ss      : %Xh", h.e_ss);
-        writefln("MZ e_sp      : %Xh", h.e_sp);
-        writefln("MZ e_csum    : %Xh", h.e_csum);
-        writefln("MZ e_ip      : %Xh", h.e_ip);
-        writefln("MZ e_cs      : %Xh", h.e_cs);
-        writefln("MZ e_lfarlc  : %Xh", h.e_lfarlc);
-        writefln("MZ e_ovno    : %Xh", h.e_ovno);
-        writefln("MZ e_lfanew  : %Xh", h.e_lfanew);
+        writefln("e_magic   : %Xh", h.e_magic);
+        writefln("e_cblp    : %Xh", h.e_cblp);
+        writefln("e_cp      : %Xh", h.e_cp);
+        writefln("e_crlc    : %Xh", h.e_crlc);
+        writefln("e_cparh   : %Xh", h.e_cparh);
+        writefln("e_minalloc: %Xh", h.e_minalloc);
+        writefln("e_maxalloc: %Xh", h.e_maxalloc);
+        writefln("e_ss      : %Xh", h.e_ss);
+        writefln("e_sp      : %Xh", h.e_sp);
+        writefln("e_csum    : %Xh", h.e_csum);
+        writefln("e_ip      : %Xh", h.e_ip);
+        writefln("e_cs      : %Xh", h.e_cs);
+        writefln("e_lfarlc  : %Xh", h.e_lfarlc);
+        writefln("e_ovno    : %Xh", h.e_ovno);
+        writefln("e_lfanew  : %Xh", h.e_lfanew);
     }
 
     if (h.e_lfanew)

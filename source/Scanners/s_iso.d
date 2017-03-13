@@ -41,7 +41,7 @@ ISO_READ:
             case BOOT: bootable = true; break;
             case PRIMARY_VOL_DESC:
                 label = isostr(buf[40 .. 71]);
-                if (Informing)
+                if (More)
                 {
                     system = isostr(buf[8 .. 40]);
                     publisher = isostr(buf[318 .. 446]);
@@ -71,7 +71,7 @@ ISO_END:
         write(", Bootable");
     writeln();
 
-    if (Informing)
+    if (More)
     {
         writeln("System: ", system);
         writeln("Publisher: ", publisher);

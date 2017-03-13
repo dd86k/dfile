@@ -26,15 +26,11 @@ private static int main(string[] args)
     {
         switch (args[i])
         {
-        case "-d", "--debug":
-            Debugging = true;
-            writeln("Debugging mode turned on");
-            break;
         case "-s", "--showname":
             ShowingName = true;
             break;
         case "-m", "--more":
-            Informing = true;
+            More = true;
             break;
         /*case "-t", "/t":
 
@@ -57,10 +53,7 @@ private static int main(string[] args)
     if (exists(filename))
     {
         if (isDir(filename))
-        {
             report("Directory");
-            return 0;
-        }
         else
             scan(filename);
     }
@@ -86,7 +79,6 @@ static void print_help_full()
     writeln("  Option           Description (Default value)");
     writeln("  -m, --more       Print more information if available. (Off)");
     writeln("  -s, --showname   Show filename before result. (Off)");
-    writeln("  -d, --debug      Print debugging information. (Off)");
     writeln();
     writeln("  -h, --help, /?   Print help and exit");
     writeln("  -v, --version    Print version and exit");
