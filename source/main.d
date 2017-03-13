@@ -22,7 +22,7 @@ private static int main(string[] args)
         return 0;
     }
 
-    for (int i = 0; i < l; ++i)
+    for (int i; i < l; ++i)
     {
         switch (args[i])
         {
@@ -75,18 +75,18 @@ private static int main(string[] args)
 
 static void print_help()
 {
-    writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
-    writefln("         %s {-h|--help|-v|--version}", PROJECT_NAME);
+    writeln("Determine the file type by its content.");
+    writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
+    writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version|/?}");
 }
 
 static void print_help_full()
 {
-    writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
-    writeln("Determine the file type.");
-    writeln("  Option           Description (Default value)\n");
-    writeln("  -m, --more       Print all information if available. (False)");
-    writeln("  -s, --showname   Show filename before result. (False)");
-    writeln("  -d, --debug      Print debugging information. (False)");
+    print_help();
+    writeln("  Option           Description (Default value)");
+    writeln("  -m, --more       Print more information if available. (Off)");
+    writeln("  -s, --showname   Show filename before result. (Off)");
+    writeln("  -d, --debug      Print debugging information. (Off)");
     writeln();
     writeln("  -h, --help, /?   Print help and exit");
     writeln("  -v, --version    Print version and exit");
@@ -97,9 +97,8 @@ static void print_version()
     debug
     writeln(PROJECT_NAME, " ", PROJECT_VERSION, "-debug (", __TIMESTAMP__, ")");
     else
-    writeln(PROJECT_NAME, " ", PROJECT_VERSION, "  (", __TIMESTAMP__, ")");
+    writeln(PROJECT_NAME, " ", PROJECT_VERSION, " (", __TIMESTAMP__, ")");
     writeln("MIT License: Copyright (c) 2016-2017 dd86k");
     writeln("Project page: <https://github.com/dd86k/dfile>");
-    writefln("Compiled %s with %s v%s",
-        __FILE__, __VENDOR__, __VERSION__);
+    writeln("Compiled ", __FILE__, " with ", __VENDOR__, " v", __VERSION__);
 }
