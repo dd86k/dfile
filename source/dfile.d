@@ -432,7 +432,7 @@ static void scan(File file)
          */
         struct pkzip_hdr { // PKWare ZIP
             //uint magic;
-            char[2] magic;
+            ushort magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -451,17 +451,17 @@ static void scan(File file)
 
         if (More)
         {
-            //writeln("magic      : ", h.magic);
+            writeln("magic      : ", h.magic);
             writeln("Version    : ", h.version_);
             writeln("Flag       : ", h.flag);
             writeln("Compression: ", h.compression);
-            //writeln("Time       : ", h.time);
-            //writeln("Date       : ", h.date);
+            writeln("Time       : ", h.time);
+            writeln("Date       : ", h.date);
             writeln("CRC32      : ", h.crc32);
             writeln("Size (Uncompressed): ", h.usize);
             writeln("Size (Compressed)  : ", h.csize);
             writeln("Filename Size      : ", h.fnlength);
-            //writeln("Extra field Size   : ", h.eflength);
+            writeln("Extra field Size   : ", h.eflength);
         }
 
         debug writefln("FNLENGTH: %X", h.fnlength);
