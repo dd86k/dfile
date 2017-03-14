@@ -594,7 +594,7 @@ static void scan(File file)
             return;
         }
 
-    case "OggS": { // Ogg extra
+    case "OggS": { // Ogg
         struct ogg_hdr {
             //uint magic;
             ubyte version_;
@@ -610,6 +610,27 @@ static void scan(File file)
         report("Ogg audio file v", false);
         writeln(h.version_, " with ", h.pages, " segments");
     } 
+        return;
+
+    case "fLaC": // FLAC
+    //https://xiph.org/flac/format.html
+    //https://xiph.org/flac/api/format_8h_source.html
+        /*
+        typedef struct {
+            FLAC__uint32 length;
+            FLAC__byte *entry;
+        } FLAC__StreamMetadata_VorbisComment_Entry;
+        typedef struct {
+            unsigned min_blocksize, max_blocksize;
+            unsigned min_framesize, max_framesize;
+            unsigned sample_rate;
+            unsigned channels;
+            unsigned bits_per_sample;
+            FLAC__uint64 total_samples;
+            FLAC__byte md5sum[16];
+        } FLAC__StreamMetadata_StreamInfo;
+        */
+        report("Free Lossless Audio Codec audio file (FLAC)");
         return;
 
     case "8BPS":
@@ -644,10 +665,6 @@ static void scan(File file)
             return;
         }
 
-    case "fLaC": //TODO: FLAC extra
-        report("Free Lossless Audio Codec audio file (FLAC)");
-        return;
-
     case "MThd": { // Big Endian
         struct midi_hdr {
             char[4] magic;
@@ -662,10 +679,10 @@ static void scan(File file)
 
         switch (invert(h.format))
         {
-            case 0: report("Single track", false); break;
-            case 1: report("Multiple tracks", false); break;
-            case 2: report("Multiple songs", false); break;
-            default: report("Unknown format"); return;
+            case 0: write("Single track"); break;
+            case 1: write("Multiple tracks"); break;
+            case 2: write("Multiple songs"); break;
+            default: write("Unknown format"); return;
         }
 
         h.number = invert(h.number);
