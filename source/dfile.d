@@ -1134,11 +1134,11 @@ static void scan(File file)
         return;
 
     case "COWD": { //TODO: Get an EXSi COW vdisk
-        /*enum COWDISK_MAX_PARENT_FILELEN = 1024;
+        enum COWDISK_MAX_PARENT_FILELEN = 1024;
         enum COWDISK_MAX_NAME_LEN = 60;
         enum COWDISK_MAX_DESC_LEN = 512;
         struct COWDisk_Header {
-            uint magicNumber;
+            //uint magicNumber;
             uint version_;
             uint flags;
             uint numSectors;
@@ -1164,24 +1164,29 @@ static void scan(File file)
             char[8] reserved;
             uint uncleanShutdown;
             //char[396] padding;
-        }*/
-        report("ESXi COW disk image");
+        }
+        COWDisk_Header h;
+        scpy(file, &h, h.sizeof);
+        if (h.flags != 3)
+        {
+            report_text();
+            return;
+        }
+        long size = h.numSectors * 512;
+        report("ESXi COW disk image v", false);
+        writeln(h.version_, ", ", formatsize(size));
+
+        if (More)
+        {
+            writeln("Cylinders: ", h.u.root.cylinders);
+            writeln("Heads: ", h.u.root.heads);
+            writeln("Sectors: ", h.u.root.sectors);
+            //writeln("Child filename: ", asciz(h.u.child.parentFileName));
+        }
     }
         return;
 
     case "cone": { // conectix, VHD, values in big endian
-        enum {
-            VHDMAGIC = "conectix",
-            OS_WINDOWS = "Wi2k",
-            OS_MAC = "Mac ",
-        }
-        enum {
-            F_TEMPORARY = 1,
-            F_RES = 2, // reserved, always 1
-            D_FIXED = 2,
-            D_DYNAMIC = 3,
-            D_DIFF = 4,
-        }
         struct vhd_hdr {
             uint features;
             ushort major;
@@ -1202,6 +1207,18 @@ static void scan(File file)
             ubyte[16] uuid;
             ubyte savedState;
             //ubyte[427] reserved;
+        }
+        enum {
+            VHDMAGIC = "conectix",
+            OS_WINDOWS = "Wi2k",
+            OS_MAC = "Mac ",
+        }
+        enum {
+            F_TEMPORARY = 1,
+            F_RES = 2, // reserved, always 1
+            D_FIXED = 2,
+            D_DYNAMIC = 3,
+            D_DIFF = 4,
         }
         file.rawRead(sig);
         if (sig != VHDMAGIC[4..$])
