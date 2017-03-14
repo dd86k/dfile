@@ -594,8 +594,22 @@ static void scan(File file)
             return;
         }
 
-    case "OggS": //TODO: Ogg extra
-        report("Ogg audio file");
+    case "OggS": { // Ogg extra
+        struct ogg_hdr {
+            //uint magic;
+            ubyte version_;
+            ubyte type; // Usually bit 2 set
+            ulong granulepos;
+            uint serialnum;
+            uint pageseqnum;
+            uint crc32;
+            ubyte pages;
+        }
+        ogg_hdr h;
+        scpy(file, &h, h.sizeof);
+        report("Ogg audio file v", false);
+        writeln(h.version_, " with ", h.pages, " segments");
+    } 
         return;
 
     case "8BPS":
@@ -1133,10 +1147,19 @@ static void scan(File file)
     }
         return;
 
-    case "COWD": { //TODO: Get an EXSi COW vdisk
+    case "COWD": { // ESXi COW
         enum COWDISK_MAX_PARENT_FILELEN = 1024;
         enum COWDISK_MAX_NAME_LEN = 60;
         enum COWDISK_MAX_DESC_LEN = 512;
+        struct Root {
+            uint cylinders;
+            uint heads;
+            uint sectors;
+        }
+        struct Child {
+            char[COWDISK_MAX_PARENT_FILELEN] parentFileName;
+            uint parentGeneration;
+        }
         struct COWDisk_Header {
             //uint magicNumber;
             uint version_;
@@ -1146,16 +1169,9 @@ static void scan(File file)
             uint gdOffset;
             uint numGDEntries;
             uint freeSector;
-            union u {
-                struct root {
-                    uint cylinders;
-                    uint heads;
-                    uint sectors;
-                }
-                struct child {
-                    char[COWDISK_MAX_PARENT_FILELEN] parentFileName;
-                    uint parentGeneration;
-                }
+            union {
+                Root root;
+                Child child;
             }
             uint generation;
             char[COWDISK_MAX_NAME_LEN] name;
@@ -1174,13 +1190,13 @@ static void scan(File file)
         }
         long size = h.numSectors * 512;
         report("ESXi COW disk image v", false);
-        writeln(h.version_, ", ", formatsize(size));
+        writeln(h.version_, ", ", formatsize(size), ", \"", asciz(h.name), "\"");
 
         if (More)
         {
-            writeln("Cylinders: ", h.u.root.cylinders);
-            writeln("Heads: ", h.u.root.heads);
-            writeln("Sectors: ", h.u.root.sectors);
+            writeln("Cylinders: ", h.root.cylinders);
+            writeln("Heads: ", h.root.heads);
+            writeln("Sectors: ", h.root.sectors);
             //writeln("Child filename: ", asciz(h.u.child.parentFileName));
         }
     }
@@ -1463,7 +1479,6 @@ static void scan(File file)
         return;
 
     /*case "With": { // WithoutFreeSpace -- Parallels HDD
-        //TODO: Need more info with Parallels HDD images
         char[12]
         report("Parallels HDD disk image");
     }
