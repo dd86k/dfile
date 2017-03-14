@@ -6,6 +6,11 @@ module utils;
 
 import std.stdio;
 
+version (X86)
+    version = X86_ANY;
+else version (X86_64)
+    version = X86_ANY;
+
 /*
  * File utilities.
  */
@@ -19,8 +24,6 @@ void scpy(File file, void* s, size_t size, bool rewind = false)
     ubyte* sp = cast(ubyte*)s, bp = &buf[0];
     do *sp++ = *bp++; while (size--);
 }
-
-//TODO: scpy_reverse
 
 /*
  * String utilities.
@@ -58,11 +61,11 @@ string isostr(char[] str) pure
  */
 
 /// Get byte size, formatted.
-string formatsize(ulong size)
+string formatsize(long size)
 {
     import std.format : format;
 
-    enum : ulong {
+    enum : long {
         KB = 1024,
         MB = KB * 1024,
         GB = MB * 1024,
@@ -81,27 +84,43 @@ string formatsize(ulong size)
         return format("%d TB", size / TB);
 }
 
-/// Invert endian.
-ushort invert(ushort num) pure
+/// Invert big to little endian.
+version (X86_ANY) ushort invert(ushort num) pure
 {
-    if (num)
+    asm pure {
+        naked;
+        xchg AH, AL;
+        ret;
+    }
+}
+else ushort invert(ushort num) pure
+{
+    version (LittleEndian)
     {
-        version (LittleEndian)
+        if (num)
         {
             ubyte* p = cast(ubyte*)&num;
             return p[1] | p[0] << 8;
         }
     }
-    
+
     return num;
 }
 
-/// Invert endian.
-uint invert(uint num) pure
+/// Invert big to little endian.
+version (X86_ANY) uint invert(uint num) pure
 {
-    if (num)
+    asm pure {
+        naked;
+        bswap EAX;
+        ret;
+    }
+}
+else uint invert(uint num) pure
+{
+    version (LittleEndian)
     {
-        version (LittleEndian)
+        if (num)
         {
             ubyte* p = cast(ubyte*)&num;
             return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
@@ -111,12 +130,12 @@ uint invert(uint num) pure
     return num;
 }
 
-/// Invert endian.
+/// Invert big to little endian.
 ulong invert(ulong num) pure
 {
-    if (num)
+    version (LittleEndian)
     {
-        version (LittleEndian)
+        if (num)
         {
             ubyte* p = cast(ubyte*)&num;
             ubyte c;

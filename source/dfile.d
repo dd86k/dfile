@@ -482,7 +482,7 @@ static void scan(File file)
         if (h.fnlength)
         {
             char[] filename = new char[h.fnlength];
-            //file.seek(h.sizeof);
+            //file.seek(h.sizeof + 2);
             file.rawRead(filename);
             write(` "`, filename, `"`);
         }
@@ -1440,11 +1440,11 @@ static void scan(File file)
     }
         return;
 
-    case "With": { // WithoutFreeSpace -- Parallels HDD
-    //TODO: more checking with parallels hdd
+    /*case "With": { // WithoutFreeSpace -- Parallels HDD
+        char[12]
         report("Parallels HDD disk image");
     }
-        return;
+        return;*/
 
     default:
         switch (sig[0..2])

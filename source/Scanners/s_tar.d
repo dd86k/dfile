@@ -34,21 +34,24 @@ void scan_tar(File file)
     tar_hdr h;
     scpy(file, &h, h.sizeof, true);
 
+    switch (h.linkflag)
+    {
+        case 0,'0': report("Normal", false); break;
+        case '1': report("Link", false); break;
+        case '2': report("Syslink", false); break;
+        case '3': report("Character Special", false); break;
+        case '4': report("Block Special", false); break;
+        case '5': report("Directory", false); break;
+        case '6': report("FIFO Special", false); break;
+        case '7': report("Contiguous", false); break;
+        default:  report("Unknown type Tar archive"); return;
+    }
+    write(" Tar archive");
+
     if (More)
     {
-        switch (h.linkflag)
-        {
-            case 0,'0': report("Normal", false); break;
-            case '1': report("Link", false); break;
-            case '2': report("Syslink", false); break;
-            case '3': report("Character Special", false); break;
-            case '4': report("Block Special", false); break;
-            case '5': report("Directory", false); break;
-            case '6': report("FIFO Special", false); break;
-            case '7': report("Contiguous", false); break;
-            default:  report("Unknown type Tar archive"); return;
-        }
-        writeln(" Tar archive, Reports ", tarstr(h.size), " Bytes");
+        write(", Reports ", tarstr(h.size), " Bytes");
     }
-    else report("Tar archive");
+
+    writeln();
 }

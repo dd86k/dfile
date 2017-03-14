@@ -169,8 +169,10 @@ static void scan_etc(File file)
         char[Tar.length] b;
         file.seek(0x101);
         file.rawRead(b);
-        if (b == Tar || b == GNUTar)
+        if (b == Tar || b == GNUTar) {
             scan_tar(file);
+            return;
+        }
     }
     else goto CONTINUE;
 
