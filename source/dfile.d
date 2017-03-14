@@ -422,8 +422,17 @@ static void scan(File file)
         return;
 
     case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
-        struct pkzip_hdr { //TODO: Fix zip
+        /*
+         * Important notice :
+         * It took me HOURS to figure this bullshit out, but
+         * this part of the code will ONLY work if we SEEK to 2
+         * and have a magic of 2 BYTES. I tried everything else as
+         * usual but NOTHING was working, so please, do NOT touch this
+         * code. Thank you for this waste of unpleasant time.
+         */
+        struct pkzip_hdr { // PKWare ZIP
             //uint magic;
+            char[2] magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -437,6 +446,7 @@ static void scan(File file)
         }
 
         pkzip_hdr h;
+        file.seek(2);
         scpy(file, &h, h.sizeof);
 
         if (More)
@@ -482,7 +492,6 @@ static void scan(File file)
         if (h.fnlength)
         {
             char[] filename = new char[h.fnlength];
-            //file.seek(h.sizeof + 2);
             file.rawRead(filename);
             write(` "`, filename, `"`);
         }
