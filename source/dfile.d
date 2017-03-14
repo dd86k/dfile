@@ -563,7 +563,7 @@ static void scan(File file)
         return;
 
     case "%PDF":
-        file.rawRead(sig);
+        file.rawRead(sig); // for "-1.0"
         report("PDF", false);
         writeln(sig, " document");
         return;
@@ -594,7 +594,7 @@ static void scan(File file)
             return;
         }
 
-    case "OggS":
+    case "OggS": //TODO: Ogg extra
         report("Ogg audio file");
         return;
 
@@ -1083,8 +1083,8 @@ static void scan(File file)
     }
         return;
 
-    case "KDMV": { //TODO: details on VMDK disk images
-        struct SparseExtentHeader { // technote
+    case "KDMV": { // VMDK vdisk
+        struct SparseExtentHeader { // check technote
             uint magicNumber;
             uint version_;
             uint flags;
@@ -1111,27 +1111,24 @@ static void scan(File file)
         SparseExtentHeader h;
         scpy(file, &h, h.sizeof, true);
 
+        //h.grainSize = h.grainSize < 8 ? 8*512 : 2^^h.grainSize;
+        long size = h.capacity / 512;
         report("VMware VMDK disk image v", false);
-        write(h.version_/*,
-            ", ",
-            ((((2 ^^ h.grainSize) * 512) * h.capacity) / 1024 / 1024),
-            " KB"*/);
-        
-        if (h.flags & COMPRESSED)
+        write(h.version_, ", ", formatsize(size));
+
+        //if (h.flags & COMPRESSED)
+        write(", ");
+        switch (h.compressAlgorithm)
         {
-            write(" using ");
-            switch (h.compressAlgorithm)
-            {
-            case 0: write("no"); break;
-            case 1: write("DEFLATE"); break;
-            default: write("unknown"); break;
-            }
-            write(" compression");
+        case 0: write("no"); break;
+        case 1: write("DEFLATE"); break;
+        default: write("unknown"); break;
         }
+        write(" compression");
 
         if (h.uncleanShutdown)
             write(", unclean shutdown");
-        
+
         writeln();
     }
         return;
