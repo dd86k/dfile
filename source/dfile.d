@@ -1398,7 +1398,7 @@ static void scan(File file)
 
         if (More)
         {
-            writeln("Snapshots: ",  invert(h.nb_snapshots));
+            writeln("Snapshots: ", invert(h.nb_snapshots));
         }
     }
         return;
@@ -1436,17 +1436,17 @@ static void scan(File file)
             if (h.features & QED_F_BACKING_FORMAT_NO_PROBE)
                 write("raw ");
             write("backing file: ", bfn);
-
         }
 
         if (h.features & QED_F_NEED_CHECK)
             write(", check needed");
-        
+
         writeln();
     }
         return;
 
     /*case "With": { // WithoutFreeSpace -- Parallels HDD
+        //TODO: Need more info with Parallels HDD images
         char[12]
         report("Parallels HDD disk image");
     }
