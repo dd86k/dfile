@@ -163,12 +163,9 @@ else ulong invert(ulong num) pure
 void invert(ubyte* a, size_t length) pure
 {
     size_t l = length / 2;
-
     if (l)
     {
-        // Get other half location if odd or not
-        ubyte* b = a + length - 1;//length % 2 ? a + l + 2 : a + l + 1;
-
+        ubyte* b = a + length - 1;
         ubyte c;
         while (l--)
         {

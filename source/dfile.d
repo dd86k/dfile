@@ -612,7 +612,7 @@ void scan(File file)
     } 
         return;
 
-    case "fLaC": // FLAC, big endian
+    case "fLaC": { // FLAC, big endian
     //https://xiph.org/flac/format.html
     //https://xiph.org/flac/api/format_8h_source.html
         struct flac_hdr {
@@ -635,26 +635,22 @@ void scan(File file)
             ushort stupid2;
             uint stupid3;
             */
+            /*uint stupid0;
+            ushort stupid1;
+            uint stupid2;
+            uint stupid3;*/
             ubyte[16] md5;
         }
         flac_hdr h;
         scpy(file, &h, h.sizeof);
-        debug {
-            ubyte* sp = cast(ubyte*)&h;
-            write("struct:");
-            int t;
-            while (t++ < h.sizeof)
-                writef(" %02X", *sp++);
-            writeln();
-        }
         report("FLAC audio file", false);
         if ((h.header & 0xFF) == 0) // Big endian
         {
-            invert(&h.stupid[0], h.stupid.length);
-            //int rate = (h.stupid1 & 0xFFFF) << 4 | (h.stupid2 >>> 12) & 0xF;
-            //int channels = ((h.stupid2 >>> 9) & 7) + 1;
-            //int bitsample = ((h.stupid2 >>> 4) & 0xF) + 1;
-            //writeln(rate, " Hz, ", bitsample, " bit, ", channels, " channels");
+            int bits = ((h.stupid[8] & 1) << 4 | (h.stupid[9] >>> 4)) + 1;
+            int chan = ((h.stupid[8] >> 1) & 7) + 1;
+            int rate =
+                ((h.stupid[6] << 12) | h.stupid[7] << 4 | h.stupid[8] >>> 4);
+            writeln(", ", rate, " Hz, ", bits, " bit, ", chan, " channels");
             if (More)
             {
                 write("MD5:");
@@ -664,6 +660,7 @@ void scan(File file)
         }
         else
             writeln();
+    }
         return;
 
     case "8BPS":
