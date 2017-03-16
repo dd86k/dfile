@@ -33,7 +33,7 @@ private struct mz_hdr
 	uint   e_lfanew;       /* File address of new exe header, or @0x3c */
 }
 
-static void scan_mz(File file)
+void scan_mz(File file)
 {
     debug writefln("L%04d: Started scanning MZ file", __LINE__);
 

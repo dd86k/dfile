@@ -52,7 +52,7 @@ private enum {
     NESOLO = 0x0001  /* Solo data */
 }
 
-static void scan_ne(File file)
+void scan_ne(File file)
 {
     ne_hdr h;
     scpy(file, &h, h.sizeof);

@@ -145,7 +145,7 @@ private enum PE_SUBSYSTEM : ushort
     WINDOWS_BOOT_APPLICATION = 16
 }
 
-static void scan_pe(File file)
+void scan_pe(File file)
 {
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;

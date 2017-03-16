@@ -62,7 +62,7 @@ enum : ushort // Public for FatELF
     EM_AARCH64 = 0xB7
 }
 
-static void scan_elf(File file)
+void scan_elf(File file)
 {
     debug writefln("L%04d: Started scanning ELF file", __LINE__);
 

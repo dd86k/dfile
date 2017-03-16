@@ -9,7 +9,7 @@ import dfile;
 import s_iso, s_tar;
 
 /// Search for signatures that's not at the beginning of the file.
-static void scan_etc(File file)
+void scan_etc(File file)
 { // Goto instructions are only allowed here.
 
     const ulong fl = file.size;

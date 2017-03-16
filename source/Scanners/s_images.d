@@ -6,7 +6,7 @@ module s_images;
 
 import dfile, std.stdio, utils;
 
-static void scan_png(File file) // Big Endian
+void scan_png(File file) // Big Endian
 { // https://www.w3.org/TR/PNG-Chunks.html
     report("Portable Network Graphics image (PNG)");
 
@@ -127,7 +127,7 @@ static void scan_png(File file) // Big Endian
     }
 }
 
-static void scan_gif(File file)
+void scan_gif(File file)
 { // http://www.fileformat.info/format/gif/egff.htm
     struct gif_header {
         char[3] magic;

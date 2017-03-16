@@ -44,7 +44,7 @@ private const enum : uint {
     VirtualDeiveDriver = 0x28000
 }
 
-static void scan_le(File file)
+void scan_le(File file)
 {
     e32_hdr h;
     scpy(file, &h, h.sizeof);

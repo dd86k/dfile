@@ -9,10 +9,10 @@ import std.file : exists, isDir;
 
 enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.5.0"
+    PROJECT_VERSION = "0.5.1"
 }
 
-private static int main(string[] args)
+private int main(string[] args)
 {
     size_t l = args.length;
     
@@ -66,14 +66,14 @@ private static int main(string[] args)
     return 0;
 }
 
-static void print_help()
+void print_help()
 {
     writeln("Determine the file type by its content.");
     writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
     writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version|/?}");
 }
 
-static void print_help_full()
+void print_help_full()
 {
     print_help();
     writeln("  Option           Description (Default value)");
@@ -84,7 +84,7 @@ static void print_help_full()
     writeln("  -v, --version    Print version and exit");
 }
 
-static void print_version()
+void print_version()
 {
     debug
     writeln(PROJECT_NAME, " ", PROJECT_VERSION, "-debug (", __TIMESTAMP__, ")");

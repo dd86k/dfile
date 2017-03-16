@@ -4,7 +4,7 @@
 
 module utils;
 
-import std.stdio;
+import std.stdio : File;
 
 version (X86)
     version = X86_ANY;
@@ -61,7 +61,7 @@ string isostr(char[] str) pure
  */
 
 /// Get byte size, formatted.
-string formatsize(long size)
+string formatsize(long size) pure
 {
     import std.format : format;
 
@@ -108,7 +108,7 @@ else ushort invert(ushort num) pure
 }
 
 /// Invert big to little endian.
-version (X86_ANY) uint invert(uint num) pure
+version (X86) uint invert(uint num) pure
 {
     asm pure {
         naked;
@@ -131,7 +131,15 @@ else uint invert(uint num) pure
 }
 
 /// Invert big to little endian.
-ulong invert(ulong num) pure
+version (X86_64) ulong invert(ulong num) pure
+{
+    asm pure {
+        naked;
+        bswap RAX;
+        ret;
+    }
+}
+else ulong invert(ulong num) pure
 {
     version (LittleEndian)
     {
@@ -147,6 +155,27 @@ ulong invert(ulong num) pure
             return num;
         }
     }
-    
+
     return num;
+}
+
+/// Invert byte sequence.
+void invert(ubyte* a, size_t length) pure
+{
+    size_t l = length / 2;
+
+    if (l)
+    {
+        // Get other half location if odd or not
+        ubyte* b = a + length - 1;//length % 2 ? a + l + 2 : a + l + 1;
+
+        ubyte c;
+        while (l--)
+        {
+            c = *b;
+            *b = *a;
+            *a = c;
+            --b; ++a;
+        } 
+    }
 }

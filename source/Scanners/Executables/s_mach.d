@@ -305,7 +305,7 @@ private enum : uint {
     FAT_CIGAM =   0xBEBAFECA
 }
 
-static void scan_mach(File file)
+void scan_mach(File file)
 {
     bool reversed, fat;
 

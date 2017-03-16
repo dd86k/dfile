@@ -1,20 +1,18 @@
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
-
-bin
-.dub
-
-# Folder config file
 Desktop.ini
 
+# DUB + Project
 dfile
 *.obj
 *.exe
 *.o
-tests
 bin
-buildall.bat
+.dub
+
+# Personal sample folder
+t
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/

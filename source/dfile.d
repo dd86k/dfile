@@ -16,10 +16,10 @@ import s_mach : scan_mach;
 import s_images, Etc, utils;
 
 /// Setting
-static bool More, ShowingName;
-private static File CurrentFile;
+bool More, ShowingName;
+private File CurrentFile;
 
-static void scan(string path)
+void scan(string path)
 {
     debug writefln("L%04d: Opening file...", __LINE__);
     CurrentFile = File(path, "rb");
@@ -31,7 +31,7 @@ static void scan(string path)
     CurrentFile.close();
 }
 
-static void scan(File file)
+void scan(File file)
 {
     if (file.size == 0)
     {
@@ -612,25 +612,58 @@ static void scan(File file)
     } 
         return;
 
-    case "fLaC": // FLAC
+    case "fLaC": // FLAC, big endian
     //https://xiph.org/flac/format.html
     //https://xiph.org/flac/api/format_8h_source.html
-        /*
-        typedef struct {
-            FLAC__uint32 length;
-            FLAC__byte *entry;
-        } FLAC__StreamMetadata_VorbisComment_Entry;
-        typedef struct {
-            unsigned min_blocksize, max_blocksize;
-            unsigned min_framesize, max_framesize;
-            unsigned sample_rate;
-            unsigned channels;
-            unsigned bits_per_sample;
-            FLAC__uint64 total_samples;
-            FLAC__byte md5sum[16];
-        } FLAC__StreamMetadata_StreamInfo;
-        */
-        report("Free Lossless Audio Codec audio file (FLAC)");
+        struct flac_hdr {
+            //uint magic;
+            uint header; // islast (1 bit) + type (7 bits) + length (24 bits)
+            ushort minblocksize;
+            ushort maxblocksize;
+            /*
+             * Min and max frames (24 bits each)
+             * Sample rate (20 bits)
+             * # of channels (3 bits)
+             * bits per sample (5 bits)
+             * total samples (36 bits)
+             * Total : 112 bits (14 bytes)
+             */
+            ubyte[14] stupid;
+            /*
+            uint stupid0;
+            uint stupid1;
+            ushort stupid2;
+            uint stupid3;
+            */
+            ubyte[16] md5;
+        }
+        flac_hdr h;
+        scpy(file, &h, h.sizeof);
+        debug {
+            ubyte* sp = cast(ubyte*)&h;
+            write("struct:");
+            int t;
+            while (t++ < h.sizeof)
+                writef(" %02X", *sp++);
+            writeln();
+        }
+        report("FLAC audio file", false);
+        if ((h.header & 0xFF) == 0) // Big endian
+        {
+            invert(&h.stupid[0], h.stupid.length);
+            //int rate = (h.stupid1 & 0xFFFF) << 4 | (h.stupid2 >>> 12) & 0xF;
+            //int channels = ((h.stupid2 >>> 9) & 7) + 1;
+            //int bitsample = ((h.stupid2 >>> 4) & 0xF) + 1;
+            //writeln(rate, " Hz, ", bitsample, " bit, ", channels, " channels");
+            if (More)
+            {
+                write("MD5:");
+                foreach (b; h.md5) writef(" %02X", b);
+                writeln();
+            }
+        }
+        else
+            writeln();
         return;
 
     case "8BPS":
@@ -1581,12 +1614,12 @@ static void scan(File file)
 
 /// Report an unknown file type.
 // never inline
-pragma(inline, false) static void report_unknown()
+pragma(inline, false) void report_unknown()
 {
     report("Unknown file type");
 }
 
-pragma(inline, false) static void report_text()
+pragma(inline, false) void report_text()
 {
     report("Text file");
 }
@@ -1597,7 +1630,7 @@ pragma(inline, false) static void report_text()
  * If the newline if false, the developper must end the information with a new
  * line manually.
  */
-pragma(inline, false) static void report(string type, bool nl = true)
+pragma(inline, false) void report(string type, bool nl = true)
 {
     if (ShowingName)
         write(CurrentFile.name, ": ", type);
