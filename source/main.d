@@ -12,6 +12,17 @@ enum {
     PROJECT_VERSION = "0.5.1"
 }
 
+debug
+{
+    extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
+}
+else
+{
+    extern (C) __gshared bool
+        rt_envvars_enabled = false,
+        rt_cmdline_enabled = false;
+}
+
 private int main(string[] args)
 {
     size_t l = args.length;

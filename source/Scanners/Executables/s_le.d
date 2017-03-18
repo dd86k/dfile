@@ -96,7 +96,7 @@ void scan_le(File file)
     else
         write("Executable"); // Program module
 
-    write(" file for ");
+    write(" for ");
 
     switch (h.e32_cpu)
     {
