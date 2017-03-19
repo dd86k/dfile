@@ -11,7 +11,7 @@ import utils;
 private struct PE_HEADER
 {
     char[4] Signature; // "PE\0\0"
-    PE_MACHINE_TYPE Machine;
+    PE_MACHINE Machine;
     ushort NumberOfSections;
     uint TimeDateStamp;
     uint PointerToSymbolTable;
@@ -75,7 +75,7 @@ private struct IMAGE_DATA_DIRECTORY
     //ulong Reserved;
 }
 
-private enum PE_MACHINE_TYPE : ushort
+private enum PE_MACHINE : ushort
 {
     UNKNOWN = 0x0,
     AM33 = 0x1d3,
@@ -199,124 +199,124 @@ void scan_pe(File file)
     switch (peoh.Subsystem)
     {
     default:
-        write("Unknown ");
+        write("Unknown");
         break;
     case PE_SUBSYSTEM.NATIVE:
-        write("Native Windows ");
+        write("Native Windows");
         break;
     case PE_SUBSYSTEM.WINDOWS_GUI:
-        write("Windows GUI ");
+        write("Windows GUI");
         break;
     case PE_SUBSYSTEM.WINDOWS_CUI:
-        write("Windows Console ");
+        write("Windows Console");
         break;
     case PE_SUBSYSTEM.POSIX_CUI:
-        write("Posix Console ");
+        write("Posix Console");
         break;
     case PE_SUBSYSTEM.WINDOWS_CE_GUI:
-        write("Windows CE GUI ");
+        write("Windows CE GUI");
         break;
     case PE_SUBSYSTEM.EFI_APPLICATION :
-        write("EFI ");
+        write("EFI");
         break;
     case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
-        write("EFI Boot Service driver ");
+        write("EFI Boot Service driver");
         break;
     case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
-        write("EFI Runtime driver ");
+        write("EFI Runtime driver");
         break;
     case PE_SUBSYSTEM.EFI_ROM:
-        write("EFI ROM ");
+        write("EFI ROM");
         break;
     case PE_SUBSYSTEM.XBOX:
-        write("XBOX ");
+        write("XBOX");
         break;
     case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
-        write("Windows Boot Application ");
+        write("Windows Boot Application");
         break;
     }
 
     if (dirs.CLRHeader)
-        write(".NET ");
+        write(" .NET");
     
     if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
-        write("Executable");
+        write(" Executable");
     else if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
-        write("Library");
+        write(" Library");
     else
-        write("Unknown");
+        write(" Unknown");
 
     write(" for ");
 
     switch (peh.Machine)
     {
-    default: // PE_MACHINE_TYPE.UNKNOWN
+    default: // PE_MACHINE.UNKNOWN
         write("Unknown");
         break;
-    case PE_MACHINE_TYPE.I386:
+    case PE_MACHINE.I386:
         write("x86");
         break;
-    case PE_MACHINE_TYPE.AMD64:
+    case PE_MACHINE.AMD64:
         write("x86-64");
         break;
-    case PE_MACHINE_TYPE.IA64:
+    case PE_MACHINE.IA64:
         write("IA64");
         break;
-    case PE_MACHINE_TYPE.EBC:
+    case PE_MACHINE.EBC:
         write("EFI (Byte Code)");
         break;
-    case PE_MACHINE_TYPE.CLR:
+    case PE_MACHINE.CLR:
         write("CLR (Pure MSIL)");
         break;
-    case PE_MACHINE_TYPE.ARM:
+    case PE_MACHINE.ARM:
         write("ARM (Little Endian)");
         break;
-    case PE_MACHINE_TYPE.ARMNT:
+    case PE_MACHINE.ARMNT:
         write("ARMv7+ (Thumb)");
         break;
-    case PE_MACHINE_TYPE.ARM64:
+    case PE_MACHINE.ARM64:
         write("ARMv8 (64-bit)");
         break;
-    case PE_MACHINE_TYPE.M32R:
+    case PE_MACHINE.M32R:
         write("Mitsubishi M32R (Little endian)");
         break;
-    case PE_MACHINE_TYPE.AM33:
+    case PE_MACHINE.AM33:
         write("Matsushita AM33");
         break;
-    case PE_MACHINE_TYPE.MIPS16:
+    case PE_MACHINE.MIPS16:
         write("MIPS16");
         break;
-    case PE_MACHINE_TYPE.MIPSFPU:
+    case PE_MACHINE.MIPSFPU:
         write("MIPS (w/FPU)");
         break;
-    case PE_MACHINE_TYPE.MIPSFPU16:
+    case PE_MACHINE.MIPSFPU16:
         write("MIPS16 (w/FPU)");
         break;
-    case PE_MACHINE_TYPE.POWERPC:
+    case PE_MACHINE.POWERPC:
         write("PowerPC");
         break;
-    case PE_MACHINE_TYPE.POWERPCFP:
+    case PE_MACHINE.POWERPCFP:
         write("PowerPC (w/FPU)");
         break;
-    case PE_MACHINE_TYPE.R4000:
+    case PE_MACHINE.R4000:
         write("MIPS (Little endian)");
         break;
-    case PE_MACHINE_TYPE.SH3:
+    case PE_MACHINE.SH3:
         write("Hitachi SH3");
         break;
-    case PE_MACHINE_TYPE.SH3DSP:
+    case PE_MACHINE.SH3DSP:
         write("Hitachi SH3 DSP");
         break;
-    case PE_MACHINE_TYPE.SH4:
+    case PE_MACHINE.SH4:
         write("Hitachi SH4");
         break;
-    case PE_MACHINE_TYPE.SH5:
+    case PE_MACHINE.SH5:
         write("Hitachi SH5");
         break;
-    case PE_MACHINE_TYPE.THUMB:
+    case PE_MACHINE.THUMB:
         write(`ARM or Thumb ("Interworking")`);
         break;
-    case PE_MACHINE_TYPE.WCEMIPSV2:
+    case PE_MACHINE.WCEMIPSV2:
         write("MIPS WCE v2 (Little Endian)");
         break;
     }
