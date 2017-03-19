@@ -6,9 +6,7 @@ module s_mz;
 
 import std.stdio;
 import dfile;
-import s_pe;
-import s_le;
-import s_ne;
+import utils : scpy;
 
 private enum ERESWDS = 0x10;
 
@@ -37,14 +35,46 @@ void scan_mz(File file)
 {
     debug writefln("L%04d: Started scanning MZ file", __LINE__);
 
-    mz_hdr h;
+    int e_lfanew;
     {
-        import core.stdc.string : memcpy;
-        byte[mz_hdr.sizeof] buf;
-        file.rewind();
+        int[1] buf;
+        file.seek(0x3C);
         file.rawRead(buf);
-        memcpy(&h, &buf, mz_hdr.sizeof);
+        e_lfanew = buf[0];
     }
+
+    if (e_lfanew)
+    {
+        import s_pe : scan_pe;
+        import s_le : scan_le;
+        import s_ne : scan_ne;
+        file.seek(e_lfanew);
+        char[2] sig;
+        file.rawRead(sig);
+
+        switch (sig)
+        {
+        case "PE":
+            file.seek(e_lfanew);
+            scan_pe(file);
+            return;
+
+        case "NE":
+            file.seek(e_lfanew);
+            scan_ne(file);
+            return;
+
+        case "LE": case "LX":
+            file.seek(e_lfanew);
+            scan_le(file);
+            return;
+
+        default: break;
+        }
+    }
+
+    mz_hdr h;
+    scpy(file, &h, h.sizeof, true);
 
     if (More)
     {
@@ -65,40 +95,10 @@ void scan_mz(File file)
         writefln("e_lfanew  : %Xh", h.e_lfanew);
     }
 
-    if (h.e_lfanew)
-    {
-        file.seek(h.e_lfanew);
-        char[2] pesig;
-        file.rawRead(pesig);
-
-        switch (pesig)
-        {
-        case "PE":
-            file.seek(h.e_lfanew);
-            scan_pe(file);
-            return;
-
-        case "NE":
-            file.seek(h.e_lfanew);
-            scan_ne(file);
-            return;
-
-        case "LE": case "LX":
-            file.seek(h.e_lfanew);
-            scan_le(file);
-            return;
-
-        default: break;
-        }
-    }
-
-    if (ShowingName)
-        writef("%s: ", file.name);
-
-    write("MZ Executable");
+    report("MZ Executable", false);
 
     if (h.e_ovno)
         writef(" (Overlay: %d)", h.e_ovno);
 
-    writeln();
+    writeln(" for MS-DOS");
 }

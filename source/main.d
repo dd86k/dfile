@@ -19,8 +19,7 @@ debug
 else
 {
     extern (C) __gshared bool
-        rt_envvars_enabled = false,
-        rt_cmdline_enabled = false;
+        rt_envvars_enabled = false, rt_cmdline_enabled = false;
 }
 
 private int main(string[] args)

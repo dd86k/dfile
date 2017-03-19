@@ -151,14 +151,13 @@ void scan_pe(File file)
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
     scpy(file, &peh, peh.sizeof);
-    {
-        if (peh.SizeOfOptionalHeader > 0)
-        { // PE Optional Header
-            scpy(file, &peoh, peoh.sizeof);
-            if (peoh.magic == PE_FORMAT.HDR64)
-                file.seek(16, SEEK_CUR);
-            scpy(file, &dirs, dirs.sizeof);
-        }
+
+    if (peh.SizeOfOptionalHeader > 0)
+    { // PE Optional Header
+        scpy(file, &peoh, peoh.sizeof);
+        if (peoh.magic == PE_FORMAT.HDR64)
+            file.seek(16, SEEK_CUR);
+        scpy(file, &dirs, dirs.sizeof);
     }
 
     if (More)
@@ -175,7 +174,7 @@ void scan_pe(File file)
         {
             writefln("Format    : %Xh", peoh.magic);
             writefln("Subsystem : %Xh", peoh.Subsystem);
-            writefln("CLR Header : %Xh", dirs.CLRHeader);
+            writefln("CLR Header: %Xh", dirs.CLRHeader);
         }
     }
 
@@ -238,9 +237,7 @@ void scan_pe(File file)
     }
 
     if (dirs.CLRHeader)
-    {
         write(".NET ");
-    }
     
     if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
         write("Executable");
@@ -249,12 +246,11 @@ void scan_pe(File file)
     else
         write("Unknown");
 
-    write(" file for ");
+    write(" for ");
 
     switch (peh.Machine)
     {
-    default:
-    case PE_MACHINE_TYPE.UNKNOWN:
+    default: // PE_MACHINE_TYPE.UNKNOWN
         write("Unknown");
         break;
     case PE_MACHINE_TYPE.I386:
@@ -334,9 +330,9 @@ void scan_pe(File file)
         if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
             write(", large addresses aware");
         if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
-            write(", 16-bit based machines");
+            write(", 16-bit machines");
         if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
-            write(", 32-bit based machines");
+            write(", 32-bit machines");
         if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
             write(", system file");
     }

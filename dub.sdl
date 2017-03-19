@@ -1,4 +1,5 @@
 name "dfile"
+version "0.5.1"
 description "Binary file scanner"
 authors "dd86k"
 copyright "Copyright © 2017, dd86k"
@@ -9,7 +10,7 @@ buildType "unittest" {
   targetType "executable"
   targetName "tests"
   buildOptions "unittests"
-  
+
   targetPath "tests"
   excludedSourceFiles "source/main.d"
   sourcePaths "tests/"
