@@ -862,22 +862,29 @@ void scan(File file)
         return;
 
     case "ISc(": {
+        struct iscab_hdr {
+            //uint magic;
+            uint version_;
+            uint volumeinfo;
+            uint desc_offset;
+            uint desc_size;
+        }
         enum : uint {
-            GENERIC   = 0x000cc9b8,
-            v2_20_905 = 0x1234001c,
+            LEGACY    = 0x000CC9B8,
+            v2_20_905 = 0x1234001C,
             v3_00_065 = 0x12340016,
             v5_00_000 = 0x00010050
         }
-        uint[1] buf;
-        file.rawRead(buf);
+        iscab_hdr h;
+        scpy(file, &h, h.sizeof);
         report("InstallShield CAB archive", false);
-        switch (buf[0])
+        switch (h.version_)
         {
-            case GENERIC: writeln(); break;
+            case LEGACY:    writeln(" (Legacy)"); break;
             case v2_20_905: writeln(" v2.20.905"); break;
             case v3_00_065: writeln(" v3.00.065"); break;
             case v5_00_000: writeln(" v5.00.000"); break;
-            default: writefln(" (Version:%X)", buf[0]); break;
+            default: writefln(" (Version:%08X)", h.version_); return;
         }
     }
         return;
