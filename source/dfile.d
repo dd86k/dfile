@@ -837,8 +837,49 @@ void scan(File file)
         report("LZ4 Streaming Format (lz4)");
         return;
 
-    case "MSCF":
-        report("Microsoft Cabinet File (cab)");
+    case "MSCF": {
+        struct cfh_hdr {
+            //char[4] magic;
+            uint reserved1;
+            uint size;
+            uint reserved2;
+            uint offset;
+            uint reserved3;
+            ubyte minor;
+            ubyte major;
+            ushort folders;
+            ushort files;
+            ushort flags;
+            ushort id;
+            ushort seq;
+        }
+        cfh_hdr h;
+        scpy(file, &h, h.sizeof);
+        report("Microsoft Cabinet archive v", false);
+        writeln(h.major, ".", h.minor, ", ", formatsize(h.size), ", ",
+            h.files, " files and ", h.folders, " folders");
+    }
+        return;
+
+    case "ISc(": {
+        enum : uint {
+            GENERIC   = 0x000cc9b8,
+            v2_20_905 = 0x1234001c,
+            v3_00_065 = 0x12340016,
+            v5_00_000 = 0x00010050
+        }
+        uint[1] buf;
+        file.rawRead(buf);
+        report("InstallShield CAB archive", false);
+        switch (buf[0])
+        {
+            case GENERIC: writeln(); break;
+            case v2_20_905: writeln(" v2.20.905"); break;
+            case v3_00_065: writeln(" v3.00.065"); break;
+            case v5_00_000: writeln(" v5.00.000"); break;
+            default: writefln(" (Version:%X)", buf[0]); break;
+        }
+    }
         return;
 
     case "FLIF":
