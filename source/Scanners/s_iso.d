@@ -18,6 +18,7 @@ void scan_iso(File file)
         VOL_TER = 255
     }
     enum s = 1024; // Half the data
+    ulong fs = file.size;
     int t;
     char[s] buf;
     bool bootable;
@@ -25,13 +26,14 @@ void scan_iso(File file)
     // Informative strings
         system, copyright, publisher, app, abst, biblio,
         ctime, mtime, etime, eftime;
-    
     file.seek(0x8000);
     goto ISO_READ;
 ISO_P0:
+    if (fs < 0x8800) goto ISO_END;
     file.seek(0x8800);
     goto ISO_READ;
 ISO_P1:
+    if (fs < 0x9000) goto ISO_END;
     file.seek(0x9000);
 ISO_READ:
     file.rawRead(buf);
@@ -79,21 +81,17 @@ ISO_END:
         writeln("Application: ", app);
         writeln("Abstract Identifier: ", abst);
         writeln("Bibliographic: ", biblio);
-        writeln("Created: ",
-            ctime[0..4], "/", ctime[4..6], "/", ctime[6..8], " ",
-            ctime[8..10], ":", ctime[10..12], ":", ctime[12..14], ".",
-            ctime[14..16], "+", ctime[16] * 15);
-        writeln("Modified: ",
-            mtime[0..4], "/", mtime[4..6], "/", mtime[6..8],
-            mtime[8..10], ":", mtime[10..12], ":", mtime[12..14], ".",
-            mtime[14..16], "+", mtime[16] * 15);
-        writeln("Expires: ",
-            etime[0..4], "/", etime[4..6], "/", etime[6..8],
-            etime[8..10], ":", etime[10..12], ":", etime[12..14], ".",
-            etime[14..16], "+", etime[16] * 15);
-        writeln("Effective at: ",
-            eftime[0..4], "/", eftime[4..6], "/", eftime[6..8],
-            eftime[8..10], ":", eftime[10..12], ":", eftime[12..14], ".",
-            eftime[14..16], "+", eftime[16] * 15);
+        writeln("Created: ", isodate(ctime));
+        writeln("Modified: ", isodate(mtime));
+        writeln("Expires: ", isodate(etime));
+        writeln("Effective at: ", isodate(eftime));
     }
+}
+
+string isodate(string stamp)
+{
+    import std.format : format;
+    return format("%s/%s/%s %s:%s:%s.%s+%d",
+        stamp[0..4], stamp[4..6], stamp[6..8],
+        stamp[8..10], stamp[10..12], stamp[12..14], stamp[14..16], stamp[16] * 15);
 }
