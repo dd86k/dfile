@@ -40,7 +40,7 @@ void scan_png(File file) // Big Endian
         scpy(file, &h, h.sizeof);
 
         with (h) {
-            write(invert(width), "x", invert(height), " pixels, ");
+            write(invert(width), " x ", invert(height), " pixels, ");
 
             switch (color)
             {
@@ -159,7 +159,7 @@ void scan_gif(File file)
         }
 
         with (h) {
-            write(width, "x", height, " pixels");
+            write(width, " x ", height, " pixels");
             if (packed & GLOBAL_COLOR_TABLE) {
                 write(", Global Color Table");
                 if (packed & 3)
@@ -169,9 +169,9 @@ void scan_gif(File file)
                 if (bgcolor)
                     write(", BG Index of ", bgcolor);
             }
-            write(", ", ((packed >> 4) & 3) + 1, "-bit Color Resolution");
+            write(", ", ((packed >> 4) & 3) + 1, "-bit");
             if (aspect) {
-                write(", ", (cast(float)aspect + 15) / 64, " pixel ratio (approx)");
+                write(", ", (cast(float)aspect + 15) / 64, " pixel ratio (reported)");
             }
         }
     }
