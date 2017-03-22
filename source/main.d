@@ -5,32 +5,31 @@
 module main;
 
 import std.stdio, dfile;
-import std.file : exists, isDir;
+import std.file;
 
 enum {
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.5.1"
+    PROJECT_VERSION = "0.6.0"
 }
 
-debug
-{
-    extern (C) __gshared string[] rt_options = [ "gcopt=profile:1" ];
-}
+debug { }
 else
 {
     extern (C) __gshared bool
         rt_envvars_enabled = false, rt_cmdline_enabled = false;
 }
 
-private int main(string[] args)
+int main(string[] args)
 {
     size_t l = args.length;
-    
+
     if (l <= 1)
     {
         print_help;
         return 0;
     }
+
+    bool cont;
 
     for (int i; i < l; ++i)
     {
@@ -42,9 +41,10 @@ private int main(string[] args)
         case "-m", "--more":
             More = true;
             break;
-        /*case "-t", "/t":
+        case "-c", "--continue":
+            cont = true;
+            break;
 
-            break;*/
         case "-h":
             print_help;
             return 0;
@@ -62,10 +62,17 @@ private int main(string[] args)
 
     if (exists(filename))
     {
-        if (isDir(filename))
-            report("Directory");
-        else
+        if (isSymlink(filename))
+            if (cont)
+                scan(filename);
+            else
+                report_link(filename);
+        else if (isFile(filename))
             scan(filename);
+        else if (isDir(filename))
+            report_dir(filename);
+        else
+            report_unknown(filename);
     }
     else
     {
@@ -87,8 +94,10 @@ void print_help_full()
 {
     print_help();
     writeln("  Option           Description (Default value)");
-    writeln("  -m, --more       Print more information if available. (Off)");
     writeln("  -s, --showname   Show filename before result. (Off)");
+    writeln("  -c, --continue   Continue on soft symlink. (Off)");
+    writeln("  -m, --more       Print more information if available. (Off)");
+    //writeln("  -o, --os         Use system functions to get more information. (Off)");
     writeln();
     writeln("  -h, --help, /?   Print help and exit");
     writeln("  -v, --version    Print version and exit");
@@ -96,9 +105,9 @@ void print_help_full()
 
 void print_version()
 {
-    debug
+debug
     writeln(PROJECT_NAME, " ", PROJECT_VERSION, "-debug (", __TIMESTAMP__, ")");
-    else
+else
     writeln(PROJECT_NAME, " ", PROJECT_VERSION, " (", __TIMESTAMP__, ")");
     writeln("MIT License: Copyright (c) 2016-2017 dd86k");
     writeln("Project page: <https://github.com/dd86k/dfile>");

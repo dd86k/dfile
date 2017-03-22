@@ -1659,14 +1659,44 @@ void scan(File file)
 
 /// Report an unknown file type.
 // never inline
-pragma(inline, false) void report_unknown()
+void report_unknown()
 {
     report("Unknown file type");
 }
 
-pragma(inline, false) void report_text()
+void report_unknown(string filename)
+{
+    if (ShowingName)
+        write(filename, ": ");
+    
+    writeln("Unknown file type");
+}
+
+void report_text()
 {
     report("Text file");
+}
+
+void report_dir(string dirname)
+{
+    if (ShowingName)
+        write(dirname, ": ");
+
+    writeln("Directory");
+}
+
+void report_link(string linkname)
+{
+    if (ShowingName)
+        write(linkname, ": ");
+
+    //TODO: Symlink location
+    // POSIX :
+    //http://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
+    // WINDOWS:
+    //
+
+    writeln("Soft symlink");
 }
 
 /**
@@ -1675,12 +1705,12 @@ pragma(inline, false) void report_text()
  * If the newline if false, the developper must end the information with a new
  * line manually.
  */
-pragma(inline, false) void report(string type, bool nl = true)
+void report(string type, bool nl = true)
 {
     if (ShowingName)
-        write(CurrentFile.name, ": ", type);
-    else
-        write(type);
+        write(CurrentFile.name, ": ");
+
+    write(type);
 
     if (nl)
         writeln();
