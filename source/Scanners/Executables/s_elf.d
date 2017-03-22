@@ -78,19 +78,19 @@ void scan_elf(File file)
 
     if (More)
     {
-        writefln("e_type: %s", h.e_type);
-        writefln("e_machine: %s", h.e_machine);
-        writefln("e_version: %s", h.e_version);
-        writefln("e_entry: %s", h.e_entry);
-        writefln("e_phoff: %s", h.e_phoff);
-        writefln("e_shoff: %s", h.e_shoff);
-        writefln("e_flags: %s", h.e_flags);
-        writefln("e_ehsize: %s", h.e_ehsize);
-        writefln("e_phentsize: %s", h.e_phentsize);
-        writefln("e_phnum: %s", h.e_phnum);
-        writefln("e_shentsize: %s", h.e_shentsize);
-        writefln("e_shnum: %s", h.e_shnum);
-        writefln("e_shstrndx: %s", h.e_shstrndx);
+        writeln("e_type: ", h.e_type);
+        writeln("e_machine: ", h.e_machine);
+        writeln("e_version: ", h.e_version);
+        writeln("e_entry: ", h.e_entry);
+        writeln("e_phoff: ", h.e_phoff);
+        writeln("e_shoff: ", h.e_shoff);
+        writeln("e_flags: ", h.e_flags);
+        writeln("e_ehsize: ", h.e_ehsize);
+        writeln("e_phentsize: ", h.e_phentsize);
+        writeln("e_phnum: ", h.e_phnum);
+        writeln("e_shentsize: ", h.e_shentsize);
+        writeln("e_shnum: ", h.e_shnum);
+        writeln("e_shstrndx: ", h.e_shstrndx);
     }
 
     report("ELF", false);
@@ -99,7 +99,7 @@ void scan_elf(File file)
     elf_print_osabi(h.e_ident[EI_OSABI]);
     write(" ");
     elf_print_type(h.e_type);
-    write(" file for ");
+    write(" for ");
     elf_print_machine(h.e_machine);
     writeln(" machines");
 }

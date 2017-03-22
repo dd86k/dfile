@@ -97,7 +97,8 @@ void print_help_full()
     writeln("  -s, --showname   Show filename before result. (Off)");
     writeln("  -c, --continue   Continue on soft symlink. (Off)");
     writeln("  -m, --more       Print more information if available. (Off)");
-    //writeln("  -o, --os         Use system functions to get more information. (Off)");
+    //writeln("  -o, --more-os   Use system functions to get more information. (Off)");
+    //e.g. https://msdn.microsoft.com/en-us/library/windows/desktop/aa364819(v=vs.85).aspx
     writeln();
     writeln("  -h, --help, /?   Print help and exit");
     writeln("  -v, --version    Print version and exit");

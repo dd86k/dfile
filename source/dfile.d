@@ -1694,7 +1694,7 @@ void report_link(string linkname)
     // POSIX :
     //http://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
     // WINDOWS:
-    //
+    //https://msdn.microsoft.com/en-us/library/windows/desktop/aa364421(v=vs.85).aspx
 
     writeln("Soft symlink");
 }
