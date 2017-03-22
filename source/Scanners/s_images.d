@@ -45,54 +45,54 @@ void scan_png(File file) // Big Endian
             switch (color)
             {
                 case 0:
-                    write("Grayscale ");
                     switch (depth)
                     {
                         case 1, 2, 4, 8, 16:
-                            write(depth, "-bit depth");
+                            write(depth, "-bit ");
                             break;
-                        default: write("with invalid depth"); break;
+                        default: break;
                     }
+                    write("Grayscale");
                     break;
                 case 2:
-                    write("RGB ");
                     switch (depth)
                     {
                         case 8, 16:
-                            write(depth * 3, "-bit depth");
+                            write(depth, "-bit ");
                             break;
-                        default: write("with invalid depth"); break;
+                        default: break;
                     }
+                    write("RGB");
                     break;
                 case 3:
-                    write("PLTE Palette ");
                     switch (depth)
                     {
                         case 1, 2, 4, 8:
-                            write("8-bit depth");
+                            write("8-bit ");
                             break;
-                        default: write("with invalid depth"); break;
+                        default: break;
                     }
+                    write("PLTE Palette");
                     break;
                 case 4:
-                    write("Grayscale+Alpha ");
                     switch (depth)
                     {
                         case 8, 16:
-                            write(depth, "-bit depth");
+                            write(depth, "-bit ");
                             break;
-                        default: write("with invalid depth"); break;
+                        default: break;
                     }
+                    write("Grayscale+Alpha");
                     break;
                 case 6:
-                    write("RGBA ");
                     switch (depth)
                     {
                         case 8, 16:
-                            write(depth * 3, "-bit depth");
+                            write(depth, "-bit ");
                             break;
-                        default: write("with invalid depth"); break;
+                        default: break;
                     }
+                    write("RGBA");
                     break;
                 default: write("Invalid color type"); break;
             }
@@ -102,7 +102,7 @@ void scan_png(File file) // Big Endian
             switch (compression)
             {
                 case 0: write("Default compression"); break;
-                default: writeln("Invalid compression"); break;
+                default: write("Invalid compression"); break;
             }
 
             write(", ");
@@ -110,7 +110,7 @@ void scan_png(File file) // Big Endian
             switch (filter)
             {
                 case 0: write("Default filtering"); break;
-                default: writeln("Invalid filtering"); break;
+                default: write("Invalid filtering"); break;
             }
 
             write(", ");
@@ -119,7 +119,7 @@ void scan_png(File file) // Big Endian
             {
                 case 0: write("No interlacing"); break;
                 case 1: write("Adam7 interlacing"); break;
-                default: writeln("Invalid interlacing"); break;
+                default: write("Invalid interlacing"); break;
             }
 
             writeln();
