@@ -4,8 +4,9 @@
 
 module main;
 
-import std.stdio, dfile;
+import std.stdio;
 import std.file;
+import dfile;
 
 enum {
     PROJECT_NAME = "dfile",

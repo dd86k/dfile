@@ -6,6 +6,8 @@ module dfile;
 
 import std.stdio;
 
+import std.exception : ErrnoException;
+
 import s_elf : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz : scan_mz;
@@ -21,8 +23,16 @@ private File CurrentFile;
 
 void scan(string path)
 {
-    debug writefln("L%04d: Opening file...", __LINE__);
-    CurrentFile = File(path, "rb");
+    try
+    {
+        debug writefln("L%04d: Opening file...", __LINE__);
+        CurrentFile = File(path, "rb");
+    }
+    catch (ErrnoException)
+    { // At this point, it is a broken symbolic link.
+        writeln("Cannot open target file from symlink, exiting");
+        return;
+    }
     
     debug writefln("L%04d: Scanning...", __LINE__);
     scan(CurrentFile);
@@ -1696,7 +1706,26 @@ void report_link(string linkname)
     // WINDOWS:
     //https://msdn.microsoft.com/en-us/library/windows/desktop/aa364421(v=vs.85).aspx
 
-    writeln("Soft symlink");
+    writeln("Soft symbolic link");
+
+    version (Windows)
+    {
+        import core.sys.windows.windows;
+        WIN32_FIND_DATA wd;
+
+        version (WindowsXP)
+        { // No WINVER, unfortunately.
+
+        }
+        else
+        { // More recent Windows versions
+
+        }
+    }
+    else version (Posix)
+    {
+
+    }
 }
 
 /**

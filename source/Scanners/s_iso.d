@@ -13,9 +13,9 @@ void scan_iso(File file)
     enum { // volume type
         BOOT = 0,
         PRIMARY_VOL_DESC,
-        SUPP_VOL_DESC,
+        /*SUPP_VOL_DESC,
         VOL_PART_DESC,
-        VOL_TER = 255
+        VOL_TER = 255*/
     }
     enum s = 1024; // Half the data
     ulong fs = file.size;
