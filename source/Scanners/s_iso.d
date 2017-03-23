@@ -19,6 +19,7 @@ void scan_iso(File file)
     }
     enum s = 1024; // Half the data
     ulong fs = file.size;
+    long volume_size;
     int t;
     char[s] buf;
     bool bootable;
@@ -29,7 +30,8 @@ void scan_iso(File file)
         // BOOT
         bootsysiden, bootiden,
         // PRIMARY_VOL_DESC
-        system, copyright, publisher, app, abst, biblio,
+        system, voliden,
+        copyright, publisher, app, abst, biblio,
         ctime, mtime, etime, eftime;
     file.seek(0x8000);
     goto ISO_READ;
@@ -57,7 +59,13 @@ ISO_READ:
                 label = isostr(buf[40 .. 71]);
                 if (More)
                 {
+                    uint size =
+                        buf[80] | buf[81] << 8 |
+                        buf[82] << 16 | buf[83] << 24;
+                    ushort blocksize = buf[128] | buf[129] << 8;
+                    volume_size = size * blocksize;
                     system = isostr(buf[8 .. 40]);
+                    voliden = isostr(buf[190 .. 318]);
                     publisher = isostr(buf[318 .. 446]);
                     app = isostr(buf[574 .. 702]);
                     copyright = isostr(buf[702 .. 739]);
@@ -81,6 +89,8 @@ ISO_END:
     report("ISO-9660 CD/DVD image", false);
     if (label)
         write(` "`, label, `"`);
+    if (volume_size)
+        write(", ", formatsize(volume_size));
     if (bootable)
         write(", Bootable");
     writeln();
@@ -90,6 +100,7 @@ ISO_END:
         writeln("Boot System Identifier: ", bootsysiden);
         writeln("Boot Identifier: ", bootiden);
         writeln("System: ", system);
+        writeln("Volume Set Indentifier: ", voliden);
         writeln("Publisher: ", publisher);
         writeln("Copyrights: ", copyright);
         writeln("Application: ", app);
