@@ -123,7 +123,6 @@ private enum SUBTYPE_I386
     PENTIUM_4 = SUBTYPE_INTEL(10, 0),
 }
 
-pragma(inline, true)
 private uint SUBTYPE_INTEL(short f, short m) { return f + (m << 4); }
 
 // MIPS subty
@@ -441,7 +440,7 @@ void scan_mach(File file)
             break;
     }
 
-    writef(" file for %s (", cpu_type);
+    writef(" for %s (", cpu_type);
 
     switch (cpu_type)
     {

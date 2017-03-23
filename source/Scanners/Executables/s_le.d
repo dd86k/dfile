@@ -51,7 +51,7 @@ void scan_le(File file)
 
     if (More)
     {
-        writefln("e32_magic : %s",  h.e32_magic);
+        writeln("e32_magic : ",  h.e32_magic);
         writefln("e32_border: %Xh", h.e32_border);
         writefln("e32_worder: %Xh", h.e32_worder);
         writefln("e32_level : %Xh", h.e32_level);

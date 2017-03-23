@@ -104,6 +104,10 @@ void scan_elf(File file)
     writeln(" machines");
 }
 
+/*
+ * ELF/ELF-FAT Methods
+ */
+
 void elf_print_class(ubyte c)
 {
     switch (c)

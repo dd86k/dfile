@@ -23,7 +23,12 @@ void scan_iso(File file)
     char[s] buf;
     bool bootable;
     string label,
-    // Informative strings
+    /*
+     * Extra info strings
+     */
+        // BOOT
+        bootsysiden, bootiden,
+        // PRIMARY_VOL_DESC
         system, copyright, publisher, app, abst, biblio,
         ctime, mtime, etime, eftime;
     file.seek(0x8000);
@@ -40,7 +45,14 @@ ISO_READ:
     if (buf[1..6] == ISO)
         switch (buf[0])
         {
-            case BOOT: bootable = true; break;
+            case BOOT:
+                bootable = true;
+                if (More)
+                {
+                    bootsysiden = isostr(buf[7 .. 39]);
+                    bootiden = isostr(buf[39 .. 71]);
+                }
+                break;
             case PRIMARY_VOL_DESC:
                 label = isostr(buf[40 .. 71]);
                 if (More)
@@ -61,20 +73,22 @@ ISO_READ:
         }
     switch (t++) // Dumb system but hey, good stuff.
     {
-        case 0:  goto ISO_P0;
-        case 1:  goto ISO_P1;
+        case  0: goto ISO_P0;
+        case  1: goto ISO_P1;
         default: goto ISO_END;
     }
 ISO_END:
     report("ISO-9660 CD/DVD image", false);
     if (label)
-        write(" \"", label, "\"");
+        write(` "`, label, `"`);
     if (bootable)
         write(", Bootable");
     writeln();
 
     if (More)
     {
+        writeln("Boot System Identifier: ", bootsysiden);
+        writeln("Boot Identifier: ", bootiden);
         writeln("System: ", system);
         writeln("Publisher: ", publisher);
         writeln("Copyrights: ", copyright);
