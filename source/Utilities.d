@@ -84,12 +84,35 @@ string formatsize(long size) pure
         return format("%d TB", size / TB);
 }
 
-/// Swap bytes.
-version (X86_ANY) ushort invert(ushort num) pure
+/*
+ * 16-bit swapping
+ */
+
+/// Swap 2 bytes.
+version (X86) ushort invert(ushort num) pure
 {
     asm pure { naked;
         xchg AH, AL;
         ret;
+    }
+}
+else version (X86_64)
+{
+    version (Windows) ushort invert(ushort num) pure
+    {
+        asm pure { naked;
+            mov AX, CX;
+            xchg AL, AH;
+            ret;
+        }
+    }
+    else ushort invert(ushort num) pure
+    {
+        asm pure { naked;
+            mov RAX, RDI;
+            xchg AL, AH;
+            ret;
+        }
     }
 }
 else ushort invert(ushort num) pure
@@ -106,7 +129,11 @@ else ushort invert(ushort num) pure
     return num;
 }
 
-/// Swap bytes.
+/*
+ * 32-bit swapping
+ */
+
+/// Swap 4 bytes.
 version (X86) uint invert(uint num) pure
 {
     asm pure { naked;
@@ -114,12 +141,23 @@ version (X86) uint invert(uint num) pure
         ret;
     }
 }
-else version (X86_64) uint invert(uint num) pure
+else version (X86_64)
 {
-    asm pure { naked;
-        mov EAX, ECX;
-        bswap EAX;
-        ret;
+    version (Windows) uint invert(uint num) pure
+    {
+        asm pure { naked;
+            mov EAX, ECX;
+            bswap EAX;
+            ret;
+        }
+    }
+    else uint invert(uint num) pure
+    {
+        asm pure { naked;
+            mov RAX, RDI;
+            bswap EAX;
+            ret;
+        }
     }
 }
 else uint invert(uint num) pure
@@ -136,7 +174,11 @@ else uint invert(uint num) pure
     return num;
 }
 
-/// Swap bytes.
+/*
+ * 64-bit swapping
+ */
+
+/// Swap 8 bytes.
 version (X86) ulong invert(ulong num) pure
 {
     asm pure { naked;
@@ -146,11 +188,23 @@ version (X86) ulong invert(ulong num) pure
         ret;
     }
 }
-else version (X86_64) ulong invert(ulong num) pure
+else version (X86_64)
 {
-    asm pure { naked;
-        bswap RAX;
-        ret;
+    version (Windows) ulong invert(ulong num) pure
+    {
+        asm pure { naked;
+            mov RAX, RCX;
+            bswap RAX;
+            ret;
+        }
+    }
+    else ulong invert(ulong num) pure
+    {
+        asm pure { naked;
+            mov RAX, RDI;
+            bswap RAX;
+            ret;
+        }
     }
 }
 else ulong invert(ulong num) pure
@@ -173,7 +227,7 @@ else ulong invert(ulong num) pure
     return num;
 }
 
-/// Invert byte sequence.
+/// Swap an array of bytes.
 void invert(ubyte* a, size_t length) pure
 {
     size_t l = length / 2;
