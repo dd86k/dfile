@@ -10,7 +10,7 @@ import std.stdio : File;
  * File utilities.
  */
 
-/// Read file with a struct.
+/// Read file with a struct or array.
 void scpy(File file, void* s, size_t size, bool rewind = false)
 {
     import std.c.string : memcpy;
@@ -18,6 +18,11 @@ void scpy(File file, void* s, size_t size, bool rewind = false)
     ubyte[] buf = new ubyte[size];
     file.rawRead(buf);
     memcpy(s, buf.ptr, size);
+    version (unittest)
+    {
+        import std.stdio : writeln;
+        writeln("SCPY::BUF: ", buf);
+    }
 }
 
 /*
