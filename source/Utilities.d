@@ -60,7 +60,7 @@ string isostr(char[] str) pure
  * Number utilities.
  */
 
-/// Get byte size, formatted.
+/// Get a formatted size.
 string formatsize(long size) pure
 {
     import std.format : format;
@@ -84,11 +84,10 @@ string formatsize(long size) pure
         return format("%d TB", size / TB);
 }
 
-/// Invert big to little endian.
+/// Swap bytes.
 version (X86_ANY) ushort invert(ushort num) pure
 {
-    asm pure {
-        naked;
+    asm pure { naked;
         xchg AH, AL;
         ret;
     }
@@ -107,11 +106,18 @@ else ushort invert(ushort num) pure
     return num;
 }
 
-/// Invert big to little endian.
+/// Swap bytes.
 version (X86) uint invert(uint num) pure
 {
-    asm pure {
-        naked;
+    asm pure { naked;
+        bswap EAX;
+        ret;
+    }
+}
+else version (X86_64) uint invert(uint num) pure
+{
+    asm pure { naked;
+        mov EAX, ECX;
         bswap EAX;
         ret;
     }
@@ -130,11 +136,19 @@ else uint invert(uint num) pure
     return num;
 }
 
-/// Invert big to little endian.
-version (X86_64) ulong invert(ulong num) pure
+/// Swap bytes.
+version (X86) ulong invert(ulong num) pure
 {
-    asm pure {
-        naked;
+    asm pure { naked;
+        xchg EAX, EDX;
+        bswap EDX;
+        bswap EAX;
+        ret;
+    }
+}
+else version (X86_64) ulong invert(ulong num) pure
+{
+    asm pure { naked;
         bswap RAX;
         ret;
     }

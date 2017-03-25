@@ -1718,7 +1718,7 @@ void report_link(string linkname)
 
         }
         else
-        { // More recent Windows versions
+        {
 
         }
     }
@@ -1731,7 +1731,7 @@ void report_link(string linkname)
 /**
  * Report to the user information.
  *
- * If the newline if false, the developper must end the information with a new
+ * If the newline is false, the developper must end the information with a new
  * line manually.
  */
 void report(string type, bool nl = true)
