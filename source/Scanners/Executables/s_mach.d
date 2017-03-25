@@ -362,8 +362,8 @@ void scan_mach(File file)
 
             if (reversed)
             {
-                cpu_type = cast(cpu_type_t)invert(fa.cputype);
-                cpu_subtype = invert(fa.cpusubtype);
+                cpu_type = cast(cpu_type_t)bswap(fa.cputype);
+                cpu_subtype = bswap(fa.cpusubtype);
             }
             else
             {
@@ -384,9 +384,9 @@ void scan_mach(File file)
 
         if (reversed)
         {
-            filetype = cast(filetype_t)invert(mh.filetype);
-            cpu_type = cast(cpu_type_t)invert(mh.cputype);
-            cpu_subtype = invert(mh.cpusubtype);
+            filetype = cast(filetype_t)bswap(mh.filetype);
+            cpu_type = cast(cpu_type_t)bswap(mh.cputype);
+            cpu_subtype = bswap(mh.cpusubtype);
         }
         else
         {

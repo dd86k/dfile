@@ -89,7 +89,7 @@ string formatsize(long size) pure
  */
 
 /// Swap 2 bytes.
-ushort invert(ushort num) pure
+ushort bswap(ushort num) pure
 {
     version (X86)
     {
@@ -137,7 +137,7 @@ ushort invert(ushort num) pure
  */
 
 /// Swap 4 bytes.
-uint invert(uint num) pure
+uint bswap(uint num) pure
 {
     version (X86)
     {
@@ -185,7 +185,7 @@ uint invert(uint num) pure
  */
 
 /// Swap 8 bytes.
-ulong invert(ulong num) pure
+ulong bswap(ulong num) pure
 {
     version (X86)
     {
@@ -237,7 +237,7 @@ ulong invert(ulong num) pure
 }
 
 /// Swap an array of bytes.
-void invert(ubyte* a, size_t length) pure
+void bswap(ubyte* a, size_t length) pure
 {
     size_t l = length / 2;
     if (l)

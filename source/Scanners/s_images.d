@@ -40,7 +40,7 @@ void scan_png(File file) // Big Endian
         scpy(file, &h, h.sizeof);
 
         with (h) {
-            write(invert(width), " x ", invert(height), " pixels, ");
+            write(bswap(width), " x ", bswap(height), " pixels, ");
 
             switch (color)
             {

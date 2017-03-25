@@ -296,7 +296,7 @@ void scan(File file)
         uint[1] b;
         file.rawRead(b);
         report("GTA Text 2 file with", false);
-        writeln(invert(b[0]), "entries");  // Byte swapped
+        writeln(bswap(b[0]), "entries");  // Byte swapped
     }
         return;
 
@@ -534,7 +534,10 @@ void scan(File file)
             report("RAR archive v5.0+");
             return;
         default:
-            report("RAR archive v1.5+");
+            if (sig[0..3] == x"1A 07 00")
+                report("RAR archive v1.5+");
+            else
+                report_unknown();
             return;
         }
 
@@ -671,10 +674,39 @@ void scan(File file)
     }
         return;
 
-    case "8BPS":
+    case "8BPS": {
+        struct psd_hdr {
+            uint magic;
+            ushort version_;
+            ubyte[6] reserved;
+            ushort channels;
+            uint height;
+            uint width;
+            ushort depth;
+            ushort colormode;
+        }
     //TODO: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
     //->http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
-        report("Photoshop native document file");
+        psd_hdr h;
+        scpy(file, &h, h.sizeof, true);
+        report("Photoshop native document v", false);
+        write(bswap(h.version_), ", ",
+            bswap(h.width), " x ", bswap(h.height), ", ",
+            bswap(h.depth), "-bit ");
+        switch (bswap(h.colormode))
+        {
+            case 0: write("Bitmap"); break;
+            case 1: write("Grayscale"); break;
+            case 2: write("Indexed"); break;
+            case 3: write("RGB"); break;
+            case 4: write("CMYK"); break;
+            case 7: write("Multichannel"); break;
+            case 8: write("Duotone"); break;
+            case 9: write("Lab"); break;
+            default: write("Unknown type"); break;
+        }
+        writeln(" image");
+    }
         return;
 
     case "RIFF":
@@ -718,7 +750,7 @@ void scan(File file)
 
         report("MIDI, ", false);
 
-        switch (invert(h.format))
+        switch (bswap(h.format))
         {
             case 0: write("Single track"); break;
             case 1: write("Multiple tracks"); break;
@@ -726,8 +758,8 @@ void scan(File file)
             default: write("Unknown format"); return;
         }
 
-        h.number = invert(h.number);
-        h.division = invert(h.division);
+        h.number = bswap(h.number);
+        h.division = bswap(h.division);
         writef(": %d tracks at ", h.number);
         if (h.division & 0x8000) // Negative, SMPTE units
             writefln("%d ticks/frame (SMPTE: %d)",
@@ -1351,16 +1383,16 @@ void scan(File file)
         }
         vhd_hdr h;
         scpy(file, &h, h.sizeof);
-        h.features = invert(h.features);
+        h.features = bswap(h.features);
         if ((h.features & F_RES) == 0)
         {
             report_text();
             return;
         }
         report("Microsoft VHD disk image v", false);
-        write(invert(h.major), ".", invert(h.minor));
+        write(bswap(h.major), ".", bswap(h.minor));
 
-        h.disk_type = invert(h.disk_type);
+        h.disk_type = bswap(h.disk_type);
         switch(h.disk_type)
         {
             case D_FIXED: write(", Fixed"); break;
@@ -1375,7 +1407,7 @@ void scan(File file)
         }
 
         write(", ", h.creator_app, " v",
-            invert(h.creator_major), ".", invert(h.creator_minor));
+            bswap(h.creator_major), ".", bswap(h.creator_minor));
 
         switch (h.creator_os)
         {
@@ -1384,8 +1416,8 @@ void scan(File file)
             default: break;
         }
 
-        h.size_current = invert(h.size_current);
-        h.size_original = invert(h.size_original);
+        h.size_current = bswap(h.size_current);
+        h.size_original = bswap(h.size_original);
         if (h.size_current && h.size_original)
         {
             write(", ", formatsize(h.size_current), "/",
@@ -1526,9 +1558,9 @@ void scan(File file)
         scpy(file, &h, h.sizeof, true);
 
         report("QEMU QCOW2 disk image v", false);
-        write(invert(h.version_), ", ", formatsize(invert(h.size)));
+        write(bswap(h.version_), ", ", formatsize(bswap(h.size)));
 
-        switch (invert(h.crypt_method))
+        switch (bswap(h.crypt_method))
         {
             case C_AES: write(", AES encrypted"); break;
             default: break;
@@ -1538,7 +1570,7 @@ void scan(File file)
 
         if (More)
         {
-            writeln("Snapshots: ", invert(h.nb_snapshots));
+            writeln("Snapshots: ", bswap(h.nb_snapshots));
         }
     }
         return;
