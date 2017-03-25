@@ -109,7 +109,7 @@ else version (X86_64)
     else ushort invert(ushort num) pure
     {
         asm pure { naked;
-            mov RAX, RDI;
+            mov EAX, EDI;
             xchg AL, AH;
             ret;
         }
