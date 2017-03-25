@@ -58,6 +58,10 @@ unittest
 
         File f = File.tmpfile();
         f.rawWrite(a);
+        ubyte[10] b;
+        scpy(f, b.ptr, b.sizeof, true);
+        assert(b == a);
+
         struct s1 { // Generic header
             uint magic;
             ushort version_;
@@ -65,7 +69,6 @@ unittest
         }
         s1 h1;
         scpy(f, &h1, h1.sizeof, true);
-        writeln(h1.type);
         assert(h1.magic == 0x0403_0201);
         assert(h1.version_ == 0x0605);
         assert(h1.type  == [7, 8, 9, 10]);
