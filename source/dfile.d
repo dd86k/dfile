@@ -674,9 +674,9 @@ void scan(File file)
     }
         return;
 
-    case "8BPS": {
+    case "8BPS": { // Oddly enough, another ZIP-like case.
         struct psd_hdr {
-            uint magic;
+            ushort magic;
             ushort version_;
             ubyte[6] reserved;
             ushort channels;
@@ -688,8 +688,9 @@ void scan(File file)
     //TODO: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
     //->http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
-        scpy(file, &h, h.sizeof, true);
-        report("Photoshop native document v", false);
+        file.seek(2);
+        scpy(file, &h, h.sizeof);
+        report("Photoshop Document v", false);
         write(bswap(h.version_), ", ",
             bswap(h.width), " x ", bswap(h.height), ", ",
             bswap(h.depth), "-bit ");

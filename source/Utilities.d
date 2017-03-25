@@ -6,11 +6,6 @@ module utils;
 
 import std.stdio : File;
 
-version (X86)
-    version = X86_ANY;
-else version (X86_64)
-    version = X86_ANY;
-
 /*
  * File utilities.
  */
@@ -18,11 +13,11 @@ else version (X86_64)
 /// Read file with a struct.
 void scpy(File file, void* s, size_t size, bool rewind = false)
 {
+    import std.c.string : memcpy;
     if (rewind) file.rewind();
     ubyte[] buf = new ubyte[size];
     file.rawRead(buf);
-    ubyte* sp = cast(ubyte*)s, bp = &buf[0];
-    do *sp++ = *bp++; while (size--);
+    memcpy(s, buf.ptr, size);
 }
 
 /*
