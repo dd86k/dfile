@@ -4,4 +4,4 @@ dfile is a fast, simple, and cross-platform binary file scanner that is very sim
 
 A list of files where additional information can be provided is available on the [Wiki](https://github.com/dd86k/dfile/wiki/Additional-Information).
 
-Currently, dfile is only supported on little-endian machines. The behavior is undefined on big-endian machines.
+Currently, dfile is only supported on little-endian machines. The behavior has not been tested on big-endian machines.

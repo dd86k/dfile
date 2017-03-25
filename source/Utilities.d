@@ -89,44 +89,47 @@ string formatsize(long size) pure
  */
 
 /// Swap 2 bytes.
-version (X86) ushort invert(ushort num) pure
+ushort invert(ushort num) pure
 {
-    asm pure { naked;
-        xchg AH, AL;
-        ret;
-    }
-}
-else version (X86_64)
-{
-    version (Windows) ushort invert(ushort num) pure
+    version (X86)
     {
         asm pure { naked;
-            mov AX, CX;
-            xchg AL, AH;
+            xchg AH, AL;
             ret;
         }
     }
-    else ushort invert(ushort num) pure
+    else version (X86_64)
     {
-        asm pure { naked;
-            mov EAX, EDI;
-            xchg AL, AH;
-            ret;
-        }
-    }
-}
-else ushort invert(ushort num) pure
-{
-    version (LittleEndian)
-    {
-        if (num)
+        version (Windows)
         {
-            ubyte* p = cast(ubyte*)&num;
-            return p[1] | p[0] << 8;
+            asm pure { naked;
+                mov AX, CX;
+                xchg AL, AH;
+                ret;
+            }
+        }
+        else
+        { // Should follow System V AMD64 ABI
+            asm pure { naked;
+                mov EAX, EDI;
+                xchg AL, AH;
+                ret;
+            }
         }
     }
+    else
+    {
+        version (LittleEndian)
+        {
+            if (num)
+            {
+                ubyte* p = cast(ubyte*)&num;
+                return p[1] | p[0] << 8;
+            }
+        }
 
-    return num;
+        return num;
+    }
 }
 
 /*
@@ -134,44 +137,47 @@ else ushort invert(ushort num) pure
  */
 
 /// Swap 4 bytes.
-version (X86) uint invert(uint num) pure
+uint invert(uint num) pure
 {
-    asm pure { naked;
-        bswap EAX;
-        ret;
-    }
-}
-else version (X86_64)
-{
-    version (Windows) uint invert(uint num) pure
+    version (X86)
     {
         asm pure { naked;
-            mov EAX, ECX;
             bswap EAX;
             ret;
         }
     }
-    else uint invert(uint num) pure
+    else version (X86_64)
     {
-        asm pure { naked;
-            mov RAX, RDI;
-            bswap EAX;
-            ret;
-        }
-    }
-}
-else uint invert(uint num) pure
-{
-    version (LittleEndian)
-    {
-        if (num)
+        version (Windows)
         {
-            ubyte* p = cast(ubyte*)&num;
-            return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+            asm pure { naked;
+                mov EAX, ECX;
+                bswap EAX;
+                ret;
+            }
+        }
+        else
+        { // Should follow System V AMD64 ABI
+            asm pure { naked;
+                mov RAX, RDI;
+                bswap EAX;
+                ret;
+            }
         }
     }
-    
-    return num;
+    else
+    {
+        version (LittleEndian)
+        {
+            if (num)
+            {
+                ubyte* p = cast(ubyte*)&num;
+                return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+            }
+        }
+        
+        return num;
+    }
 }
 
 /*
@@ -179,52 +185,55 @@ else uint invert(uint num) pure
  */
 
 /// Swap 8 bytes.
-version (X86) ulong invert(ulong num) pure
+ulong invert(ulong num) pure
 {
-    asm pure { naked;
-        xchg EAX, EDX;
-        bswap EDX;
-        bswap EAX;
-        ret;
-    }
-}
-else version (X86_64)
-{
-    version (Windows) ulong invert(ulong num) pure
+    version (X86)
     {
         asm pure { naked;
-            mov RAX, RCX;
-            bswap RAX;
+            xchg EAX, EDX;
+            bswap EDX;
+            bswap EAX;
             ret;
         }
     }
-    else ulong invert(ulong num) pure
+    else version (X86_64)
     {
-        asm pure { naked;
-            mov RAX, RDI;
-            bswap RAX;
-            ret;
-        }
-    }
-}
-else ulong invert(ulong num) pure
-{
-    version (LittleEndian)
-    {
-        if (num)
+        version (Windows)
         {
-            ubyte* p = cast(ubyte*)&num;
-            ubyte c;
-            for (int a, b = 7; a < 4; ++a, --b) {
-                c = *(p + b);
-                *(p + b) = *(p + a);
-                *(p + a) = c;
+            asm pure { naked;
+                mov RAX, RCX;
+                bswap RAX;
+                ret;
             }
-            return num;
+        }
+        else
+        { // Should follow System V AMD64 ABI
+            asm pure { naked;
+                mov RAX, RDI;
+                bswap RAX;
+                ret;
+            }
         }
     }
+    else
+    {
+        version (LittleEndian)
+        {
+            if (num)
+            {
+                ubyte* p = cast(ubyte*)&num;
+                ubyte c;
+                for (int a, b = 7; a < 4; ++a, --b) {
+                    c = *(p + b);
+                    *(p + b) = *(p + a);
+                    *(p + a) = c;
+                }
+                return num;
+            }
+        }
 
-    return num;
+        return num;
+    }
 }
 
 /// Swap an array of bytes.
@@ -244,3 +253,22 @@ void invert(ubyte* a, size_t length) pure
         } 
     }
 }
+
+ushort make_ushort(char[] buf) pure
+{
+    return buf[0] | buf[1] << 8;
+}
+ushort make_ushort(ubyte[] buf) pure
+{
+    return buf[0] | buf[1] << 8;
+}
+uint make_uint(char[] buf) pure
+{
+    return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
+}
+uint make_uint(ubyte[] buf) pure
+{
+    return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
+}
+
+//TODO: Make "Print array with '-'"-like method

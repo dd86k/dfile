@@ -254,14 +254,12 @@ void scan(File file)
         report("Kodak Cineon image");
         return;
 
-    case ['R', 'N', 'C', 0x01]:
-    case ['R', 'N', 'C', 0x02]:
-        report("Compressed file (Rob Northen Compression v" ~
+    case ['R', 'N', 'C', 0x01], ['R', 'N', 'C', 0x02]:
+        report("Rob Northen Compressed archive v" ~
             (sig[3] == 1 ? '1' : '2') ~ ")");
         return;
 
-    case "SDPX":
-    case "XPDS":
+    case "SDPX", "XPDS":
         report("SMPTE DPX image");
         return;
 
@@ -273,9 +271,7 @@ void scan(File file)
         report("Better Portable Graphics image (BPG)");
         return;
 
-    case [0xFF, 0xD8, 0xFF, 0xDB]:
-    case [0xFF, 0xD8, 0xFF, 0xE0]:
-    case [0xFF, 0xD8, 0xFF, 0xE1]:
+    case [0xFF, 0xD8, 0xFF, 0xDB], [0xFF, 0xD8, 0xFF, 0xE0], [0xFF, 0xD8, 0xFF, 0xE1]:
         report("Joint Photographic Experts Group image (JPEG)");
         return;
 
@@ -287,14 +283,13 @@ void scan(File file)
         report("%s: GTA Text (GTA2+) file in ", false);
         final switch (sig[3])
         {
-        case 'E': write("English");  break;
-        case 'F': write("French");   break;
-        case 'G': write("German");   break;
-        case 'I': write("Italian");  break;
-        case 'S': write("Spanish");  break;
-        case 'J': write("Japanese"); break;
+        case 'E': writeln("English");  break;
+        case 'F': writeln("French");   break;
+        case 'G': writeln("German");   break;
+        case 'I': writeln("Italian");  break;
+        case 'S': writeln("Spanish");  break;
+        case 'J': writeln("Japanese"); break;
         }
-        write(" language");
         return;
 
     case "2TXG": {
@@ -306,10 +301,17 @@ void scan(File file)
         return;
 
     case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
+        struct rpf_hdr {
+            //int magic;
+            int tablesize;
+            int numentries;
+            int unknown0;
+            int encrypted;
+        }
+        rpf_hdr h;
+        scpy(file, &h , h.sizeof);
         report("RPF", false);
-        int[4] buf; // Table of Contents Size, Number of Entries, ?, Encryted
-        file.rawRead(buf);
-        if (buf[3])
+        if (h.encrypted)
             write(" encrypted");
         write(" archive v", sig[3], " (");
         final switch (sig[3])
@@ -321,7 +323,7 @@ void scan(File file)
             case '6': write("Red Dead Redemption"); break;
             case '7': write("GTA V"); break;
         }
-        writefln(") with %d entries", buf[1]);
+        writefln(") with ", h.numentries, " entries");
     }
         return;
 
@@ -528,6 +530,7 @@ void scan(File file)
         switch (sig)
         {
         case [0x1A, 0x07, 0x01, 0x00]:
+            //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
         default:
@@ -619,6 +622,11 @@ void scan(File file)
         scpy(file, &h, h.sizeof);
         report("Ogg audio file v", false);
         writeln(h.version_, " with ", h.pages, " segments");
+
+        if (More)
+        {
+            writefln("CRC32: %X", h.crc32);
+        }
     } 
         return;
 
@@ -639,16 +647,6 @@ void scan(File file)
              * Total : 112 bits (14 bytes)
              */
             ubyte[14] stupid;
-            /*
-            uint stupid0;
-            uint stupid1;
-            ushort stupid2;
-            uint stupid3;
-            */
-            /*uint stupid0;
-            ushort stupid1;
-            uint stupid2;
-            uint stupid3;*/
             ubyte[16] md5;
         }
         flac_hdr h;
@@ -674,6 +672,8 @@ void scan(File file)
         return;
 
     case "8BPS":
+    //TODO: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
+    //->http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         report("Photoshop native document file");
         return;
 
@@ -683,6 +683,7 @@ void scan(File file)
         switch (sig)
         {
         case "WAVE":
+        //TODO: https://developer.blackberry.com/native/documentation/graphics_multimedia/audio_video/tutorial_play_a_wav_structure_of_a_wav_file.html
             report("Waveform Audio File (wav)");
             return;
         case "AVI ":
@@ -741,7 +742,7 @@ void scan(File file)
         switch (sig)
         {
         case [0xA1, 0xB1, 0x1A, 0xE1]:
-            report("Compound File Binary Format document (doc, xls, ppt)");
+            report("Compound File Binary Format document (doc, xls, ppt, etc.)");
             return;
         default:
             report_unknown();
@@ -761,6 +762,7 @@ void scan(File file)
         }
 
     case "Cr24":
+    //TODO: https://developer.chrome.com/extensions/crx
         report("Google Chrome extension or packaged app (crx)");
         return;
 
@@ -890,12 +892,13 @@ void scan(File file)
         report("InstallShield CAB archive", false);
         switch (h.version_)
         {
-            case LEGACY:    writeln(" (Legacy)"); break;
-            case v2_20_905: writeln(" v2.20.905"); break;
-            case v3_00_065: writeln(" v3.00.065"); break;
-            case v5_00_000: writeln(" v5.00.000"); break;
-            default: writefln(" (Version:%08X)", h.version_); return;
+            case LEGACY:    write(" (Legacy)");  break;
+            case v2_20_905: write(" v2.20.905"); break;
+            case v3_00_065: write(" v3.00.065"); break;
+            case v5_00_000: write(" v5.00.000"); break;
+            default: writef(" (Version:0x%08X)", h.version_); break;
         }
+        writefln(" at 0x%X", h.desc_offset);
     }
         return;
 
@@ -1033,8 +1036,7 @@ void scan(File file)
     }
         return;
 
-    case "PWAD":
-    case "IWAD": {
+    case "PWAD", "IWAD": {
         int[2] b; // Doom reads as int
         file.rawRead(b);
         report(sig.idup, false);
@@ -1593,11 +1595,11 @@ void scan(File file)
         switch (sig[0..2])
         {
         case [0x1F, 0x9D]:
-            report("Lempel-Ziv-Welch compressed file (RAR/ZIP)");
+            report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
             return;
 
         case [0x1F, 0xA0]:
-            report("LZH compressed file (RAR/ZIP)");
+            report("LZH compressed archive (RAR/ZIP)");
             return;
 
         case "MZ":
@@ -1613,11 +1615,11 @@ void scan(File file)
             return;
 
         case "BM":
-            report("Bitmap iamge file (BMP)");
+            report("Bitmap image file (BMP)");
             return;
 
         case [0x1F, 0x8B]:
-            report("GZIP compressed file ([tar.]gz)");
+            report("GZIP compressed file (gz)");
             return;
 
         case [0x30, 0x82]:
@@ -1632,7 +1634,7 @@ void scan(File file)
                 break;
 
             case "BZh":
-                report("Bzip2 compressed file (BZh)");
+                report("Bzip2 compressed file (bzip2)");
                 return;
 
             case [0xEF, 0xBB, 0xBF]:
@@ -1641,10 +1643,6 @@ void scan(File file)
 
             case "ID3":
                 report("MPEG-2 Audio Layer III audio file with ID3v2 (MP3)");
-                return;
-
-            case "KDM":
-                report("VMware Disk K virtual disk file (VMDK)");
                 return;
 
             case "NES":
@@ -1668,7 +1666,6 @@ void scan(File file)
 }
 
 /// Report an unknown file type.
-// never inline
 void report_unknown()
 {
     report("Unknown file type");

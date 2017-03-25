@@ -23,16 +23,16 @@ void scan_iso(File file)
     int t;
     char[s] buf;
     bool bootable;
-    string label,
     /*
-     * Extra info strings
+     * ISO strings
      */
-        // BOOT
-        bootsysiden, bootiden,
         // PRIMARY_VOL_DESC
+    string label,
         system, voliden,
         copyright, publisher, app, abst, biblio,
-        ctime, mtime, etime, eftime;
+        ctime, mtime, etime, eftime,
+        // BOOT
+        bootsysiden, bootiden;
     file.seek(0x8000);
     goto ISO_READ;
 ISO_P0:
@@ -57,13 +57,11 @@ ISO_READ:
                 break;
             case PRIMARY_VOL_DESC:
                 label = isostr(buf[40 .. 71]);
+                uint size = make_uint(buf[80..84]);
+                ushort blocksize = make_ushort(buf[128..130]);
+                volume_size = size * blocksize;
                 if (More)
                 {
-                    uint size =
-                        buf[80] | buf[81] << 8 |
-                        buf[82] << 16 | buf[83] << 24;
-                    ushort blocksize = buf[128] | buf[129] << 8;
-                    volume_size = size * blocksize;
                     system = isostr(buf[8 .. 40]);
                     voliden = isostr(buf[190 .. 318]);
                     publisher = isostr(buf[318 .. 446]);
