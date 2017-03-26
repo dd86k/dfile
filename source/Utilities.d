@@ -91,32 +91,24 @@ string formatsize(long size) pure
 /// Swap 2 bytes.
 ushort bswap(ushort num) pure
 {
-    version (X86)
-    {
-        asm pure { naked;
-            xchg AH, AL;
-            ret;
-        }
+    version (X86) asm pure {
+        naked;
+        xchg AH, AL;
+        ret;
     }
     else version (X86_64)
-    {
-        version (Windows)
-        {
-            asm pure { naked;
-                mov AX, CX;
-                xchg AL, AH;
-                ret;
-            }
+        version (Windows) asm pure {
+            naked;
+            mov AX, CX;
+            xchg AL, AH;
+            ret;
         }
-        else
-        { // Should follow System V AMD64 ABI
-            asm pure { naked;
-                mov EAX, EDI;
-                xchg AL, AH;
-                ret;
-            }
+        else asm pure { // System V AMD64 ABI
+            naked;
+            mov EAX, EDI;
+            xchg AL, AH;
+            ret;
         }
-    }
     else
     {
         version (LittleEndian)
@@ -139,32 +131,23 @@ ushort bswap(ushort num) pure
 /// Swap 4 bytes.
 uint bswap(uint num) pure
 {
-    version (X86)
-    {
-        asm pure { naked;
+    version (X86) asm pure {
+        naked;
+        bswap EAX;
+        ret;
+    }
+    else version (X86_64)
+        version (Windows) asm pure { naked;
+            mov EAX, ECX;
             bswap EAX;
             ret;
         }
-    }
-    else version (X86_64)
-    {
-        version (Windows)
-        {
-            asm pure { naked;
-                mov EAX, ECX;
-                bswap EAX;
-                ret;
-            }
+        else asm pure { // System V AMD64 ABI
+            naked;
+            mov RAX, RDI;
+            bswap EAX;
+            ret;
         }
-        else
-        { // Should follow System V AMD64 ABI
-            asm pure { naked;
-                mov RAX, RDI;
-                bswap EAX;
-                ret;
-            }
-        }
-    }
     else
     {
         version (LittleEndian)
@@ -187,34 +170,25 @@ uint bswap(uint num) pure
 /// Swap 8 bytes.
 ulong bswap(ulong num) pure
 {
-    version (X86)
-    {
-        asm pure { naked;
-            xchg EAX, EDX;
-            bswap EDX;
-            bswap EAX;
-            ret;
-        }
+    version (X86) asm pure {
+        naked;
+        xchg EAX, EDX;
+        bswap EDX;
+        bswap EAX;
+        ret;
     }
     else version (X86_64)
-    {
-        version (Windows)
-        {
-            asm pure { naked;
-                mov RAX, RCX;
-                bswap RAX;
-                ret;
-            }
+        version (Windows) asm pure {
+            naked;
+            mov RAX, RCX;
+            bswap RAX;
+            ret;
+        } else asm pure { // System V AMD64 ABI
+            naked;
+            mov RAX, RDI;
+            bswap RAX;
+            ret;
         }
-        else
-        { // Should follow System V AMD64 ABI
-            asm pure { naked;
-                mov RAX, RDI;
-                bswap RAX;
-                ret;
-            }
-        }
-    }
     else
     {
         version (LittleEndian)
