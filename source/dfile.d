@@ -685,8 +685,7 @@ void scan(File file)
             ushort depth;
             ushort colormode;
         }
-    //TODO: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
-    //->http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
+    //http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
         file.seek(2);
         scpy(file, &h, h.sizeof);
@@ -706,7 +705,7 @@ void scan(File file)
             case 9: write("Lab"); break;
             default: write("Unknown type"); break;
         }
-        writeln(" image");
+        writeln(" image, ", bswap(h.channels), " channel(s)");
     }
         return;
 
@@ -1790,13 +1789,13 @@ void report_link(string linkname)
 
     writeln("Soft symbolic link");
 
-    version (Windows)
-    {
+    /*version (Windows)
+    { // No WINVER, unfortunately.
         import core.sys.windows.windows;
         WIN32_FIND_DATA wd;
 
         version (WindowsXP)
-        { // No WINVER, unfortunately.
+        {
 
         }
         else
@@ -1806,8 +1805,8 @@ void report_link(string linkname)
     }
     else version (Posix)
     {
-
-    }
+        import core.sys.posix.
+    }*/
 }
 
 /**
