@@ -664,8 +664,8 @@ void scan(File file)
             writeln(", ", rate, " Hz, ", bits, " bit, ", chan, " channels");
             if (More)
             {
-                write("MD5:");
-                foreach (b; h.md5) writef(" %02X", b);
+                write("MD5: ");
+                print_array(&h.md5[0], h.md5.length);
                 writeln();
             }
         }
@@ -715,9 +715,62 @@ void scan(File file)
         file.rawRead(sig);
         switch (sig)
         {
-        case "WAVE":
-        //TODO: https://developer.blackberry.com/native/documentation/graphics_multimedia/audio_video/tutorial_play_a_wav_structure_of_a_wav_file.html
-            report("Waveform Audio File (wav)");
+        case "WAVE": {
+            //http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
+            struct fmt_chunk {
+                char[4] id;
+                uint cksize;
+                ushort format;
+                ushort channels;
+                uint samplerate; // Blocks per second
+                uint datarate;
+                ushort blocksize;
+                ushort samplebits;
+                ushort extensionsize;
+                ushort nbvalidbits;
+                uint speakmask;
+                char[16] guid;
+            }
+            enum {
+                PCM = 1,
+                IEEE_FLOAT = 3,
+                ALAW = 6,
+                MULAW = 7,
+                EXTENSIBLE = 0xFFFE
+            }
+            fmt_chunk h;
+            scpy(file, &h, h.sizeof);
+            report("WAVE audio file (", false);
+            if (h.id != "fmt ")
+            {
+                writeln();
+                return;
+            }
+            switch (h.format)
+            {
+                case PCM: write("PCM"); break;
+                case IEEE_FLOAT: write("IEEE Float"); break;
+                case ALAW:  write("8-bit ITU G.711 A-law"); break;
+                case MULAW: write("8-bit ITU G.711 u-law"); break;
+                case EXTENSIBLE:
+                    write("EXTENDED");
+                    if (More)
+                    {
+                        write(":");
+                        print_array(&h.guid[0], h.guid.length);
+                    }
+                    break;
+                default: writeln("Unknown type"); return;
+            }
+            write(") ", h.samplerate, " Hz, ", h.datarate / 1024 * 8,
+                " kbps, ", h.samplebits, "-bit, ");
+            switch (h.channels)
+            {
+                case 1: writeln("Mono"); break;
+                case 2: writeln("Stereo"); break;
+                default: writeln(h.channels, " channels"); break;
+            }
+        }
             return;
         case "AVI ":
             report("Audio Video Interface video (avi)");
@@ -795,7 +848,6 @@ void scan(File file)
         }
 
     case "Cr24":
-    //TODO: https://developer.chrome.com/extensions/crx
         report("Google Chrome extension or packaged app (crx)");
         return;
 

@@ -4,7 +4,7 @@
 
 module utils;
 
-import std.stdio : File;
+import std.stdio;
 
 /*
  * File utilities.
@@ -271,4 +271,9 @@ uint make_uint(ubyte[] buf) pure
     return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
 }
 
-//TODO: Make "Print array with '-'"-like method
+void print_array(void* arr, size_t length)
+{
+    ubyte* p = cast(ubyte*)arr;
+    writef("%02X", p[--length]);
+    do writef("-%02X", p[--length]); while (length);
+}
