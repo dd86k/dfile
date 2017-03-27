@@ -90,10 +90,10 @@ void scan(File file)
                 switch (b[8..12])
                 {
                     case " ACE":
-                        report("Microsoft Access 2007 file");
+                        report("Microsoft Access 2007 Database");
                         return;
                     case " Jet":
-                        report("Microsoft Access file");
+                        report("Microsoft Access Database");
                         return;
                     default:
                         report_unknown();
@@ -108,7 +108,7 @@ void scan(File file)
                 }
                 return;
         }
-        }
+    }
 
     case "NESM": {
         char[1] b;
@@ -533,7 +533,7 @@ void scan(File file)
             //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
-        default:
+        default: // 0,1,2
             if (sig[0..3] == x"1A 07 00")
                 report("RAR archive v1.5+");
             else
