@@ -157,15 +157,13 @@ ushort bswap(ushort num) pure
         naked;
         xchg AH, AL;
         ret;
-    }
-    else version (X86_64)
+    } else version (X86_64)
         version (Windows) asm pure {
             naked;
             mov AX, CX;
             xchg AL, AH;
             ret;
-        }
-        else asm pure { // System V AMD64 ABI
+        } else asm pure { // System V AMD64 ABI
             naked;
             mov EAX, EDI;
             xchg AL, AH;
@@ -197,14 +195,13 @@ uint bswap(uint num) pure
         naked;
         bswap EAX;
         ret;
-    }
-    else version (X86_64)
-        version (Windows) asm pure { naked;
+    } else version (X86_64)
+        version (Windows) asm pure {
+            naked;
             mov EAX, ECX;
             bswap EAX;
             ret;
-        }
-        else asm pure { // System V AMD64 ABI
+        } else asm pure { // System V AMD64 ABI
             naked;
             mov RAX, RDI;
             bswap EAX;
@@ -238,8 +235,7 @@ ulong bswap(ulong num) pure
         bswap EDX;
         bswap EAX;
         ret;
-    }
-    else version (X86_64)
+    } else version (X86_64)
         version (Windows) asm pure {
             naked;
             mov RAX, RCX;

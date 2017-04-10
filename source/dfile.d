@@ -525,7 +525,7 @@ void scan(File file)
     }
         return;
 
-    case "Rar!":
+    case "Rar!": {
         file.rawRead(sig);
         switch (sig)
         {
@@ -540,6 +540,7 @@ void scan(File file)
                 report_unknown();
             return;
         }
+    }
 
     case "\x7FELF":
         scan_elf(file);
@@ -1787,26 +1788,39 @@ void report_link(string linkname)
     // WINDOWS:
     //https://msdn.microsoft.com/en-us/library/windows/desktop/aa364421(v=vs.85).aspx
 
-    writeln("Soft symbolic link");
+    /*
+     * Problem is, there's no way to find it on XP so yeah
+     */
 
-    /*version (Windows)
-    { // No WINVER, unfortunately.
+    write("Soft symbolic link");
+
+    /+version (Windows)
+    {
         import core.sys.windows.windows;
         WIN32_FIND_DATA wd;
 
-        version (WindowsXP)
+        OSVERSIONINFO winver;
+        if (GetVersionEx(&winver))
         {
+            if (winver.dwMajorVersion >= 6)
+            {
+                import std.utf : toUTF16z, count;
+                wchar[MAX_PATH] ws;
+                HANDLE = FindFirstFileNameW(
+                    linkname.toUTF16z,
+                    0,
+                    MAX_PATH,
+                    &ws[0]
+                );
 
-        }
-        else
-        {
-
+                writeln(ws);
+            }
         }
     }
     else version (Posix)
     {
-        import core.sys.posix.
-    }*/
+        //import core.sys.posix.
+    }+/
 }
 
 /**
