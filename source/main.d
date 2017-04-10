@@ -4,9 +4,7 @@
 
 module main;
 
-import std.stdio;
-import std.file;
-import dfile;
+import std.stdio, std.file, dfile;
 
 enum
     PROJECT_NAME = "dfile",
@@ -23,13 +21,13 @@ int main(string[] args)
 {
     size_t l = args.length;
 
-    if (l <= 1)
+    if (l < 2)
     {
         print_help;
         return 0;
     }
 
-    bool cont;
+    bool cont; // Continue with symlink, disable by default
 
     for (int i; i < l; ++i)
     {
@@ -63,27 +61,57 @@ int main(string[] args)
 
     string filename = args[l - 1]; // Last argument, no exceptions!
 
-    if (exists(filename))
-    {
-        if (isSymlink(filename))
-            if (cont)
-                scan(filename);
-            else
-                report_link(filename);
-        else if (isFile(filename))
-            scan(filename);
-        else if (isDir(filename))
-            report_dir(filename);
-        else
-            report_unknown(filename);
+    if (exists(filename)) {
+        prescan(filename, cont);
     }
     else
     {
-        report("File does not exist");
-        return 1;
+        import std.string : indexOf;
+        bool glob =
+            indexOf(filename, '*', 0) >= 0 || indexOf(filename, '?', 0) >= 0 ||
+            indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0;
+        if (glob) { // No point to do globbing if there are no metacharacters
+            import std.path : globMatch, dirName;
+            debug writeln("GLOB ON");
+            ShowingName = !ShowingName;
+            int nbf;
+            foreach (DirEntry dir; dirEntries(dirName(filename), SpanMode.shallow, cont))
+            {
+                if (globMatch(dir.name, filename)) {
+                    ++nbf;
+                    prescan(dir.name, cont);
+                }
+            }
+            if (!nbf)
+            {
+                ShowingName = false;
+                goto F_NE;
+            }
+        }
+        else // No glob!
+        {
+F_NE:
+            report("File does not exist");
+            return 1;
+        }
     }
 
     return 0;
+}
+
+void prescan(string filename, bool cont)
+{
+    if (isSymlink(filename))
+        if (cont)
+            scan(filename);
+        else
+            report_link(filename);
+    else if (isFile(filename))
+        scan(filename);
+    else if (isDir(filename))
+        report_dir(filename);
+    else
+        report_unknown(filename);
 }
 
 void print_help()
