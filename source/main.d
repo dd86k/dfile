@@ -8,10 +8,9 @@ import std.stdio;
 import std.file;
 import dfile;
 
-enum {
+enum
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.6.0"
-}
+    PROJECT_VERSION = "0.6.0";
 
 debug { }
 else
@@ -44,6 +43,9 @@ int main(string[] args)
             break;
         case "-c", "--continue":
             cont = true;
+            break;
+        case "-b":
+            Base10 = true;
             break;
 
         case "-h":

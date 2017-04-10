@@ -18,7 +18,7 @@ import s_mach : scan_mach;
 import s_images, Etc, utils;
 
 /// Setting
-bool More, ShowingName;
+bool More, ShowingName, Base10;
 private File CurrentFile;
 
 void scan(string path)

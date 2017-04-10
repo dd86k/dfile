@@ -4,7 +4,7 @@
 
 module utils;
 
-import std.stdio;
+import std.stdio, dfile : Base10;
 
 /*
  * File utilities.
@@ -60,8 +60,8 @@ string isostr(char[] str) pure
  * Number utilities.
  */
 
-/// Get a formatted size.
-string formatsize(long size, bool b10 = false)
+/// Get a byte-formatted size.
+string formatsize(long size) //BUG: %f is unpure?
 {
     import std.format : format;
 
@@ -78,7 +78,7 @@ string formatsize(long size, bool b10 = false)
 
 	const float s = size;
 
-	if (b10)
+	if (Base10)
 	{
 		if (size > TiB)
 			if (size > 100 * TiB)
@@ -150,7 +150,7 @@ string formatsize(long size, bool b10 = false)
  * 16-bit swapping
  */
 
-/// Swap 2 bytes.
+/// Byte swap 2 bytes.
 ushort bswap(ushort num) pure
 {
     version (X86) asm pure {
@@ -188,7 +188,7 @@ ushort bswap(ushort num) pure
  * 32-bit swapping
  */
 
-/// Swap 4 bytes.
+/// Byte swap 4 bytes.
 uint bswap(uint num) pure
 {
     version (X86) asm pure {
@@ -226,7 +226,7 @@ uint bswap(uint num) pure
  * 64-bit swapping
  */
 
-/// Swap 8 bytes.
+/// Byte swap 8 bytes.
 ulong bswap(ulong num) pure
 {
     version (X86) asm pure {
