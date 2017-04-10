@@ -44,7 +44,7 @@ int main(string[] args)
         case "-c", "--continue":
             cont = true;
             break;
-        case "-b":
+        case "-b", "--base10":
             Base10 = true;
             break;
 
@@ -88,6 +88,9 @@ int main(string[] args)
 
 void print_help()
 {
+    // CLI RULER
+    //      1        10        20        30       40        50        60        70        80
+    //      |--------|---------|---------|--------|---------|---------|---------|---------|
     writeln("Determine the file type by its content.");
     writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
     writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version|/?}");
@@ -96,7 +99,11 @@ void print_help()
 void print_help_full()
 {
     print_help();
+    // CLI RULER
+    //       1        10        20        30       40        50        60        70        80
+    //       |--------|---------|---------|--------|---------|---------|---------|---------|
     writeln("  Option           Description (Default value)");
+    writeln("  -b, --base10     Use decimal metrics instead of binary. (Off)");
     writeln("  -s, --showname   Show filename before result. (Off)");
     writeln("  -c, --continue   Continue on soft symlink. (Off)");
     writeln("  -m, --more       Print more information if available. (Off)");
