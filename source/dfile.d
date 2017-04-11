@@ -590,7 +590,7 @@ void scan(File file)
         file.rawRead(b);
         switch (b)
         {
-        case [0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0, 0xAA, 0, 0x62, 0xCE, 0x6C]:
+        case x"8E 66 CF 11 A6 D9 0 AA 0 62 CE 6C":
             report("Advanced Systems Format file (ASF, WMA, WMV)");
             return;
         default:
@@ -631,7 +631,7 @@ void scan(File file)
         {
             writefln("CRC32: %X", h.crc32);
         }
-    } 
+    }
         return;
 
     case "fLaC": { // FLAC, big endian
