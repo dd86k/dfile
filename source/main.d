@@ -4,14 +4,11 @@
 
 module main;
 
-import std.stdio;
-import std.file;
-import dfile;
+import std.stdio, std.file, dfile;
 
-enum {
+enum
     PROJECT_NAME = "dfile",
-    PROJECT_VERSION = "0.6.0"
-}
+    PROJECT_VERSION = "0.6.0";
 
 debug { }
 else
@@ -24,13 +21,13 @@ int main(string[] args)
 {
     size_t l = args.length;
 
-    if (l <= 1)
+    if (l < 2)
     {
         print_help;
         return 0;
     }
 
-    bool cont;
+    bool cont; // Continue with symlink, disable by default
 
     for (int i; i < l; ++i)
     {
@@ -44,6 +41,9 @@ int main(string[] args)
             break;
         case "-c", "--continue":
             cont = true;
+            break;
+        case "-b", "--base10":
+            Base10 = true;
             break;
 
         case "-h":
@@ -61,31 +61,64 @@ int main(string[] args)
 
     string filename = args[l - 1]; // Last argument, no exceptions!
 
-    if (exists(filename))
-    {
-        if (isSymlink(filename))
-            if (cont)
-                scan(filename);
-            else
-                report_link(filename);
-        else if (isFile(filename))
-            scan(filename);
-        else if (isDir(filename))
-            report_dir(filename);
-        else
-            report_unknown(filename);
+    if (exists(filename)) {
+        prescan(filename, cont);
     }
     else
     {
-        report("File does not exist");
-        return 1;
+        import std.string : indexOf;
+        bool glob =
+            indexOf(filename, '*', 0) >= 0 || indexOf(filename, '?', 0) >= 0 ||
+            indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0;
+        if (glob) { // No point to do globbing if there are no metacharacters
+            import std.path : globMatch, dirName;
+            debug writeln("GLOB ON");
+            ShowingName = !ShowingName;
+            int nbf;
+            foreach (DirEntry dir; dirEntries(dirName(filename), SpanMode.shallow, cont))
+            {
+                if (globMatch(dir.name, filename)) {
+                    ++nbf;
+                    prescan(dir.name, cont);
+                }
+            }
+            if (!nbf)
+            {
+                ShowingName = false;
+                goto F_NE;
+            }
+        }
+        else // No glob!
+        {
+F_NE:
+            report("File does not exist");
+            return 1;
+        }
     }
 
     return 0;
 }
 
+void prescan(string filename, bool cont)
+{
+    if (isSymlink(filename))
+        if (cont)
+            scan(filename);
+        else
+            report_link(filename);
+    else if (isFile(filename))
+        scan(filename);
+    else if (isDir(filename))
+        report_dir(filename);
+    else
+        report_unknown(filename);
+}
+
 void print_help()
 {
+    // CLI RULER
+    //      1        10        20        30       40        50        60        70        80
+    //      |--------|---------|---------|--------|---------|---------|---------|---------|
     writeln("Determine the file type by its content.");
     writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
     writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version|/?}");
@@ -94,7 +127,11 @@ void print_help()
 void print_help_full()
 {
     print_help();
+    // CLI RULER
+    //       1        10        20        30       40        50        60        70        80
+    //       |--------|---------|---------|--------|---------|---------|---------|---------|
     writeln("  Option           Description (Default value)");
+    writeln("  -b, --base10     Use decimal metrics instead of binary. (Off)");
     writeln("  -s, --showname   Show filename before result. (Off)");
     writeln("  -c, --continue   Continue on soft symlink. (Off)");
     writeln("  -m, --more       Print more information if available. (Off)");

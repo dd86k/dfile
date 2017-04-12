@@ -4,7 +4,7 @@
 
 module utils;
 
-import std.stdio;
+import std.stdio, dfile : Base10;
 
 /*
  * File utilities.
@@ -60,8 +60,8 @@ string isostr(char[] str) pure
  * Number utilities.
  */
 
-/// Get a formatted size.
-string formatsize(long size, bool b10 = false)
+/// Get a byte-formatted size.
+string formatsize(long size) //BUG: %f is unpure?
 {
     import std.format : format;
 
@@ -78,7 +78,7 @@ string formatsize(long size, bool b10 = false)
 
 	const float s = size;
 
-	if (b10)
+	if (Base10)
 	{
 		if (size > TiB)
 			if (size > 100 * TiB)
@@ -150,30 +150,27 @@ string formatsize(long size, bool b10 = false)
  * 16-bit swapping
  */
 
-/// Swap 2 bytes.
+/// Byte swap 2 bytes.
 ushort bswap(ushort num) pure
 {
-    version (X86) asm pure {
-        naked;
-        xchg AH, AL;
-        ret;
-    }
-    else version (X86_64)
-        version (Windows) asm pure {
+    version (LittleEndian)
+        version (X86) asm pure {
             naked;
-            mov AX, CX;
-            xchg AL, AH;
+            xchg AH, AL;
             ret;
-        }
-        else asm pure { // System V AMD64 ABI
-            naked;
-            mov EAX, EDI;
-            xchg AL, AH;
-            ret;
-        }
-    else
-    {
-        version (LittleEndian)
+        } else version (X86_64)
+            version (Windows) asm pure {
+                naked;
+                mov AX, CX;
+                xchg AL, AH;
+                ret;
+            } else asm pure { // System V AMD64 ABI
+                naked;
+                mov EAX, EDI;
+                xchg AL, AH;
+                ret;
+            }
+        else
         {
             if (num)
             {
@@ -181,38 +178,34 @@ ushort bswap(ushort num) pure
                 return p[1] | p[0] << 8;
             }
         }
-
-        return num;
-    }
+    else return num;
 }
 
 /*
  * 32-bit swapping
  */
 
-/// Swap 4 bytes.
+/// Byte swap 4 bytes.
 uint bswap(uint num) pure
 {
-    version (X86) asm pure {
-        naked;
-        bswap EAX;
-        ret;
-    }
-    else version (X86_64)
-        version (Windows) asm pure { naked;
-            mov EAX, ECX;
-            bswap EAX;
-            ret;
-        }
-        else asm pure { // System V AMD64 ABI
+    version (LittleEndian)
+        version (X86) asm pure {
             naked;
-            mov RAX, RDI;
             bswap EAX;
             ret;
-        }
-    else
-    {
-        version (LittleEndian)
+        } else version (X86_64)
+            version (Windows) asm pure {
+                naked;
+                mov EAX, ECX;
+                bswap EAX;
+                ret;
+            } else asm pure { // System V AMD64 ABI
+                naked;
+                mov RAX, RDI;
+                bswap EAX;
+                ret;
+            }
+        else
         {
             if (num)
             {
@@ -220,40 +213,36 @@ uint bswap(uint num) pure
                 return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
             }
         }
-        
-        return num;
-    }
+    else return num;
 }
 
 /*
  * 64-bit swapping
  */
 
-/// Swap 8 bytes.
+/// Byte swap 8 bytes.
 ulong bswap(ulong num) pure
 {
-    version (X86) asm pure {
-        naked;
-        xchg EAX, EDX;
-        bswap EDX;
-        bswap EAX;
-        ret;
-    }
-    else version (X86_64)
-        version (Windows) asm pure {
+    version (LittleEndian)
+        version (X86) asm pure {
             naked;
-            mov RAX, RCX;
-            bswap RAX;
+            xchg EAX, EDX;
+            bswap EDX;
+            bswap EAX;
             ret;
-        } else asm pure { // System V AMD64 ABI
-            naked;
-            mov RAX, RDI;
-            bswap RAX;
-            ret;
-        }
-    else
-    {
-        version (LittleEndian)
+        } else version (X86_64)
+            version (Windows) asm pure {
+                naked;
+                mov RAX, RCX;
+                bswap RAX;
+                ret;
+            } else asm pure { // System V AMD64 ABI
+                naked;
+                mov RAX, RDI;
+                bswap RAX;
+                ret;
+            }
+        else
         {
             if (num)
             {
@@ -267,9 +256,7 @@ ulong bswap(ulong num) pure
                 return num;
             }
         }
-
-        return num;
-    }
+    else return num;
 }
 
 /// Swap an array of bytes.

@@ -4,6 +4,9 @@ import std.stdio;
 
 unittest
 {
+    /**
+     * bswap
+     */
     {
         ushort s = 0xFFAA;
         assert(bswap(s) == 0xAAFF);
@@ -27,6 +30,9 @@ unittest
         assert(bswap(l) == 0xDDCCBBAA_00000000);
     }
 
+    /**
+     * bswap array
+     */
     {
         ubyte[] a = [1];
         bswap(&a[0], a.length);
@@ -55,25 +61,32 @@ unittest
         a = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
         bswap(&a[0], a.length);
         assert(a == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    }
 
+    /**
+     * scpy
+     */
+    {
+        ubyte[] a = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
         File f = File.tmpfile();
         f.rawWrite(a);
+
         ubyte[10] b;
         scpy(f, b.ptr, b.sizeof, true);
         assert(b == a);
 
-        struct s1 { // Generic header
+        struct s1 { // Generic header 1
             uint magic;
             ushort version_;
             ubyte[4] type;
         }
         s1 h1;
         scpy(f, &h1, h1.sizeof, true);
-        assert(h1.magic == 0x0403_0201);
-        assert(h1.version_ == 0x0605);
-        assert(h1.type  == [7, 8, 9, 10]);
+        assert(h1.magic == 0x0708_090A);
+        assert(h1.version_ == 0x0506);
+        assert(h1.type == [4, 3, 2, 1]);
 
-        struct s2 { // Generic header
+        struct s2 { // Generic header 2
             uint magic;
             ushort version_;
             ushort type1;
@@ -81,15 +94,15 @@ unittest
         }
         s2 h2;
         scpy(f, &h2, h2.sizeof, true);
-        assert(h2.magic == 0x0403_0201);
-        assert(h2.version_ == 0x0605);
-        assert(h2.type1 == 0x0807);
-        assert(h2.type2 == 0x0A09);
+        assert(h2.magic == 0x0708_090A);
+        assert(h2.version_ == 0x0506);
+        assert(h2.type1 == 0x0304);
+        assert(h2.type2 == 0x0102);
 
-        struct s3 { // Generic header
+        struct s3 { // Generic header 3
             uint magic;
             ushort version_;
-            uint type;
+            uint type; // Compiler mis-alignment?
         }
         s3 h3;
         scpy(f, &h3, h3.sizeof, true);
@@ -99,9 +112,9 @@ unittest
         writefln("%X", h3.magic);
         writefln("%X", h3.version_);
         writefln("%X", h3.type);
-        assert(h3.magic == 0x0403_0201);
-        assert(h3.version_ == 0x0605);
-        assert(h3.type == 0x0A09_0807);
+        assert(h3.magic == 0x0708_090A);
+        assert(h3.version_ == 0x0506);
+        assert(h3.type == 0x0102_0304);
         f.close();
     }
 }
