@@ -59,7 +59,6 @@ int main(string[] args_)
             writeln("Project page: <https://github.com/dd86k/dfile>");
             writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
 	} else {
-        writeln(args_[1]);
         string filename = args[1]; // Last argument, no exceptions!
 
         if (exists(filename)) {
