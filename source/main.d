@@ -17,84 +17,85 @@ else
         rt_envvars_enabled = false, rt_cmdline_enabled = false;
 }
 
-int main(string[] args)
-{
-    size_t l = args.length;
+string[] args;
 
-    if (l < 2)
-    {
-        print_help;
-        return 0;
-    }
+int main(string[] args_)
+{
+    args = args_;
 
     bool cont; // Continue with symlink, disable by default
+    bool shwVersion;
 
-    for (int i; i < l; ++i)
-    {
-        switch (args[i])
-        {
-        case "-s", "--showname":
-            ShowingName = true;
-            break;
-        case "-m", "--more":
-            More = true;
-            break;
-        case "-c", "--continue":
-            cont = true;
-            break;
-        case "-b", "--base10":
-            Base10 = true;
-            break;
+    import std.getopt;
+    GetoptResult rslt;
+	try {
+		rslt = getopt(args,
+            "base10|b", "", &Base10,
+            "continue|c", "Continue on soft symlink", &cont,
+			"more|m", "Print more information if available", &More,
+			"showname|s", "Show filename before result", &ShowingName,
+            "version|v", "Print version information", &shwVersion);
+	} catch(GetOptException e) {
+        import core.stdc.stdlib : exit;
+		stderr.writefln("%s", e.msg);
+        exit(1);
+	}
 
-        case "-h":
-            print_help;
-            return 0;
-        case "--help", "/?":
-            print_help_full;
-            return 0;
-        case "-v", "--version":
-            print_version;
-            return 0;
-        default:
+    if(args_.length <= 1 || rslt.helpWanted) {
+        writeln("Determine the file type by its content.");
+		writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
+        writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
+        if(rslt.helpWanted)
+    	{
+    		defaultGetoptPrinter("\nSome information about the program.",
+    		rslt.options);
         }
-    }
+	} else if (shwVersion) {
+        debug
+            writefln("%s %s -debug (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
+        else
+            writefln("%s %s (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
+            writeln("MIT License: Copyright (c) 2016-2017 dd86k");
+            writeln("Project page: <https://github.com/dd86k/dfile>");
+            writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
+	} else {
+        string filename = args[1]; // Last argument, no exceptions!
 
-    string filename = args[l - 1]; // Last argument, no exceptions!
-
-    if (exists(filename)) {
-        prescan(filename, cont);
-    }
-    else
-    {
-        import std.string : indexOf;
-        bool glob =
-            indexOf(filename, '*', 0) >= 0 || indexOf(filename, '?', 0) >= 0 ||
-            indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0;
-        if (glob) { // No point to do globbing if there are no metacharacters
-            import std.path : globMatch, dirName;
-            debug writeln("GLOB ON");
-            ShowingName = !ShowingName;
-            int nbf;
-            foreach (DirEntry dir; dirEntries(dirName(filename), SpanMode.shallow, cont))
-            {
-                if (globMatch(dir.name, filename)) {
-                    ++nbf;
-                    prescan(dir.name, cont);
+        if (exists(filename)) {
+            prescan(filename, cont);
+        }
+        else
+        {
+            import std.string : indexOf;
+            bool glob =
+                indexOf(filename, '*', 0) >= 0 || indexOf(filename, '?', 0) >= 0 ||
+                indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0;
+            if (glob) { // No point to do globbing if there are no metacharacters
+                import std.path : globMatch, dirName;
+                debug writeln("GLOB ON");
+                ShowingName = !ShowingName;
+                int nbf;
+                foreach (DirEntry dir; dirEntries(dirName(filename), SpanMode.shallow, cont))
+                {
+                    if (globMatch(dir.name, filename)) {
+                        ++nbf;
+                        prescan(dir.name, cont);
+                    }
+                }
+                if (!nbf)
+                {
+                    ShowingName = false;
+                    goto F_NE;
                 }
             }
-            if (!nbf)
+            else // No glob!
             {
-                ShowingName = false;
-                goto F_NE;
+    F_NE:
+                report("File does not exist");
+                return 1;
             }
         }
-        else // No glob!
-        {
-F_NE:
-            report("File does not exist");
-            return 1;
-        }
-    }
+	}
 
     return 0;
 }
@@ -112,43 +113,4 @@ void prescan(string filename, bool cont)
         report_dir(filename);
     else
         report_unknown(filename);
-}
-
-void print_help()
-{
-    // CLI RULER
-    //      1        10        20        30       40        50        60        70        80
-    //      |--------|---------|---------|--------|---------|---------|---------|---------|
-    writeln("Determine the file type by its content.");
-    writeln("  Usage: ", PROJECT_NAME, " [<Options>] <File>");
-    writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version|/?}");
-}
-
-void print_help_full()
-{
-    print_help();
-    // CLI RULER
-    //       1        10        20        30       40        50        60        70        80
-    //       |--------|---------|---------|--------|---------|---------|---------|---------|
-    writeln("  Option           Description (Default value)");
-    writeln("  -b, --base10     Use decimal metrics instead of binary. (Off)");
-    writeln("  -s, --showname   Show filename before result. (Off)");
-    writeln("  -c, --continue   Continue on soft symlink. (Off)");
-    writeln("  -m, --more       Print more information if available. (Off)");
-    //writeln("  -o, --more-os   Use system functions to get more information. (Off)");
-    //e.g. https://msdn.microsoft.com/en-us/library/windows/desktop/aa364819(v=vs.85).aspx
-    writeln();
-    writeln("  -h, --help, /?   Print help and exit");
-    writeln("  -v, --version    Print version and exit");
-}
-
-void print_version()
-{
-debug
-    writeln(PROJECT_NAME, " ", PROJECT_VERSION, "-debug (", __TIMESTAMP__, ")");
-else
-    writeln(PROJECT_NAME, " ", PROJECT_VERSION, " (", __TIMESTAMP__, ")");
-    writeln("MIT License: Copyright (c) 2016-2017 dd86k");
-    writeln("Project page: <https://github.com/dd86k/dfile>");
-    writeln("Compiled ", __FILE__, " with ", __VENDOR__, " v", __VERSION__);
 }
