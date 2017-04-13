@@ -10,8 +10,7 @@ enum
     PROJECT_NAME = "dfile",
     PROJECT_VERSION = "0.6.0";
 
-debug { }
-else
+debug { } else
 {
     extern (C) __gshared bool
         rt_envvars_enabled = false, rt_cmdline_enabled = false;
@@ -48,15 +47,15 @@ int main(string[] args)
     if (r.helpWanted)
     {
         print_help;
-        defaultGetoptPrinter("\nSwitches", r.options);
-        /*foreach (it; r.options)
+        writeln("\nSwitches");
+        foreach (it; r.options)
         { // "custom" defaultGetoptPrinter
-            writefln("%*s, %*s%s    %s",
+            writefln("%*s, %-*s%s%s",
                 4,  it.optShort,
-                10, it.optLong,
-                it.required ? " Required: " : " ",
+                12, it.optLong,
+                it.required ? "Required: " : " ",
                 it.help);
-        }*/
+        }
 	}
     else
     {
@@ -71,24 +70,19 @@ int main(string[] args)
                 indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0) { 
                 import std.path : globMatch, dirName;
                 debug writeln("GLOB ON");
-                ShowingName = !ShowingName;
                 int nbf;
                 foreach (DirEntry e;
-                    dirEntries(dirName(filename), SpanMode.shallow, cont))
-                {
+                    dirEntries(dirName(filename), SpanMode.shallow, cont)) {
                     if (globMatch(e.name, filename)) {
                         ++nbf;
                         prescan(e.name, cont);
                     }
                 }
-                if (!nbf)
-                {
+                if (!nbf) {
                     ShowingName = false;
                     goto F_NE;
                 }
-            }
-            else // No glob!
-            {
+            } else { // No glob!
 F_NE:
                 report("File does not exist");
                 return 1;
