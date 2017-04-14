@@ -71,6 +71,10 @@ unittest
         File f = File.tmpfile();
         f.rawWrite(a);
 
+        uint u;
+        scpy(f, &u, u.sizeof, true);
+        assert(u == 0x0708_090A);
+
         ubyte[10] b;
         scpy(f, b.ptr, b.sizeof, true);
         assert(b == a);

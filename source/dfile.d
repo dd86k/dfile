@@ -6,23 +6,13 @@ module dfile;
 
 import std.stdio;
 
-import std.exception : ErrnoException;
-
-import s_elf : scan_elf;
-import s_fatelf : scan_fatelf;
-import s_mz : scan_mz;
-import s_pe : scan_pe;
-import s_ne : scan_ne;
-import s_le : scan_le;
-import s_mach : scan_mach;
-import s_images, Etc, utils;
-
 /// Setting
 bool More, ShowingName, Base10;
 private File CurrentFile;
 
 void scan(string path)
 {
+    import std.exception : ErrnoException;
     try
     {
         debug writefln("L%04d: Opening file...", __LINE__);
@@ -43,6 +33,14 @@ void scan(string path)
 
 void scan(File file)
 {
+    import s_elf : scan_elf;
+    import s_fatelf : scan_fatelf;
+    import s_mz : scan_mz;
+    import s_pe : scan_pe;
+    import s_ne : scan_ne;
+    import s_le : scan_le;
+    import s_mach : scan_mach;
+    import s_images, Etc, utils;
     if (file.size == 0)
     {
         report("Empty file");
@@ -1675,6 +1673,12 @@ void scan(File file)
         report("Parallels HDD disk image");
     }
         return;*/
+
+    case "PMX ": {
+        import s_models : scan_pmx;
+        scan_pmx(file);
+        return;
+    }
 
     default:
         switch (sig[0..2])
