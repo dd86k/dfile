@@ -10,7 +10,7 @@ dfile
 *.o
 bin
 .dub
-
+dub.selections.json
 # Personal sample folder
 t
 

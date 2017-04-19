@@ -178,3 +178,67 @@ void scan_gif(File file)
 
     writeln();
 }
+
+void scan_bpg(File file)
+{ // Big Endian
+    report("Better Portable Graphics");
+
+    if (More)
+    {
+        struct heic_hdr {
+            uint magic;
+            ubyte format;
+            ubyte color;
+            uint width;
+            uint height;
+            uint length;
+        }
+        enum // FORMAT
+            ALPHA = 0b1_0000;
+        enum // COLOR
+            ANIMATION = 1,
+            LIMITED = 0b10, // RANGE
+            ALPHA2 = 0b100,
+            EXTENSION = 0b1000;
+
+        heic_hdr h;
+        scpy(file, &h, h.sizeof, true);
+        //TODO: https://en.wikipedia.org/wiki/Exponential-Golomb_coding
+        write(expgol(h.width), " x ", h.height, ", ");
+
+        switch (h.color & 0b1111_0000)
+        {
+            default: write("Unknown color "); break;
+            case 0: write("YCbCr (BT 709) "); break;
+            case 0b0001_0000: write("RGB"); break;
+            case 0b0010_0000: write("YCgCo "); break;
+            case 0b0011_0000: write("YCbCr (BT 709) "); break;
+            case 0b0100_0000: write("YCbCr (BT 2020) "); break;
+            case 0b0101_0000: write("YCbCr (BT 2020, constant) "); break;
+        }
+
+        switch (h.format & 0b1110_0000)
+        {
+            default: write("Unknown format"); break;
+            case 0: write("Grayscale"); break;
+            case 0b0010_0000: write("4:2:0 (JPEG)"); break;
+            case 0b0100_0000: write("4:2:2 (JPEG)"); break;
+            case 0b0110_0000: write("4:4:4"); break;
+            case 0b1000_0000: write("4:2:0 (MPEG2)"); break;
+            case 0b1010_0000: write("4:2:2 (MPEG2)"); break;
+        }
+
+        if (h.format & ALPHA)
+            write(", Alpha");
+        if (h.color & ALPHA2)
+            write(", Alpha2");
+        if (h.color & ANIMATION)
+            write(", Animated");
+        if (h.color & LIMITED)
+            write(", Limited range");
+        if (h.color & EXTENSION)
+            write(", Data extension");
+        
+        writeln();
+    }
+}

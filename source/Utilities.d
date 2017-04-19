@@ -60,6 +60,14 @@ string isostr(char[] str) pure
  * Number utilities.
  */
 
+// https://en.wikipedia.org/wiki/Exponential-Golomb_coding
+//TODO: EXP-GOLOMB UTIL
+/// Get a Exp-Golomb-Encoded number
+ulong expgol(uint n)
+{
+    return 0;
+}
+
 /// Get a byte-formatted size.
 string formatsize(long size) //BUG: %f is unpure?
 {

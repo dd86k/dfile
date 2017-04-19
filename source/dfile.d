@@ -1680,6 +1680,10 @@ void scan(File file)
         return;
     }
 
+    case "BPG\xFB":
+        scan_bpg(file);
+        return;
+
     default:
         switch (sig[0..2])
         {
