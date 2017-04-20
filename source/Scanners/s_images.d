@@ -181,7 +181,7 @@ void scan_gif(File file)
 
 void scan_bpg(File file)
 { // Big Endian
-    report("Better Portable Graphics");
+    report("Better Portable Graphics image");
 
     if (More)
     {
@@ -240,5 +240,25 @@ void scan_bpg(File file)
             write(", Data extension");
         
         writeln();
+    }
+}
+
+void scan_flif(File file)
+{
+    report("Free Lossless Image Format image");
+
+    if (More)
+    {
+        struct flif_hdr {
+            uint magic;
+            ubyte type;
+            ubyte channelbytes;
+        }
+
+        flif_hdr h;
+        scpy(file, &h, h.sizeof, true);
+
+        //TODO: Continue FLIF
+        //1 byte determines the variable's length in bytes, first bit is set
     }
 }

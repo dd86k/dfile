@@ -985,10 +985,6 @@ void scan(File file)
     }
         return;
 
-    case "FLIF":
-        report("Free Lossless Image Format image file (flif)");
-        return;
-
     case [0x1A, 0x45, 0xDF, 0xA3]:
         report("Matroska media container (mkv, webm)");
         return;
@@ -1682,6 +1678,10 @@ void scan(File file)
 
     case "BPG\xFB":
         scan_bpg(file);
+        return;
+
+    case "FLIF":
+        scan_flif(file);
         return;
 
     default:
