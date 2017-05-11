@@ -1526,7 +1526,7 @@ void scan(File file)
             ubyte[16] lastsnap_uuid;
             ubyte[16] parent_uuid;
         }
-        string magic = file.readln()[0..$-1];
+        const char[] magic = file.readln()[0..$-1];
         switch (magic)
         {
             case VDI, VDI_OLDER: break;
@@ -1756,27 +1756,26 @@ void scan(File file)
             } // 3 Byte signatures
         } // 2 Byte signatures
     } // 4 Byte signatures
-}
+} // main
 
 /// Report an unknown file type.
-void report_unknown()
+/// Params: filename = Filename if in CLI phase
+void report_unknown(string filename = null)
 {
-    report("Unknown file type");
-}
-
-void report_unknown(string filename)
-{
-    if (ShowingName)
+    if (ShowingName && filename)
         write(filename, ": ");
     
     writeln("Unknown file type");
 }
 
+/// Report a text file.
 void report_text()
 {
     report("Text file");
 }
 
+/// Report a directory.
+/// Params: dirname = Directory name
 void report_dir(string dirname)
 {
     if (ShowingName)
@@ -1785,6 +1784,8 @@ void report_dir(string dirname)
     writeln("Directory");
 }
 
+/// Report a symbolic link.
+/// Params: linkname = Path to the link
 void report_link(string linkname)
 {
     if (ShowingName)
@@ -1836,6 +1837,9 @@ void report_link(string linkname)
  *
  * If the newline is false, the developper must end the information with a new
  * line manually.
+ * Params:
+ *   type = Type/format of file (String)
+ *   nl = Print newline
  */
 void report(string type, bool nl = true)
 {

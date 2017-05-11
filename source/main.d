@@ -53,7 +53,7 @@ int main(string[] args)
     if (r.helpWanted)
     {
         print_help;
-        writeln("\nSwitches");
+        writeln("\nOption             Description");
         foreach (it; r.options)
         { // "custom" defaultGetoptPrinter
             writefln("%*s, %-*s%s%s",
@@ -72,11 +72,12 @@ int main(string[] args)
         } else {
             import std.string : indexOf;
             // No point to do globbing if there are no metacharacters
+            //TODO: Maybe use a custom loop?
             if (indexOf(filename, '*', 0) >= 0 || indexOf(filename, '?', 0) >= 0 ||
                 indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0) {
                 import std.path : globMatch, dirName;
                 debug writeln("GLOB ON");
-                int nbf;
+                int nbf; // Number of files
                 foreach (DirEntry e;
                     dirEntries(dirName(filename),
                     recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
@@ -85,7 +86,7 @@ int main(string[] args)
                         prescan(e.name, cont);
                     }
                 }
-                if (!nbf) {
+                if (!nbf) { // Not found if no files.
                     ShowingName = false;
                     goto F_NE;
                 }
@@ -117,7 +118,7 @@ void prescan(string filename, bool cont)
 
 void print_help()
 {
-    writeln("Determine the file type by its content.");
+    writeln("Determine the file type by its magic.");
     writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
     writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
 }

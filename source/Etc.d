@@ -10,8 +10,7 @@ import s_iso, s_tar;
 
 /// Search for signatures that's not at the beginning of the file.
 void scan_etc(File file)
-{ // Goto instructions are only allowed here.
-
+{
     const ulong fl = file.size;
 
     if (fl > 0x40)
