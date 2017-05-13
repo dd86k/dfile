@@ -4,7 +4,8 @@
 
 module main;
 
-import std.stdio, std.file, dfile;
+import std.stdio, std.file;
+import dfile;
 
 debug enum PROJECT_VERSION = "0.7.0-debug";
 else  enum PROJECT_VERSION = "0.6.0";
@@ -14,8 +15,7 @@ enum PROJECT_NAME = "dfile";
 debug { } else
 {
     extern (C) __gshared bool
-        rt_envvars_enabled = false,
-        rt_cmdline_enabled = false;
+        rt_envvars_enabled = false, rt_cmdline_enabled = false;
 }
 
 int main(string[] args)
@@ -23,11 +23,11 @@ int main(string[] args)
     import std.getopt;
 
     bool cont, // Continue with symlinks
-         recursive;
+         recursive; // GLOB - Recursive (breath-first)
 
     if (args.length <= 1)
     {
-        print_help;
+        PrintHelp;
         return 0;
     }
 
@@ -42,29 +42,26 @@ int main(string[] args)
 			"more|m", "Print more information if available", &More,
             config.bundling, config.caseSensitive,
 			"showname|s", "Show filename before result", &ShowingName,
-            config.bundling,
+            config.bundling, config.caseSensitive,
 			"recursive|r", "Recursive (for glob)", &recursive,
-            "version|v", "Print version information", &print_version);
+            "version|v", "Print version information", &PrintVersion);
 	} catch (GetOptException ex) {
 		stderr.writeln("Error: ", ex.msg);
         return 1;
 	}
 
-    if (r.helpWanted)
-    {
-        print_help;
+    if (r.helpWanted) {
+        PrintHelp;
         writeln("\nOption             Description");
-        foreach (it; r.options)
-        { // "custom" defaultGetoptPrinter
+        foreach (it; r.options) { // "custom" defaultGetoptPrinter
             writefln("%*s, %-*s%s%s",
                 4,  it.optShort,
                 12, it.optLong,
                 it.required ? "Required: " : " ",
                 it.help);
         }
-	}
-    else
-    {
+	} else {
+        //TODO: Multiple entries (chained)
         string filename = args[$ - 1]; // Last argument, no exceptions!
 
         if (exists(filename)) {
@@ -72,26 +69,26 @@ int main(string[] args)
         } else {
             import std.string : indexOf;
             // No point to do globbing if there are no metacharacters
-            //TODO: Maybe use a custom loop?
-            if (indexOf(filename, '*', 0) >= 0 || indexOf(filename, '?', 0) >= 0 ||
-                indexOf(filename, '[', 0) >= 0 || indexOf(filename, ']', 0) >= 0) {
+            if (globTime(filename)) {
                 import std.path : globMatch, dirName;
                 debug writeln("GLOB ON");
                 int nbf; // Number of files
                 foreach (DirEntry e;
                     dirEntries(dirName(filename),
                     recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
-                    if (globMatch(e.name, filename)) {
+                    immutable char[] s = e.name;
+                    //TODO: WARNING - Check if this collides with folder names (Posix)
+                    if (globMatch(s, filename)) {
                         ++nbf;
-                        prescan(e.name, cont);
+                        prescan(s, cont);
                     }
                 }
-                if (!nbf) { // Not found if no files.
+                if (!nbf) { // "Not found"-case if 0 files.
                     ShowingName = false;
-                    goto F_NE;
+                    goto CLI_NOTFOUND;
                 }
             } else { // No glob!
-F_NE:
+CLI_NOTFOUND:
                 report("File does not exist");
                 return 1;
             }
@@ -103,6 +100,7 @@ F_NE:
 
 void prescan(string filename, bool cont)
 {
+    //TODO: #6 (Posix) -- Use stat(2)
     if (isSymlink(filename))
         if (cont)
             scan(filename);
@@ -116,14 +114,36 @@ void prescan(string filename, bool cont)
         report_unknown(filename);
 }
 
-void print_help()
+/**
+ * Determines if it's GLOB time!
+ * Params: s = String to evalutate
+ * Returns: True if GLOB time.
+ */
+bool globTime(const char[] s) pure @nogc
+{
+    const size_t l = s.length;
+    for (int i; i < l; ++i) {
+        switch (s[i]) {
+            case '[', ']', '*', '?':
+                return true;
+                /*if (i - 1 >= 0)
+                    if (s[i] != '\\')
+                        return true;
+                break;*/
+            default:
+        }
+    }
+    return false;
+}
+
+void PrintHelp()
 {
     writeln("Determine the file type by its magic.");
     writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
     writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
 }
 
-void print_version()
+void PrintVersion()
 {
     import core.stdc.stdlib : exit;
     writefln("%s %s (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
