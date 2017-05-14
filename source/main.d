@@ -77,8 +77,7 @@ int main(string[] args)
                     dirEntries(dirName(filename),
                     recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
                     immutable char[] s = e.name;
-                    //TODO: WARNING - Check if this collides with folder names (Posix)
-                    if (globMatch(s, filename)) {
+                    if (isFile(s) && globMatch(s, filename)) {
                         ++nbf;
                         prescan(s, cont);
                     }

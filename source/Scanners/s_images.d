@@ -183,7 +183,7 @@ void scan_bpg(File file)
 { // Big Endian
     report("Better Portable Graphics image");
 
-    if (More)
+    /*if (More)
     {
         struct heic_hdr {
             uint magic;
@@ -240,14 +240,14 @@ void scan_bpg(File file)
             write(", Data extension");
         
         writeln();
-    }
+    }*/
 }
 
 void scan_flif(File file)
 {
     report("Free Lossless Image Format image");
 
-    if (More)
+    /*if (More)
     {
         struct flif_hdr {
             uint magic;
@@ -260,5 +260,5 @@ void scan_flif(File file)
 
         //TODO: Continue FLIF
         //1 byte determines the variable's length in bytes, first bit is set
-    }
+    }*/
 }

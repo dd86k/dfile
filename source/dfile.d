@@ -1784,6 +1784,20 @@ void report_dir(string dirname)
     writeln("Directory");
 }
 
+/**
+ * Some Microsoft thing.
+ * Params:
+ *   t = Device type
+ *   f = Function
+ *   m = Method
+ *   a = Access
+ * Returns: BOOL
+ */
+version (Windows)
+uint CTL_CODE(uint d, uint f, uint m, uint a) {
+    return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
+}
+
 /// Report a symbolic link.
 /// Params: linkname = Path to the link
 void report_link(string linkname)
@@ -1793,20 +1807,69 @@ void report_link(string linkname)
 
     //TODO: Symlink location
     // POSIX :
-    //http://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
+//http://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
     // WINDOWS:
-    //https://msdn.microsoft.com/en-us/library/windows/desktop/aa364421(v=vs.85).aspx
+//https://msdn.microsoft.com/en-us/library/aa365511(v=VS.85).aspx
 
-    /*
-     * Problem is, there's no way to find it on XP so yeah
-     */
+    writeln("Soft symbolic link");
 
-    write("Soft symbolic link");
-
-    /+version (Windows)
-    {
+    version (Windows)
+    { // Obviously this won't work.
         import core.sys.windows.windows;
-        WIN32_FIND_DATA wd;
+        // WinIoCtl.h
+        enum FILE_DEVICE_FILE_SYSTEM = 0x00000009;
+        enum METHOD_BUFFERED = 0;
+        enum FILE_ANY_ACCESS = 0;
+        enum FSCTL_GET_REPARSE_POINT =
+        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS);
+        struct REPARSE_JUNCTION_DATA_BUFFER {
+            ULONG ReparseTag;
+            USHORT ReparseDataLength;
+            USHORT Reserved;
+            union {
+                struct SymbolicLinkReparseBuffer{
+                    USHORT SubstituteNameOffset;
+                    USHORT SubstituteNameLength;
+                    USHORT PrintNameOffset;
+                    USHORT PrintNameLength;
+                    ULONG  Flags;
+                    WCHAR[1]  PathBuffer;
+                }
+                struct MountPointReparseBuffer{
+                    USHORT SubstituteNameOffset;
+                    USHORT SubstituteNameLength;
+                    USHORT PrintNameOffset;
+                    USHORT PrintNameLength;
+                    WCHAR[1]  PathBuffer;
+                }
+                struct GenericReparseBuffer{
+                    UCHAR[1] DataBuffer;
+                }
+            }
+        }
+
+        File f = File(linkname);
+        DWORD bytesRet;
+
+        REPARSE_JUNCTION_DATA_BUFFER rbuf;
+        if (DeviceIoControl(f.windowsHandle,
+            FSCTL_GET_REPARSE_POINT,
+            NULL,
+            0,
+            &rbuf,
+            rbuf.sizeof,
+            &bytesRet,
+            NULL)) { // Not-zero (BOOL)
+            writeln("!!!!! YES!? !!!!!!");
+        } else {
+            /*
+                Usually returns 0x00001126
+                ERROR_NOT_A_REPARSE_POINT
+                The file or directory is not a reparse point.
+            */
+            writefln("ERROR: %08X (%d B ret)", GetLastError, bytesRet);
+        }
+        /*WIN32_FIND_DATA wd;
 
         OSVERSIONINFO winver;
         if (GetVersionEx(&winver))
@@ -1824,12 +1887,12 @@ void report_link(string linkname)
 
                 writeln(ws);
             }
-        }
+        }*/
     }
     else version (Posix)
     {
         //import core.sys.posix.
-    }+/
+    }
 }
 
 /**
