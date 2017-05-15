@@ -1811,7 +1811,7 @@ void report_link(string linkname)
     // WINDOWS:
 //https://msdn.microsoft.com/en-us/library/aa365511(v=VS.85).aspx
 
-    writeln("Soft symbolic link");
+    write("Soft symbolic link");
 
     version (Windows)
     { // Obviously this won't work.
@@ -1911,15 +1911,14 @@ void report_link(string linkname)
             }
         }*/
     }
-    else version (Posix)
+    version (Posix)
     {
-        import core.stdc.stdio;
-        import core.stdc.stdlib;
+        import core.stdc.stdio : printf;
         import core.sys.posix.stdlib : realpath;
-        enum CNULL = cast(char*)0;
-        char* p = realpath(cast(const char*)&linkname[0], 0);
-        printf(" to %s", CNULL);
+        char* p = realpath(&linkname[0], cast(char*)0);
+        printf(" to %s", p);
     }
+    writeln;
 }
 
 /**
