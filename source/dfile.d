@@ -1916,7 +1916,7 @@ void report_link(string linkname)
         import core.stdc.stdio;
         import core.stdc.stdlib;
         import core.sys.posix.stdlib : realpath;
-        char* p = realpath(cast(const)&linkname[0], 0);
+        char* p = realpath(cast(const char*)&linkname[0], 0);
         printf(" to %s", p);
     }
 }
