@@ -6,7 +6,6 @@ module s_elf;
 
 import std.stdio;
 import dfile;
-import utils;
 
 private struct Elf32_Ehdr
 {
@@ -33,45 +32,46 @@ private enum {
     EI_NIDENT = 16,
     EV_NONE = 0,
     EV_CURRENT = 1,
-    ET_NONE = 0,        // No file type
-    ET_REL = 1,         // Relocatable file
-    ET_EXEC = 2,        // Executable file
-    ET_DYN = 3,         // Shared object file
-    ET_CORE = 4,        // Core file
-    ET_LOPROC = 0xFF00, // Processor-specific
-    ET_HIPROC = 0xFFFF  // Processor-specific
+    ET_NONE = 0,        /// No file type
+    ET_REL = 1,         /// Relocatable file
+    ET_EXEC = 2,        /// Executable file
+    ET_DYN = 3,         /// Shared object file
+    ET_CORE = 4,        /// Core file
+    ET_LOPROC = 0xFF00, /// Processor-specific
+    ET_HIPROC = 0xFFFF  /// Processor-specific
 }
 
 enum : ushort // Public for FatELF
 {
-    EM_NONE = 0,  // No machine
-    EM_M32 = 1,   // AT&T WE 32100
-    EM_SPARC = 2, // SPARC
-    EM_386 = 3,   // Intel Architecture
-    EM_68K = 4,   // Motorola 68000
-    EM_88K = 5,   // Motorola 88000
-    EM_860 = 7,   // Intel 80860
-    EM_MIPS = 8,  // MIPS RS3000
-    EM_MIPS_RS4_BE = 10, // MIPS RS4000 Big-Endian
+    EM_NONE = 0,  /// No machine
+    EM_M32 = 1,   /// AT&T WE 32100
+    EM_SPARC = 2, /// SPARC
+    EM_386 = 3,   /// Intel Architecture
+    EM_68K = 4,   /// Motorola 68000
+    EM_88K = 5,   /// Motorola 88000
+    EM_860 = 7,   /// Intel 80860
+    EM_MIPS = 8,  /// MIPS RS3000
+    EM_MIPS_RS4_BE = 10, /// MIPS RS4000 Big-Endian
     // Rest is from http://wiki.osdev.org/ELF
-    EM_POWERPC = 0x14,
-    EM_ARM = 0x28,
-    EM_SUPERH = 0xA2,
-    EM_IA64 = 0x32,
-    EM_AMD64 = 0x3E,
-    EM_AARCH64 = 0xB7
+    EM_POWERPC = 0x14, /// PowerPC
+    EM_ARM = 0x28,     /// ARM
+    EM_SUPERH = 0xA2,  /// SuperH
+    EM_IA64 = 0x32,    /// Intel IA64
+    EM_AMD64 = 0x3E,   /// x86-64
+    EM_AARCH64 = 0xB7  /// 64-bit ARM
 }
 
 void scan_elf(File file)
 {
-    debug writefln("L%04d: Started scanning ELF file", __LINE__);
+    import utils : scpy;
+    debug dbg("Started scanning ELF file");
 
     Elf32_Ehdr h;
     scpy(file, &h, h.sizeof, true);
 
     debug
     {
-        write("e_ident: ");
+        dbgl("e_ident: ");
         foreach (c; h.e_ident) writef("%02X ", c);
         writeln();
     }
@@ -182,7 +182,7 @@ void elf_print_machine(ushort c)
     case EM_POWERPC: write("PowerPC"); break;
     case EM_ARM:     write("ARM"); break;
     case EM_SUPERH:  write("SuperH"); break;
-    case EM_AARCH64: write("AArch64"); break;
+    case EM_AARCH64: write("ARM (64-bit)"); break;
     default:         write("Unknown"); break;
     }
 }

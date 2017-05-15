@@ -10,7 +10,15 @@ import std.stdio, dfile : Base10;
  * File utilities.
  */
 
-/// Read file with a struct or array.
+/**
+ * Read file with a struct or array.
+ * Note: 
+ * Params:
+ *   file = Current file
+ *   s = Void pointer to the first element
+ *   size = Size of the struct
+ *   rewind = Rewind seeker to start of the file
+ */
 void scpy(File file, void* s, size_t size, bool rewind = false)
 {
     import std.c.string : memcpy;
@@ -29,7 +37,11 @@ void scpy(File file, void* s, size_t size, bool rewind = false)
  * String utilities.
  */
 
-/// Get a null-terminated string.
+/**
+ * Get a string from a  null-terminated buffer.
+ * Params: str = ASCIZ sting
+ * Returns: String (UTF-8)
+ */
 string asciz(char[] str) pure
 {
     if (str[0] == '\0') return null;
@@ -38,7 +50,11 @@ string asciz(char[] str) pure
     return str[0 .. p - ip].idup;
 }
 
-/// Get a Tar-like string ('0' padded).
+/**
+ * Get a string from a '0'-padded buffer.
+ * Params: str = tar sting
+ * Returns: String (UTF-8)
+ */
 string tarstr(char[] str) pure
 {
     size_t p;
@@ -46,7 +62,11 @@ string tarstr(char[] str) pure
     return str[p .. $ - 1].idup;
 }
 
-/// Get a ISO-like string (' ' padded).
+/**
+ * Get a ' '-padded string from a buffer.
+ * Params: str = iso-string
+ * Returns: String (UTF-8)
+ */
 string isostr(char[] str) pure
 {
     if (str[0] == ' ') return null;
@@ -68,7 +88,11 @@ ulong expgol(uint n)
     return 0;
 }
 
-/// Get a byte-formatted size.
+/**
+ * Get a byte-formatted size.
+ * Params: size = Size to format.
+ * Returns: Formatted string.
+ */
 string formatsize(long size) //BUG: %f is unpure?
 {
     import std.format : format;

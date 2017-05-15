@@ -4,11 +4,11 @@
 
 module Etc;
 
-import std.stdio;
+import std.stdio : File;
 import dfile;
-import s_iso, s_tar;
 
 /// Search for signatures that's not at the beginning of the file.
+/// Params: file = File structure.
 void scan_etc(File file)
 {
     const ulong fl = file.size;
@@ -165,6 +165,7 @@ void scan_etc(File file)
 
     if (fl > 0x108)
     { // Tar files
+        import s_tar : scan_tar, Tar, GNUTar;
         char[Tar.length] b;
         file.seek(0x101);
         file.rawRead(b);
@@ -177,6 +178,7 @@ void scan_etc(File file)
 
     if (fl > 0x9007)
     { // ISO files
+        import s_iso : scan_iso, ISO;
         char[5] b;
         file.seek(0x8001);
         file.rawRead(b);

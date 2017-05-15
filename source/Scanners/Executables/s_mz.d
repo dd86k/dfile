@@ -6,7 +6,6 @@ module s_mz;
 
 import std.stdio;
 import dfile;
-import utils : scpy;
 
 private enum ERESWDS = 0x10;
 
@@ -33,7 +32,8 @@ private struct mz_hdr
 
 void scan_mz(File file)
 {
-    debug writefln("L%04d: Started scanning MZ file", __LINE__);
+    import utils : scpy;
+    debug dbg("Started scanning MZ file");
 
     int e_lfanew;
     {
@@ -64,7 +64,7 @@ void scan_mz(File file)
             scan_ne(file);
             return;
 
-        case "LE": case "LX":
+        case "LE", "LX":
             file.seek(e_lfanew);
             scan_le(file);
             return;

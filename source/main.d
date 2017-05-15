@@ -6,23 +6,31 @@ module main;
 
 import std.stdio, std.file;
 import dfile;
+import std.getopt;
 
+/// Debugging version, usually ahead of stable.
 debug enum PROJECT_VERSION = "0.7.0-debug";
-else  enum PROJECT_VERSION = "0.6.0";
+else  enum PROJECT_VERSION = "0.6.0"; /// Project version.
 
+/// Project name, usually the name of the executable.
 enum PROJECT_NAME = "dfile";
 
 debug { } else
-{
+{ // --DRT-gcopt related
     extern (C) __gshared bool
-        rt_envvars_enabled = false, rt_cmdline_enabled = false;
+        rt_envvars_enabled = false, /// Disables runtime environment variables
+        rt_cmdline_enabled = false; /// Disables runtime CLI
 }
 
+/**
+ * Main entry point from CLI.
+ * Params: args = CLI arguments.
+ * Returns: Errorcode
+ */
 int main(string[] args)
 {
-    import std.getopt;
-
     bool cont, // Continue with symlinks
+         glob, // Use GLOBBING explicitly
          recursive; // GLOB - Recursive (breath-first)
 
     if (args.length <= 1)
@@ -35,16 +43,18 @@ int main(string[] args)
 	try {
 		r = getopt(args,
             config.bundling, config.caseSensitive,
-            "base10|b", "Use decimal metrics instead of binary", &Base10,
+            "base10|b", "Use decimal metrics instead of binary.", &Base10,
             config.bundling, config.caseSensitive,
-            "continue|c", "Continue on soft symlink", &cont,
+            "continue|c", "Continue on soft symlink.", &cont,
             config.bundling, config.caseSensitive,
-			"more|m", "Print more information if available", &More,
+			"more|m", "Print more information if available.", &More,
             config.bundling, config.caseSensitive,
-			"showname|s", "Show filename before result", &ShowingName,
+			"showname|s", "Show filename before result.", &ShowingName,
             config.bundling, config.caseSensitive,
-			"recursive|r", "Recursive (for glob)", &recursive,
-            "version|v", "Print version information", &PrintVersion);
+            "glob|g", "Use globbing.", &glob,
+            config.bundling, config.caseSensitive,
+			"recursive|r", "Recursive (for glob).", &recursive,
+            "version|v", "Print version information.", &PrintVersion);
 	} catch (GetOptException ex) {
 		stderr.writeln("Error: ", ex.msg);
         return 1;
@@ -68,10 +78,10 @@ int main(string[] args)
             prescan(filename, cont);
         } else {
             import std.string : indexOf;
-            // No point to do globbing if there are no metacharacters
-            if (globTime(filename)) {
+            
+            if (glob) {
                 import std.path : globMatch, dirName;
-                debug writeln("GLOB ON");
+                debug dbg("GLOB ON");
                 int nbf; // Number of files
                 foreach (DirEntry e;
                     dirEntries(dirName(filename),
@@ -81,14 +91,16 @@ int main(string[] args)
                         ++nbf;
                         prescan(s, cont);
                     }
+                    if (!nbf) { // "Not found"-case if 0 files.
+                        writeln("No files were found.");
+                        return 1;
+                    }
                 }
-                if (!nbf) { // "Not found"-case if 0 files.
-                    ShowingName = false;
-                    goto CLI_NOTFOUND;
-                }
-            } else { // No glob!
-CLI_NOTFOUND:
-                report("File does not exist");
+            } else {
+                if (ShowingName)
+                    writef("%s: ", filename);
+                
+                writeln("Not found.");
                 return 1;
             }
         }
@@ -97,44 +109,50 @@ CLI_NOTFOUND:
     return 0;
 }
 
+/**
+ * Determines the type of thing from its filename.
+ * Params:
+ *   filename = Path
+ *   cont = Continue on softlink
+ */
 void prescan(string filename, bool cont)
 {
     //TODO: #6 (Posix) -- Use stat(2)
     if (isSymlink(filename))
-        if (cont)
-            scan(filename);
-        else
-            report_link(filename);
+        if (cont) goto FILE;
+        else report_link(filename);
     else if (isFile(filename))
-        scan(filename);
+    {
+FILE:
+        import std.exception : ErrnoException;
+        try
+        {
+            debug dbg("Opening file...");
+            CurrentFile = File(filename, "rb");
+        }
+        catch (ErrnoException)
+        { // At this point, it is a broken symbolic link.
+            writeln("Cannot open target file from symlink, exiting");
+            return;
+        }
+        
+        debug dbg("Scanning...");
+        scan(CurrentFile);
+        
+        debug dbg("Closing file...");
+        CurrentFile.close();
+    }
     else if (isDir(filename))
-        report_dir(filename);
+    {
+        if (ShowingName)
+            writef("%s: ", filename);
+        writeln("Directory");
+    }
     else
         report_unknown(filename);
 }
 
-/**
- * Determines if it's GLOB time!
- * Params: s = String to evalutate
- * Returns: True if GLOB time.
- */
-bool globTime(const char[] s) pure @nogc
-{
-    const size_t l = s.length;
-    for (int i; i < l; ++i) {
-        switch (s[i]) {
-            case '[', ']', '*', '?':
-                return true;
-                /*if (i - 1 >= 0)
-                    if (s[i] != '\\')
-                        return true;
-                break;*/
-            default:
-        }
-    }
-    return false;
-}
-
+/// Print description and synopsis.
 void PrintHelp()
 {
     writeln("Determine the file type by its magic.");
@@ -142,6 +160,7 @@ void PrintHelp()
     writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
 }
 
+/// Print program version and exit.
 void PrintVersion()
 {
     import core.stdc.stdlib : exit;

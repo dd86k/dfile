@@ -5,55 +5,64 @@
 module dfile;
 
 import std.stdio;
+import s_elf : scan_elf;
+import s_fatelf : scan_fatelf;
+import s_mz : scan_mz;
+import s_pe : scan_pe;
+import s_ne : scan_ne;
+import s_le : scan_le;
+import s_mach : scan_mach;
+import s_images, Etc, utils;
 
 /// Setting
 bool More, ShowingName, Base10;
-private File CurrentFile;
+/// Current file handle.
+File CurrentFile;
 
-void scan(string path)
-{
-    import std.exception : ErrnoException;
-    try
-    {
-        debug writefln("L%04d: Opening file...", __LINE__);
-        CurrentFile = File(path, "rb");
-    }
-    catch (ErrnoException)
-    { // At this point, it is a broken symbolic link.
-        writeln("Cannot open target file from symlink, exiting");
-        return;
-    }
-    
-    debug writefln("L%04d: Scanning...", __LINE__);
-    scan(CurrentFile);
-    
-    debug writefln("L%04d: Closing file...", __LINE__);
-    CurrentFile.close();
+/**
+ * Prints debugging message with a FILE<at>LINE: MSG formatting.
+ * Params:
+ *   msg = Message
+ *   line = Source line (automatic)
+ *   file = Source file (automatic)
+ */
+debug void dbg(string msg, int line = __LINE__, string file = __FILE__) {
+    dbgl(msg, line, file);
+    writeln;
 }
 
+/**
+ * Same as dbg but without a newline.
+ * Params:
+ *   msg = Message
+ *   line = Source line (automatic)
+ *   file = Source file (automatic)
+ * See_Also: dbg
+ */
+debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
+    import std.path : baseName;
+    writef("%s@L%d: %s", baseName(file), line, msg);
+}
+
+/**
+ * Scanner entry point.
+ * Params: file = File handle
+ */
 void scan(File file)
 {
-    import s_elf : scan_elf;
-    import s_fatelf : scan_fatelf;
-    import s_mz : scan_mz;
-    import s_pe : scan_pe;
-    import s_ne : scan_ne;
-    import s_le : scan_le;
-    import s_mach : scan_mach;
-    import s_images, Etc, utils;
-    if (file.size == 0)
+    if (file.size == 0UL)
     {
         report("Empty file");
         return;
     }
 
     char[4] sig; // UTF-8, ASCII compatible.
-    debug writefln("L%04d: Reading file..", __LINE__);
+    debug dbg("Reading file");
     file.rawRead(sig);
 
     debug
     {
-        writef("L%04d: Magic: ", __LINE__);
+        dbgl("Magic: ");
         foreach (b; sig) writef("%02X ", b);
         writeln();
     }
@@ -656,9 +665,9 @@ void scan(File file)
         report("FLAC audio file", false);
         if ((h.header & 0xFF) == 0) // Big endian
         {
-            int bits = ((h.stupid[8] & 1) << 4 | (h.stupid[9] >>> 4)) + 1;
-            int chan = ((h.stupid[8] >> 1) & 7) + 1;
-            int rate =
+            const int bits = ((h.stupid[8] & 1) << 4 | (h.stupid[9] >>> 4)) + 1;
+            const int chan = ((h.stupid[8] >> 1) & 7) + 1;
+            const int rate =
                 ((h.stupid[6] << 12) | h.stupid[7] << 4 | h.stupid[8] >>> 4);
             writeln(", ", rate, " Hz, ", bits, " bit, ", chan, " channels");
             if (More)
@@ -1074,7 +1083,7 @@ void scan(File file)
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
             }
-            catch (Throwable)
+            catch (Exception)
             {
                 return;
             }
@@ -1144,7 +1153,7 @@ void scan(File file)
     // http://www.cabextract.org.uk/libmspack/doc/szdd_kwaj_format.html
     case "KWAJ": {
         struct kwaj_hdr {
-            char[8] sig;
+            char[8] magic;
             ushort method; // compressed method
             ushort offset;
             ushort header; // header flag
@@ -1178,7 +1187,7 @@ void scan(File file)
             EXT = 0x10,  // ASCIZ, extension
         }
 
-        int ext = h.header & EXT, name = h.header & NAME;
+        const int ext = h.header & EXT, name = h.header & NAME;
 
         if (ext || name)
         {
@@ -1204,7 +1213,7 @@ void scan(File file)
 
     case "SZDD": {
         struct szdd_hdr {
-            char[8] sig;
+            char[8] magic;
             ubyte compression; // compressed mode, only 'A' is valid
             ubyte character; // filename end character (0=unknown)
             uint length; // unpacked
@@ -1311,13 +1320,10 @@ void scan(File file)
         SparseExtentHeader h;
         scpy(file, &h, h.sizeof, true);
 
-        //h.grainSize = h.grainSize < 8 ? 8*512 : 2^^h.grainSize;
-        long size = h.capacity / 512;
-        report("VMware VMDK disk image v", false);
-        write(h.version_, ", ", formatsize(size));
+        report("VMware Disk image v", false);
+        write(h.version_, ", ");
 
         //if (h.flags & COMPRESSED)
-        write(", ");
         switch (h.compressAlgorithm)
         {
         case 0: write("no"); break;
@@ -1330,6 +1336,13 @@ void scan(File file)
             write(", unclean shutdown");
 
         writeln();
+
+        if (More)
+        {
+            writefln("Capacity: %d Sectors", h.capacity);
+            writefln("Overhead: %d Sectors", h.overHead);
+            writefln("Grain size (Raw): %d Sectors", h.grainSize);
+        }
     }
         return;
 
@@ -1374,7 +1387,7 @@ void scan(File file)
             report_text();
             return;
         }
-        long size = h.numSectors * 512;
+        const long size = h.numSectors * 512;
         report("ESXi COW disk image v", false);
         writeln(h.version_, ", ", formatsize(size), ", \"", asciz(h.name), "\"");
 
@@ -1759,32 +1772,27 @@ void scan(File file)
 } // main
 
 /// Report an unknown file type.
-/// Params: filename = Filename if in CLI phase
+/// Params: filename = Filename in CLI phase
 void report_unknown(string filename = null)
 {
-    if (ShowingName && filename)
-        write(filename, ": ");
+    if (ShowingName) {
+        if (filename)
+            write(filename, ": ");
+        else
+            write(CurrentFile.name, ": ");
+    }
     
     writeln("Unknown file type");
 }
 
 /// Report a text file.
+// A few functions relies on this.
 void report_text()
 {
     report("Text file");
 }
 
-/// Report a directory.
-/// Params: dirname = Directory name
-void report_dir(string dirname)
-{
-    if (ShowingName)
-        write(dirname, ": ");
-
-    writeln("Directory");
-}
-
-/**
+/*
  * Some Microsoft thing used for DeviceIoCtl.
  * Params:
  *   t = Device type
@@ -1793,10 +1801,10 @@ void report_dir(string dirname)
  *   a = Access
  * Returns: BOOL
  */
-version (Windows)
+/*version (Windows)
 uint CTL_CODE(uint d, uint f, uint m, uint a) {
     return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
-}
+}*/
 
 /// Report a symbolic link.
 /// Params: linkname = Path to the link
@@ -1922,8 +1930,7 @@ void report_link(string linkname)
 /**
  * Report to the user information.
  *
- * If the newline is false, the developper must end the information with a new
- * line manually.
+ * If the newline is false, the developper must end the information with a new line manually.
  * Params:
  *   type = Type/format of file (String)
  *   nl = Print newline
@@ -1931,7 +1938,7 @@ void report_link(string linkname)
 void report(string type, bool nl = true)
 {
     if (ShowingName)
-        write(CurrentFile.name, ": ");
+        writef("%s: ", CurrentFile.name);
 
     write(type);
 
