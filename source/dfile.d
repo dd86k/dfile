@@ -1916,8 +1916,9 @@ void report_link(string linkname)
         import core.stdc.stdio;
         import core.stdc.stdlib;
         import core.sys.posix.stdlib : realpath;
+        enum CNULL = cast(char*)0;
         char* p = realpath(cast(const char*)&linkname[0], 0);
-        printf(" to %s", p);
+        printf(" to %s", CNULL);
     }
 }
 
