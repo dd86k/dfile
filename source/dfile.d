@@ -1785,7 +1785,7 @@ void report_dir(string dirname)
 }
 
 /**
- * Some Microsoft thing.
+ * Some Microsoft thing used for DeviceIoCtl.
  * Params:
  *   t = Device type
  *   f = Function
@@ -1806,8 +1806,6 @@ void report_link(string linkname)
         write(linkname, ": ");
 
     //TODO: Symlink location
-    // POSIX :
-//http://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
     // WINDOWS:
 //https://msdn.microsoft.com/en-us/library/aa365511(v=VS.85).aspx
 
@@ -1916,7 +1914,7 @@ void report_link(string linkname)
         import core.stdc.stdio : printf;
         import core.sys.posix.stdlib : realpath;
         char* p = realpath(&linkname[0], cast(char*)0);
-        printf(" to %s", p);
+        if (p) printf(" to %s", p);
     }
     writeln;
 }
