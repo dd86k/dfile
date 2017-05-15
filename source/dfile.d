@@ -1815,7 +1815,9 @@ void report_link(string linkname)
 
     version (Windows)
     { // Obviously this won't work.
-        import core.sys.windows.windows;
+        /+import core.sys.windows.windows;
+        import std.utf;
+        import std.array;
         // WinIoCtl.h
         enum FILE_DEVICE_FILE_SYSTEM = 0x00000009;
         enum METHOD_BUFFERED = 0;
@@ -1848,11 +1850,30 @@ void report_link(string linkname)
             }
         }
 
-        File f = File(linkname);
+        immutable wchar[] ws = linkname.byUTF!wchar().array;
+
+        HANDLE f = CreateFile(&ws[0],
+            GENERIC_READ | GENERIC_WRITE,
+            0,
+            NULL,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_READONLY | FILE_FLAG_BACKUP_SEMANTICS,
+            NULL
+        );
+
+        DWORD e = GetLastError;
+
+        if (e)
+        {
+            writefln("Error %X", e);
+            return;
+        }
+
+        //File f = File(linkname);
         DWORD bytesRet;
 
         REPARSE_JUNCTION_DATA_BUFFER rbuf;
-        if (DeviceIoControl(f.windowsHandle,
+        if (DeviceIoControl(f,
             FSCTL_GET_REPARSE_POINT,
             NULL,
             0,
@@ -1868,7 +1889,8 @@ void report_link(string linkname)
                 The file or directory is not a reparse point.
             */
             writefln("ERROR: %08X (%d B ret)", GetLastError, bytesRet);
-        }
+        }+/
+        // Solution 2
         /*WIN32_FIND_DATA wd;
 
         OSVERSIONINFO winver;
@@ -1891,7 +1913,11 @@ void report_link(string linkname)
     }
     else version (Posix)
     {
-        //import core.sys.posix.
+        import core.stdc.stdio;
+        import core.stdc.stdlib;
+        import core.sys.posix.stdlib : realpath;
+        char* p = realpath(&linkname[0], 0);
+        printf(" to %s", p);
     }
 }
 
