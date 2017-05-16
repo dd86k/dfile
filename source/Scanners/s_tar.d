@@ -14,7 +14,7 @@ void scan_tar(File file)
     import core.stdc.string : memcpy;
     enum NAMSIZ = 100;
     enum TUNMLEN = 32, TGNMLEN = 32;
-    struct tar_hdr {
+    struct tar_hdr { align(1):
         char[NAMSIZ] name;
         char[8] mode;
         char[8] uid;

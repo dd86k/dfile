@@ -124,7 +124,7 @@ void scan(File file)
         switch (b)
         {
         case x"1A": {
-            struct nesm_hdr {
+            struct nesm_hdr { align(1):
                 char[5] magic;
                 ubyte version_, total_song, start_song;
                 ushort load_add, init_add, play_add;
@@ -181,7 +181,7 @@ void scan(File file)
         switch (b)
         {
             case x"1A": {
-                struct spc2_hdr {
+                struct spc2_hdr { align(1):
                     char[5] magic;
                     ubyte majorver, minorver;
                     ushort number;
@@ -308,7 +308,7 @@ void scan(File file)
         return;
 
     case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
-        struct rpf_hdr {
+        struct rpf_hdr { align(1):
             //int magic;
             int tablesize;
             int numentries;
@@ -384,47 +384,20 @@ void scan(File file)
         char[4] b;
         file.seek(8);
         file.rawRead(b);
-        switch (b)
-        {
-        case "ILBM":
-            report("IFF Interleaved Bitmap Image");
-            return;
-        case "8SVX":
-            report("IFF 8-Bit Sampled Voice");
-            return;
-        case "ACBM":
-            report("Amiga Contiguous Bitmap");
-            return;
-        case "ANBM":
-            report("IFF Animated Bitmap");
-            return;
-        case "ANIM":
-            report("IFF CEL Animation");
-            return;
-        case "FAXX":
-            report("IFF Facsimile Image");
-            return;
-        case "FTXT":
-            report("IFF Formatted Text");
-            return;
-        case "SMUS":
-            report("IFF Simple Musical Score");
-            return;
-        case "CMUS":
-            report("IFF Musical Score");
-            return;
-        case "YUVN":
-            report("IFF YUV Image");
-            return;
-        case "FANT":
-            report("Amiga Fantavision Movie");
-            return;
-        case "AIFF":
-            report("Audio Interchange File Format");
-            return;
-        default:
-            report_unknown();
-            return;
+        switch (b) {
+        case "ILBM": report("IFF Interleaved Bitmap Image"); return;
+        case "8SVX": report("IFF 8-Bit Sampled Voice"); return;
+        case "ACBM": report("Amiga Contiguous Bitmap"); return;
+        case "ANBM": report("IFF Animated Bitmap"); return;
+        case "ANIM": report("IFF CEL Animation"); return;
+        case "FAXX": report("IFF Facsimile Image"); return;
+        case "FTXT": report("IFF Formatted Text"); return;
+        case "SMUS": report("IFF Simple Musical Score"); return;
+        case "CMUS": report("IFF Musical Score"); return;
+        case "YUVN": report("IFF YUV Image"); return;
+        case "FANT": report("Amiga Fantavision Movie"); return;
+        case "AIFF": report("Audio Interchange File Format"); return;
+        default: report_unknown(); return;
         }
     }
 
@@ -441,17 +414,9 @@ void scan(File file)
         return;
 
     case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
-        /*
-         * Important notice :
-         * It took me HOURS to figure this bullshit out, but
-         * this part of the code will ONLY work if we SEEK to 2
-         * and have a magic of 2 BYTES. I tried everything else as
-         * usual but NOTHING was working, so please, do NOT touch this
-         * code. Thank you for this waste of unpleasant time.
-         */
-        struct pkzip_hdr { // PKWare ZIP
+        struct pkzip_hdr {  align(1): // PKWare ZIP
             //uint magic;
-            ushort magic;
+            //ushort magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -465,12 +430,11 @@ void scan(File file)
         }
 
         pkzip_hdr h;
-        file.seek(2);
         scpy(file, &h, h.sizeof);
 
         if (More)
         {
-            writeln("magic      : ", h.magic);
+            //writeln("magic      : ", h.magic);
             writeln("Version    : ", h.version_);
             writeln("Flag       : ", h.flag);
             writeln("Compression: ", h.compression);
@@ -510,6 +474,7 @@ void scan(File file)
 
         if (h.fnlength)
         {
+            file.seek(-2, SEEK_CUR);
             char[] filename = new char[h.fnlength];
             file.rawRead(filename);
             write(` "`, filename, `"`);
@@ -619,7 +584,7 @@ void scan(File file)
         }
 
     case "OggS": { // Ogg
-        struct ogg_hdr {
+        struct ogg_hdr { align(1):
             //uint magic;
             ubyte version_;
             ubyte type; // Usually bit 2 set
@@ -644,7 +609,7 @@ void scan(File file)
     case "fLaC": { // FLAC, big endian
     //https://xiph.org/flac/format.html
     //https://xiph.org/flac/api/format_8h_source.html
-        struct flac_hdr {
+        struct flac_hdr { align(1):
             //uint magic;
             uint header; // islast (1 bit) + type (7 bits) + length (24 bits)
             ushort minblocksize;
@@ -683,7 +648,7 @@ void scan(File file)
         return;
 
     case "8BPS": { // Oddly enough, another ZIP-like case.
-        struct psd_hdr {
+        struct psd_hdr { align(1):
             ushort magic;
             ushort version_;
             ubyte[6] reserved;
@@ -724,7 +689,7 @@ void scan(File file)
         {
         case "WAVE": {
             //http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
-            struct fmt_chunk {
+            struct fmt_chunk { align(1):
                 char[4] id;
                 uint cksize;
                 ushort format;
@@ -800,7 +765,7 @@ void scan(File file)
         }
 
     case "MThd": { // Big Endian
-        struct midi_hdr {
+        struct midi_hdr { align(1):
             char[4] magic;
             uint length;
             ushort format, number, division;
@@ -942,7 +907,7 @@ void scan(File file)
         return;
 
     case "MSCF": {
-        struct cfh_hdr {
+        struct cfh_hdr { align(1):
             //char[4] magic;
             uint reserved1;
             uint size;
@@ -966,7 +931,7 @@ void scan(File file)
         return;
 
     case "ISc(": {
-        struct iscab_hdr {
+        struct iscab_hdr { align(1):
             //uint magic;
             uint version_;
             uint volumeinfo;
@@ -1035,7 +1000,7 @@ void scan(File file)
         return;
 
     case "!<ar": { // Debian Package
-        struct deb_hdr { // Ignore fields in caps
+        struct deb_hdr { align(1): // Ignore fields in caps
             char[8]  magic; // "!<arch>\n"
             char[16] file_iden; // "debian-binary   "
             char[12] timestamp;
@@ -1052,7 +1017,7 @@ void scan(File file)
             char[10] ctl_filesize;
             char[2]  CTL_END;
         }
-        struct deb_data_hdr {
+        struct deb_data_hdr { align(1):
             char[16] file_ident;
             char[12] timestamp;
             char[6]  uid, gid;
@@ -1094,7 +1059,7 @@ void scan(File file)
         return;
 
     case x"ED AB EE DB": { // RPM Package
-        struct rpm_hdr {
+        struct rpm_hdr { align(1):
             char[4] magic;
             ubyte major, minor;
             ushort type;
@@ -1152,7 +1117,7 @@ void scan(File file)
     
     // http://www.cabextract.org.uk/libmspack/doc/szdd_kwaj_format.html
     case "KWAJ": {
-        struct kwaj_hdr {
+        struct kwaj_hdr { align(1):
             char[8] magic;
             ushort method; // compressed method
             ushort offset;
@@ -1212,7 +1177,7 @@ void scan(File file)
         break;
 
     case "SZDD": {
-        struct szdd_hdr {
+        struct szdd_hdr { align(1):
             char[8] magic;
             ubyte compression; // compressed mode, only 'A' is valid
             ubyte character; // filename end character (0=unknown)
@@ -1271,7 +1236,7 @@ void scan(File file)
         return;
 
     case "HDR0": {
-        struct trx_hdr {
+        struct trx_hdr { align(1):
             uint magic;
             uint length;
             uint crc;
@@ -1293,7 +1258,7 @@ void scan(File file)
         return;
 
     case "KDMV": { // VMDK vdisk
-        struct SparseExtentHeader { // check technote
+        struct SparseExtentHeader { align(1): // check technote
             uint magicNumber;
             uint version_;
             uint flags;
@@ -1350,16 +1315,16 @@ void scan(File file)
         enum COWDISK_MAX_PARENT_FILELEN = 1024;
         enum COWDISK_MAX_NAME_LEN = 60;
         enum COWDISK_MAX_DESC_LEN = 512;
-        struct Root {
+        struct Root { align(1):
             uint cylinders;
             uint heads;
             uint sectors;
         }
-        struct Child {
+        struct Child { align(1):
             char[COWDISK_MAX_PARENT_FILELEN] parentFileName;
             uint parentGeneration;
         }
-        struct COWDisk_Header {
+        struct COWDisk_Header { align(1):
             //uint magicNumber;
             uint version_;
             uint flags;
@@ -1402,7 +1367,7 @@ void scan(File file)
         return;
 
     case "cone": { // conectix, VHD, values in big endian
-        struct vhd_hdr {
+        struct vhd_hdr { align(1):
             uint features;
             ushort major;
             ushort minor;
@@ -1513,7 +1478,7 @@ void scan(File file)
             VDI = "Oracle VM VirtualBox Disk Image >>>"
         }
         enum VDIMAGIC = 0xBEDA107F;
-        struct vdi_hdr {
+        struct vdi_hdr { align(1):
             uint magic;
             ushort majorv;
             ushort minorv;
@@ -1522,7 +1487,7 @@ void scan(File file)
             uint flags;
             char[28] description;
         }
-        struct svdi_hdr { // SEEK 0x150
+        struct svdi_hdr { align(1): // SEEK 0x150
             uint offsetBlock;
             uint offsetData;
             uint cylinders;
@@ -1595,7 +1560,7 @@ void scan(File file)
     case "QFI\xFB": { // QCOW2, big endian
     //https://people.gnome.org/~markmc/qcow-image-format.html
     //http://git.qemu-project.org/?p=qemu.git;a=blob;f=docs/specs/qcow2.txt
-        struct QCowHeader { //v1/v2, v3 has extra fields
+        struct QCowHeader { align(1): //v1/v2, v3 has extra fields
             uint magic;
             uint version_;
             ulong backing_file_offset;
@@ -1637,7 +1602,7 @@ void scan(File file)
 
     case "QED\0": { // QED
     //http://wiki.qemu-project.org/Features/QED/Specification
-        struct qed_hdr {
+        struct qed_hdr { align(1):
             uint magic;
             uint cluster_size;
             uint table_size;
@@ -1782,7 +1747,7 @@ void report_unknown(string filename = null)
             write(CurrentFile.name, ": ");
     }
     
-    writeln("Unknown file type");
+    writeln("Unknown type");
 }
 
 /// Report a text file.

@@ -9,7 +9,7 @@ import std.stdio, dfile, utils;
 // https://gist.github.com/ulrikdamm/8274171
 void scan_pmx(File file)
 {
-    struct pmx_hdr {
+    struct pmx_hdr { align(1):
         //char[4] sig;
         float ver; // 4 bytes
         char len; // 8
@@ -33,7 +33,6 @@ void scan_pmx(File file)
     {
         try
         {
-            file.seek(-3, SEEK_CUR);
             uint l;
             scpy(file, &l, l.sizeof);
             writefln(" -- l : %X", l);
@@ -53,7 +52,7 @@ void scan_pmx(File file)
                 }
             }
         }
-        catch (Throwable)
+        catch (Exception)
         {
 
         }

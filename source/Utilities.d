@@ -83,10 +83,10 @@ string isostr(char[] str) pure
 // https://en.wikipedia.org/wiki/Exponential-Golomb_coding
 //TODO: EXP-GOLOMB UTIL
 /// Get a Exp-Golomb-Encoded number
-ulong expgol(uint n)
+/*ulong expgol(uint n)
 {
     return 0;
-}
+}*/
 
 /**
  * Get a byte-formatted size.

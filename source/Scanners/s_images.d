@@ -12,7 +12,7 @@ void scan_png(File file) // Big Endian
 
     if (More)
     {
-        struct ihdr_chunk_full { // Yeah.. Blame PNG
+        struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
             uint length;
             uint type;
             uint width;        // START IHDR
@@ -25,7 +25,7 @@ void scan_png(File file) // Big Endian
             uint crc;
         }
 
-        /*struct png_chunk {
+        /*struct png_chunk { align(1):
             uint length;
             uint type;
             ubyte[] data;
@@ -129,7 +129,7 @@ void scan_png(File file) // Big Endian
 
 void scan_gif(File file)
 { // http://www.fileformat.info/format/gif/egff.htm
-    struct gif_header {
+    struct gif_header { align(1):
         char[3] magic;
         char[3] version_;
         ushort width;
@@ -185,7 +185,7 @@ void scan_bpg(File file)
 
     /*if (More)
     {
-        struct heic_hdr {
+        struct heic_hdr { align(1):
             uint magic;
             ubyte format;
             ubyte color;
@@ -249,7 +249,7 @@ void scan_flif(File file)
 
     /*if (More)
     {
-        struct flif_hdr {
+        struct flif_hdr { align(1):
             uint magic;
             ubyte type;
             ubyte channelbytes;

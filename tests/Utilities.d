@@ -79,7 +79,7 @@ unittest
         scpy(f, b.ptr, b.sizeof, true);
         assert(b == a);
 
-        struct s1 { // Generic header 1
+        struct s1 { align(1): // Generic header 1
             uint magic;
             ushort version_;
             ubyte[4] type;
@@ -90,7 +90,7 @@ unittest
         assert(h1.version_ == 0x0506);
         assert(h1.type == [4, 3, 2, 1]);
 
-        struct s2 { // Generic header 2
+        struct s2 { align(1): // Generic header 2
             uint magic;
             ushort version_;
             ushort type1;
@@ -103,7 +103,7 @@ unittest
         assert(h2.type1 == 0x0304);
         assert(h2.type2 == 0x0102);
 
-        struct s3 { // Generic header 3
+        struct s3 { align(1): // Generic header 3
             uint magic;
             ushort version_;
             uint type; // Compiler mis-alignment?
