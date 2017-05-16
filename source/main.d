@@ -10,7 +10,7 @@ import std.getopt;
 
 /// Debugging version, usually ahead of stable.
 debug enum PROJECT_VERSION = "0.7.0-debug";
-else  enum PROJECT_VERSION = "0.6.0"; /// Project version.
+else  enum PROJECT_VERSION = "0.7.0-git"; /// Project version.
 
 /// Project name, usually the name of the executable.
 enum PROJECT_NAME = "dfile";

@@ -44,21 +44,50 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
     writef("%s@L%d: %s", baseName(file), line, msg);
 }
 
+/*uint charap(char* p) pure @nogc {
+    version (X86) asm pure @nogc { naked;
+        mov ESI, p;
+        mov EAX, [ESI];
+        ret;
+    } else version (X86_64) asm pure @nogc { naked;
+        mov RSI, p;
+        mov EAX, [RSI];
+        ret;
+    } else {
+        return *cast(uint*)p;
+    }
+}*/
+
 /**
  * Scanner entry point.
  * Params: file = File handle
  */
 void scan(File file)
 {
-    if (file.size == 0UL)
+    if (file.size == 0)
     {
         report("Empty file");
         return;
     }
 
     char[4] sig; // UTF-8, ASCII compatible.
-    debug dbg("Reading file");
     file.rawRead(sig);
+    version (X86) {
+        uint s = void;
+        asm pure @nogc {
+            lea ESI, sig;
+            mov EAX, [ESI];
+            mov s, EAX;
+        }
+    } else version (X86_64) {
+        uint s = void;
+        asm pure @nogc {
+            lea RSI, sig;
+            mov EAX, [RSI];
+            mov s, EAX;
+        }
+    } else uint s = *cast(uint*)&sig[0];
+    debug writefln("s::%08X", s);
 
     debug
     {
@@ -67,7 +96,8 @@ void scan(File file)
         writeln();
     }
 
-    switch (sig)
+    //TODO: Switch back to sig
+    switch (s)
     {
     /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
         write("LD2000 Frame file (LDS)");
@@ -77,15 +107,15 @@ void scan(File file)
         report("Palm Desktop Calendar Archive (DBA)");
         break;*/
 
-    case [0x00, 0x01, 0x42, 0x44]:
+    case 0x44420100:
         report("Palm Desktop To Do Archive (DBA)");
         return;
 
-    case [0x00, 0x01, 0x44, 0x54]:
+    case 0x54440100:
         report("Palm Desktop Calendar Archive (TDA)");
         return;
 
-    case [0x00, 0x01, 0x00, 0x00]: {
+    case 0x00000100: {
         char[12] b;
         file.rawRead(b);
         switch (b[0..4])
@@ -117,7 +147,7 @@ void scan(File file)
         }
     }
 
-    case "NESM": {
+    case 0x4D53454E: { // "NESM"
         char[1] b;
         file.rawRead(b);
 
@@ -175,7 +205,7 @@ void scan(File file)
         }
     }
 
-    case "KSPC": {
+    case 0x4350534B: { // "KSPC"
         char[1] b;
         file.rawRead(b);
         switch (b)
@@ -201,15 +231,15 @@ void scan(File file)
         }
     }
 
-    case [0x00, 0x00, 0x01, 0x00]:
+    case 0x00010000:
         report("Icon, ICO format");
         return;
 
-    case [0, 1, 0, 8]:
+    case 0x08000100:
         report("Ventura Publisher/GEM VDI Image Format Bitmap file");
         return;
 
-    case "BACK":
+    case 0x4B434142: // "BACK"
         file.rawRead(sig);
         switch (sig)
         {
@@ -229,64 +259,65 @@ void scan(File file)
             return;
         }
 
-    case [0, 0, 1, 0xBA]:
+    case 0xBA010000:
         report("DVD Video Movie File or DVD MPEG2");
         return;
 
-    case "MM\0*":
+    case 0x2A004D4D: // "MM\0*"
         report("Tagged Image File Format image (TIFF)");
         return;
 
-    case "II*\0":
+    case 0x002A4949: { // "II*\0"
+        char[6] b;
+        file.rawRead(b);
+        switch (b)
         {
-            char[6] b;
-            file.rawRead(b);
-            switch (b)
-            {
-            case [0x10, 0, 0, 0, 'C', 'R']:
-                report("Canon RAW Format Version 2 image (TIFF)");
-                return;
+        case [0x10, 0, 0, 0, 'C', 'R']:
+            report("Canon RAW Format Version 2 image (TIFF)");
+            return;
 
-            default:
-                report("Tagged Image File Format image (TIFF)");
-                return;
-            }
+        default:
+            report("Tagged Image File Format image (TIFF)");
+            return;
         }
+    }
 
-    case [0, 0, 0, 0xc]:
+    case 0x0C000000:
         report("Various JPEG-2000 image file formats");
         return;
 
-    case [0x80, 0x2A, 0x5F, 0xD7]:
+    case 0xD75F2A80:
         report("Kodak Cineon image");
         return;
 
-    case ['R', 'N', 'C', 0x01], ['R', 'N', 'C', 0x02]:
+    case 0x01434E52, 0x02434E52: // RNC\x01 or \x02
         report("Rob Northen Compressed archive v" ~
             (sig[3] == 1 ? '1' : '2') ~ ")");
         return;
 
-    case "SDPX", "XPDS":
+    case 0x58504453, 0x53445058: // "SDPX", "XPDS"
         report("SMPTE DPX image");
         return;
 
-    case [0x76, 0x2F, 0x31, 0x01]:
+    case 0x01312F76:
         report("OpenEXR image");
         return;
 
-    case "BPGû":
+    case 0xFB475042: // BPGû
         report("Better Portable Graphics image (BPG)");
         return;
 
-    case [0xFF, 0xD8, 0xFF, 0xDB], [0xFF, 0xD8, 0xFF, 0xE0], [0xFF, 0xD8, 0xFF, 0xE1]:
+    case 0xDBFFD8FF, 0xE0FFD8FF, 0xE1FFD8FF:
         report("Joint Photographic Experts Group image (JPEG)");
         return;
 
-    case ['g', 0xA3, 0xA1, 0xCE]:
+    case 0xCEA1A367:
         report("IMG archive");
         return;
 
-    case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
+    //case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
+    case 0x454C4247, 0x464C4247, 0x474C4247,
+         0x494C4247, 0x534C4247, 0x4A4C4247:
         report("%s: GTA Text (GTA2+) file in ", false);
         final switch (sig[3])
         {
@@ -299,7 +330,7 @@ void scan(File file)
         }
         return;
 
-    case "2TXG": {
+    case 0x47585432: { // "2TXG"
         uint[1] b;
         file.rawRead(b);
         report("GTA Text 2 file with", false);
@@ -307,7 +338,9 @@ void scan(File file)
     }
         return;
 
-    case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
+    //case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
+    case 0x30465052, 0x32465052, 0x33465052,
+         0x34465052, 0x36465052, 0x37465052: {
         struct rpf_hdr { align(1):
             //int magic;
             int tablesize;
@@ -334,10 +367,7 @@ void scan(File file)
     }
         return;
 
-    case [0, 0, 0, 0x14]:
-    case [0, 0, 0, 0x18]:
-    case [0, 0, 0, 0x1C]:
-    case [0, 0, 0, 0x20]: {
+    case 0x14000000, 0x18000000, 0x1C000000, 0x20000000: {
         char[8] b;
         file.rawRead(b);
         switch (b[0..4])
@@ -380,7 +410,7 @@ void scan(File file)
         }
     }
 
-    case "FORM": {
+    case 0x4D524F46: { // "FORM"
         char[4] b;
         file.seek(8);
         file.rawRead(b);
@@ -401,19 +431,20 @@ void scan(File file)
         }
     }
 
-    case [0, 0, 1, 0xB7]:
+    case 0xB7010000:
         report("MPEG video file");
         return;
 
-    case "INDX":
+    case 0x58444E49: // INDX
         report("AmiBack backup index file");
         return;
 
-    case "LZIP":
+    case 0x50495A4C: // "LZIP"
         report("LZIP Archive");
         return;
 
-    case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
+    //case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
+    case 0x04034B42, 0x06054B42, 0x08074B42: {
         struct pkzip_hdr {  align(1): // PKWare ZIP
             //uint magic;
             //ushort magic;
@@ -497,7 +528,7 @@ void scan(File file)
     }
         return;
 
-    case "Rar!": {
+    case 0x21726152: { // "Rar!"
         file.rawRead(sig);
         switch (sig)
         {
@@ -514,15 +545,15 @@ void scan(File file)
         }
     }
 
-    case "\x7FELF":
+    case 0x464C457F: // "\x7FELF"
         scan_elf(file);
         return;
 
-    case [0xFA, 0x70, 0x0E, 0x01]: // FatELF - 0x1F0E70FA
+    case 0x010E70FA: // FatELF - 0x1F0E70FA
         scan_fatelf(file);
         return;
 
-    case [0x89, 'P', 'N', 'G']:
+    case 0x474E5089: // "\x89PNG"
         file.rawRead(sig);
         switch (sig)
         {
@@ -534,30 +565,28 @@ void scan(File file)
             return;
         }
     
-    case [0xFE, 0xED, 0xFA, 0xCE]:
+    /*case [0xFE, 0xED, 0xFA, 0xCE]:
     case [0xFE, 0xED, 0xFA, 0xCF]:
     case [0xCE, 0xFA, 0xED, 0xFE]:
     case [0xCF, 0xFA, 0xED, 0xFE]:
     case [0xCA, 0xFE, 0xBA, 0xBE]:
-    case [0xBE, 0xBA, 0xFE, 0xCA]:
+    case [0xBE, 0xBA, 0xFE, 0xCA]:*/
+    case 0xCEFAEDFE, 0xCFFAEDFE, 0xFEEDFACE,
+         0xFEEDFACF, 0xBEBAFECA, 0xCAFEBABE:
         scan_mach(file);
         return;
 
-    case [0xFF, 0xFE, 0x00, 0x00]:
-        report("UTF-32 text file (byte-order mark)");
-        return;
-
-    case "%!PS":
+    case 0x53502125: // "%!PS"
         report("PostScript document");
         return;
 
-    case "%PDF":
+    case 0x46445025: // "%PDF"
         file.rawRead(sig); // for "-1.0"
         report("PDF", false);
         writeln(sig, " document");
         return;
 
-    case [0x30, 0x26, 0xB2, 0x75]: {
+    case 0x75B22630: {
         char[12] b;
         file.rawRead(b);
         switch (b)
@@ -571,7 +600,7 @@ void scan(File file)
         }
     }
 
-    case "$SDI":
+    case 0x49445324: // "$SDI"
         file.rawRead(sig);
         switch (sig)
         {
@@ -583,7 +612,7 @@ void scan(File file)
             return;
         }
 
-    case "OggS": { // Ogg
+    case 0x5367674F: { // "OggS"
         struct ogg_hdr { align(1):
             //uint magic;
             ubyte version_;
@@ -606,7 +635,7 @@ void scan(File file)
     }
         return;
 
-    case "fLaC": { // FLAC, big endian
+    case 0x43614C66: { // "fLaC", big endian
     //https://xiph.org/flac/format.html
     //https://xiph.org/flac/api/format_8h_source.html
         struct flac_hdr { align(1):
@@ -647,9 +676,9 @@ void scan(File file)
     }
         return;
 
-    case "8BPS": { // Oddly enough, another ZIP-like case.
+    case 0x53504238: { // "8BPS", Native Photoshop file
         struct psd_hdr { align(1):
-            ushort magic;
+            //ushort magic;
             ushort version_;
             ubyte[6] reserved;
             ushort channels;
@@ -660,7 +689,7 @@ void scan(File file)
         }
     //http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
-        file.seek(2);
+        //file.seek(2);
         scpy(file, &h, h.sizeof);
         report("Photoshop Document v", false);
         write(bswap(h.version_), ", ",
@@ -682,7 +711,7 @@ void scan(File file)
     }
         return;
 
-    case "RIFF":
+    case 0x46464952: // "RIFF"
         file.seek(8);
         file.rawRead(sig);
         switch (sig)
@@ -752,7 +781,7 @@ void scan(File file)
             return;
         }
 
-    case "SIMP":
+    case 0x504D4953: // "SIMP"
         file.rawRead(sig);
         switch (sig)
         {
@@ -764,7 +793,7 @@ void scan(File file)
             return;
         }
 
-    case "MThd": { // Big Endian
+    case 0x6468544D: { // "MThd", MIDI, Big Endian
         struct midi_hdr { align(1):
             char[4] magic;
             uint length;
@@ -795,7 +824,7 @@ void scan(File file)
     }
         return;
 
-    case [0xD0, 0xCF, 0x11, 0xE0]:
+    case 0xE011CFD0:
         file.rawRead(sig);
         switch (sig)
         {
@@ -807,7 +836,7 @@ void scan(File file)
             return;
         }
 
-    case ['d', 'e', 'x', 0x0A]:
+    case 0x0A786564: // "dex\x0A"
         file.rawRead(sig);
         switch (sig)
         {
@@ -819,15 +848,15 @@ void scan(File file)
             return;
         }
 
-    case "Cr24":
+    case 0x34327243: // "Cr24"
         report("Google Chrome extension or packaged app (crx)");
         return;
 
-    case "AGD3":
+    case 0x33444741: // "AGD3"
         report("FreeHand 8 document (fh8)");
         return;
 
-    case [0x05, 0x07, 0x00, 0x00]: {
+    case 0x00000705: {
         char[6] b;
         file.rawRead(b);
         switch (b)
@@ -844,19 +873,19 @@ void scan(File file)
         }
     }
 
-    case ['E', 'R', 0x02, 0x00]:
+    case 0x00025245:
         report("Roxio Toast disc image or DMG file (toast or dmg)");
         return;
 
-    case ['x', 0x01, 's', 0x0D]:
+    case 0x0D730178:
         report("Apple Disk Image file (dmg)");
         return;
 
-    case "xar!":
+    case 0x21726178: // "xar!"
         report("eXtensible ARchive format (xar)");
         return;
 
-    case "PMOC":
+    case 0x434F4D50: // "PMOC"
         file.rawRead(sig);
         switch (sig)
         {
@@ -868,15 +897,15 @@ void scan(File file)
             return;
         }
 
-    case "TOX3":
+    case 0x33584F54: // "TOX3"
         report("Open source portable voxel file");
         return;
 
-    case "MLVI":
+    case 0x49564C4D: // "MLVI"
         report("Magic Lantern Video file");
         return;
 
-    case "DCM\0":
+    case 0x004D4344: // "DCM\0"
         file.rawRead(sig);
         switch (sig)
         {
@@ -888,7 +917,7 @@ void scan(File file)
             return;
         }
 
-    case [0x37, 0x7A, 0xBC, 0xAF]: {
+    case 0xAFBC7A37: {
         char[2] b;
         file.rawRead(b);
         switch (b)
@@ -902,11 +931,11 @@ void scan(File file)
         }
     }
 
-    case [0x04, 0x22, 0x4D, 0x18]:
+    case 0x184D2204:
         report("LZ4 Streaming Format (lz4)");
         return;
 
-    case "MSCF": {
+    case 0x4643534D: { // "MSCF"
         struct cfh_hdr { align(1):
             //char[4] magic;
             uint reserved1;
@@ -930,7 +959,7 @@ void scan(File file)
     }
         return;
 
-    case "ISc(": {
+    case 0x28635349: { // "ISc("
         struct iscab_hdr { align(1):
             //uint magic;
             uint version_;
@@ -959,15 +988,15 @@ void scan(File file)
     }
         return;
 
-    case [0x1A, 0x45, 0xDF, 0xA3]:
+    case 0xA3DF451A:
         report("Matroska media container (mkv, webm)");
         return;
 
-    case "MIL ":
+    case 0x204C494D: // "MIL "
         report(`"SEAN : Session Analysis" Training file`);
         return;
 
-    case "AT&T":
+    case 0x54265441: // "AT&T"
         file.rawRead(sig);
         switch (sig)
         {
@@ -991,15 +1020,15 @@ void scan(File file)
             return;
         }
 
-    case "wOFF":
+    case 0x46464F77: // "wOFF"
         report("WOFF File Format 1.0 font (woff)");
         return;
 
-    case "wOF2":
+    case 0x32464F77: // "wOF2"
         report("WOFF File Format 2.0 font (woff)");
         return;
 
-    case "!<ar": { // Debian Package
+    case 0x72613C21: { // "!<ar", Debian Package
         struct deb_hdr { align(1): // Ignore fields in caps
             char[8]  magic; // "!<arch>\n"
             char[16] file_iden; // "debian-binary   "
@@ -1058,7 +1087,7 @@ void scan(File file)
     }
         return;
 
-    case x"ED AB EE DB": { // RPM Package
+    case 0xDBEEABED: { // RPM Package
         struct rpm_hdr { align(1):
             char[4] magic;
             ubyte major, minor;
@@ -1089,19 +1118,19 @@ void scan(File file)
     }
         return;
 
-    case "PWAD", "IWAD": {
+    case 0x44415749, 0x44415750: {// "IWAD", "PWAD"
         int[2] b; // Doom reads as int
         file.rawRead(b);
         report(sig.idup, false);
         writefln(" holding %d entries at %Xh", b[0], b[1]);
-    }
         return;
+    }
 
-    case "\0asm":
+    case 0x6D736100: // "\0asm"
         report("WebAssembly file (wasm)");
         return;
 
-    case "TRUE": {
+    case 0x45555254: { // "TRUE"
         char[12] b;
         file.rawRead(b);
         switch (b)
@@ -1116,7 +1145,7 @@ void scan(File file)
     }
     
     // http://www.cabextract.org.uk/libmspack/doc/szdd_kwaj_format.html
-    case "KWAJ": {
+    case 0x4A41574B: { // "KWAJ"
         struct kwaj_hdr { align(1):
             char[8] magic;
             ushort method; // compressed method
@@ -1176,7 +1205,7 @@ void scan(File file)
     }
         break;
 
-    case "SZDD": {
+    case 0x44445A53: { // "SZDD"
         struct szdd_hdr { align(1):
             char[8] magic;
             ubyte compression; // compressed mode, only 'A' is valid
@@ -1198,11 +1227,11 @@ void scan(File file)
     }
         break;
 
-    case [0, 0, 2, 0]:
+    case 0x00020000:
         report("Lotus 1-2-3 spreadsheet (v1) file");
         return;
 
-    case [0, 0, 0x1A, 0]: {
+    case 0x001A0000: {
         char[3] b;
         file.rawRead(b);
         switch (b)
@@ -1222,20 +1251,21 @@ void scan(File file)
         }
     }
 
-    case [0, 0, 3, 0xF3]:
+    case 0xF3030000:
         report("Amiga Hunk executable file");
         return;    
 
-    case "\0\0II":
-    case "\0\0MM":
+    case 0x49490000, 0x4D4D0000: // "\0\0II", "\0\0MM"
         report("Quark Express document");
         return;
 
-    case [0, 0, 0xFE, 0xFF]:
-        report("UTF-32BE BOM");
+    case 0x0000FEFF, 0xFFFE0000:
+        report("UTF-32 text file with Byte-Order Mark (", false);
+        if (s == 0x0000FEFF) writeln("LSB)");
+        else  writeln("MSB)");
         return;
 
-    case "HDR0": {
+    case 0x30524448: { // "HDR0"
         struct trx_hdr { align(1):
             uint magic;
             uint length;
@@ -1257,8 +1287,8 @@ void scan(File file)
     }
         return;
 
-    case "KDMV": { // VMDK vdisk
-        struct SparseExtentHeader { align(1): // check technote
+    case 0x564D444B: { // "KDMV", VMDK vdisk
+        struct SparseExtentHeader { align(1):
             uint magicNumber;
             uint version_;
             uint flags;
@@ -1311,7 +1341,7 @@ void scan(File file)
     }
         return;
 
-    case "COWD": { // ESXi COW
+    case 0x44574F43: { // "COWD", ESXi COW
         enum COWDISK_MAX_PARENT_FILELEN = 1024;
         enum COWDISK_MAX_NAME_LEN = 60;
         enum COWDISK_MAX_DESC_LEN = 512;
@@ -1366,7 +1396,7 @@ void scan(File file)
     }
         return;
 
-    case "cone": { // conectix, VHD, values in big endian
+    case 0x656E6F63: { // "cone", conectix, VHD, values in big endian
         struct vhd_hdr { align(1):
             uint features;
             ushort major;
@@ -1471,7 +1501,7 @@ void scan(File file)
     }
         return;
 
-    case "<<< ": { // VDI
+    case 0x203C3C3C: { // "<<< ", VDI vdisk
     //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
         enum {
             VDI_OLDER = "Sun xVM VirtualBox Disk Image >>>",
@@ -1557,7 +1587,7 @@ void scan(File file)
     }
         return;
 
-    case "QFI\xFB": { // QCOW2, big endian
+    case 0xFB494651: { // "QFI\xFB", QCOW2, big endian
     //https://people.gnome.org/~markmc/qcow-image-format.html
     //http://git.qemu-project.org/?p=qemu.git;a=blob;f=docs/specs/qcow2.txt
         struct QCowHeader { align(1): //v1/v2, v3 has extra fields
@@ -1600,7 +1630,7 @@ void scan(File file)
     }
         return;
 
-    case "QED\0": { // QED
+    case 0x00444551: { // "QED\0", QED
     //http://wiki.qemu-project.org/Features/QED/Specification
         struct qed_hdr { align(1):
             uint magic;
@@ -1648,17 +1678,13 @@ void scan(File file)
     }
         return;*/
 
-    case "PMX ": {
+    case 0x20584D50: { // "PMX "
         import s_models : scan_pmx;
         scan_pmx(file);
         return;
     }
 
-    case "BPG\xFB":
-        scan_bpg(file);
-        return;
-
-    case "FLIF":
+    case 0x46494C46: // "FLIF"
         scan_flif(file);
         return;
 
