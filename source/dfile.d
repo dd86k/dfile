@@ -863,10 +863,6 @@ void scan(File file)
         report("Roxio Toast disc image or DMG file (toast or dmg)");
         return;
 
-    case 0x0D730178:
-        report("Apple Disk Image file (dmg)");
-        return;
-
     case 0x21726178: // "xar!"
         report("eXtensible ARchive format (xar)");
         return;
@@ -1476,10 +1472,7 @@ void scan(File file)
         if (More)
         {
             write("UUID: ");
-            writef("%02X", h.uuid[0]);
-            for (uint i = 1; i < h.uuid.length; ++i)
-                writef("-%02X", h.uuid[i]);
-            writeln();
+            print_array(&h.uuid[0], h.uuid.length);
             writeln("Cylinders: ", h.cylinders);
             writeln("Heads: ", h.heads);
             writeln("Sectors: ", h.sectors);
@@ -1541,7 +1534,7 @@ void scan(File file)
         const char[] magic = file.readln();
         switch (magic) {
             case VDI, VDI_OLDER:
-                file.seek(0x40);
+                file.seek(64); // Description size
                 break;
             default:
                 report_text(); // Coincidence
@@ -1555,28 +1548,45 @@ void scan(File file)
         }
         report("VirtualBox VDI disk image v", false);
         write(h.majorv, ".", h.minorv, ", ");
-        if (h.majorv == 1) {
-            VDIHEADER1 sh;
-            scpy(file, &sh, sh.sizeof);
-            switch (sh.u32Type) {
-                case 1: write("Dynamic"); break;
-                case 2: write("Static"); break;
-                default: write("Unknown type"); break;
+        VDIHEADER1 sh;
+        switch (h.majorv) { // Use latest major version natively
+            case 1:
+                scpy(file, &sh, sh.sizeof);
+                break;
+            case 0:
+                VDIHEADER0 t;
+                scpy(file, &t, t.sizeof);
+                sh.cbDisk = t.cbDisk;
+                sh.u32Type = t.u32Type;
+                sh.uuidCreate = t.uuidCreate;
+                sh.uuidModify = t.uuidModify;
+                sh.uuidLinkage = t.uuidLinkage;
+                sh.LegacyGeometry = t.LegacyGeometry;
+                break;
+            default: return;
+        }
+        switch (sh.u32Type) {
+            case 1: write("Dynamic"); break;
+            case 2: write("Static"); break;
+            default: write("Unknown type"); break;
+        }
+        writeln(", ", formatsize(sh.cbDisk), " Maximum");
+        if (More) {
+            write("Create UUID : ");
+            print_array(&sh.uuidCreate[0], 16);
+            write("Modify UUID : ");
+            print_array(&sh.uuidModify[0], 16);
+            write("Link UUID   : ");
+            print_array(&sh.uuidLinkage[0], 16);
+            if (h.majorv >= 1) {
+                write("ParentModify UUID: ");
+                print_array(&sh.uuidParentModify[0], 16);
+                writeln("Header size: ", sh.cbHeader);
             }
-            writeln(", ", formatsize(sh.cbDisk));
-            if (More)
-            {
-                write("VDI UUID     : ");
-                print_array(&sh.uuidCreate[0], 16);
-                write("LASTSNAP UUID: ");
-                print_array(&sh.uuidModify[0], 16);
-                write("PARENT UUID  : ");
-                print_array(&sh.uuidLinkage[0], 16);
-                writeln("Cylinders (Legacy): ", sh.LegacyGeometry.cCylinders);
-                writeln("Heads (Legacy): ", sh.LegacyGeometry.cHeads);
-                writeln("Sectors (Legacy): ", sh.LegacyGeometry.cSectors);
-                writeln("Sector size: ", sh.LegacyGeometry.cbSector);
-            }
+            writeln("Cylinders (Legacy): ", sh.LegacyGeometry.cCylinders);
+            writeln("Heads (Legacy): ", sh.LegacyGeometry.cHeads);
+            writeln("Sectors (Legacy): ", sh.LegacyGeometry.cSectors);
+            writeln("Sector size (Legacy): ", sh.LegacyGeometry.cbSector);
         }
     }
         return;
@@ -1666,11 +1676,25 @@ void scan(File file)
     }
         return;
 
+    case 0x0D730178, 0x6B6F6C79, 0x6d697368: // Apple DMG disk image
+//https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Storage/DMG.cpp
+        report("Apple Disk Image file (dmg)");
+        return;
+
+    /*case 0x6B6F6C79: // "koly", Apple DMG disk image
+
+        return;
+
+    case 0x6d697368: // "mish", Apple DMG disk image
+
+        return;*/
+
     /*case "With": { // WithoutFreeSpace -- Parallels HDD
+        //TODO: Parallels HDD (Lacks verification/documentation)
         char[12]
         report("Parallels HDD disk image");
-    }
-        return;*/
+        return;
+    }*/
 
     case 0x20584D50: { // "PMX "
         import s_models : scan_pmx;
