@@ -17,34 +17,20 @@ void scan_etc(File file)
     { // Palm Database Format
         import s_mobi : palmdb_name, scan_palmdoc, scan_mobi;
         enum { // 4 bytes for type, 4 bytes for creator
-            ADOBE =      ".pdfADBE",
-            BOOKMOBI =   "BOOKMOBI",
-            PALMDOC =    "TEXtREAd",
-            BDICTY =     "BVokBDIC",
-            DB =         "DB99DBOS",
-            EREADER0 =   "PNRdPPrs",
-            EREADER1 =   "DataPPrs",
-            FIREVIEWER = "vIMGView",
-            HANDBASE =   "PmDBPmDB",
-            INFOVIEW =   "InfoINDB",
-            ISILO =      "ToGoToGo",
-            ISILO3 =     "SDocSilX",
-            JFILE =      "JbDbJBas",
-            JFILEPRO =   "JfDbJFil",
-            LIST =       "DATALSdb",
-            MOBILEDB =   "Mdb1Mdb1",
-            PLUCKER =    "DataPlkr",
-            QUICKSHEET = "DataSprd",
-            SUPERMEMO =  "SM01SMem",
-            TEALDOC =    "TEXtTlDc",
-            TEALINFO =   "InfoTlIf",
-            TEALMEAL =   "DataTlMl",
-            TEALPAINT =  "DataTlPt",
-            THINKDB =    "dataTDBP",
-            TIDES =      "TdatTide",
-            TOMERAIDER = "ToRaTRPW",
-            WEASEL =     "zTXTGPlm",
-            WORDSMITH =  "BDOCWrdS"
+            ADOBE =      ".pdfADBE", BOOKMOBI =   "BOOKMOBI",
+            PALMDOC =    "TEXtREAd", BDICTY =     "BVokBDIC",
+            DB =         "DB99DBOS", EREADER0 =   "PNRdPPrs",
+            EREADER1 =   "DataPPrs", FIREVIEWER = "vIMGView",
+            HANDBASE =   "PmDBPmDB", INFOVIEW =   "InfoINDB",
+            ISILO =      "ToGoToGo", ISILO3 =     "SDocSilX",
+            JFILE =      "JbDbJBas", JFILEPRO =   "JfDbJFil",
+            LIST =       "DATALSdb", MOBILEDB =   "Mdb1Mdb1",
+            PLUCKER =    "DataPlkr", QUICKSHEET = "DataSprd",
+            SUPERMEMO =  "SM01SMem", TEALDOC =    "TEXtTlDc",
+            TEALINFO =   "InfoTlIf", TEALMEAL =   "DataTlMl",
+            TEALPAINT =  "DataTlPt", THINKDB =    "dataTDBP",
+            TIDES =      "TdatTide", TOMERAIDER = "ToRaTRPW",
+            WEASEL =     "zTXTGPlm", WORDSMITH =  "BDOCWrdS"
         }
         char[8] b;
         file.seek(0x3C);
@@ -55,12 +41,8 @@ void scan_etc(File file)
                 report("Palm Database (Adobe Reader)", false);
                 palmdb_name(file);
                 return;
-            case BOOKMOBI:
-                scan_mobi(file);
-                return;
-            case PALMDOC:
-                scan_palmdoc(file);
-                return;
+            case BOOKMOBI: scan_mobi(file); return;
+            case PALMDOC: scan_palmdoc(file); return;
             case BDICTY:
                 report("Palm Database (BDicty)", false);
                 palmdb_name(file);

@@ -14,8 +14,9 @@ import s_le : scan_le;
 import s_mach : scan_mach;
 import s_images, Etc, utils;
 
-/// Setting
-bool More, ShowingName, Base10;
+bool More, /// -m : More flag
+     ShowingName, /// -s : Show name flag
+     Base10; /// -b : Base 10 flag
 /// Current file handle.
 File CurrentFile;
 
@@ -44,20 +45,6 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
     writef("%s@L%d: %s", baseName(file), line, msg);
 }
 
-/*uint charap(char* p) pure @nogc {
-    version (X86) asm pure @nogc { naked;
-        mov ESI, p;
-        mov EAX, [ESI];
-        ret;
-    } else version (X86_64) asm pure @nogc { naked;
-        mov RSI, p;
-        mov EAX, [RSI];
-        ret;
-    } else {
-        return *cast(uint*)p;
-    }
-}*/
-
 /**
  * Scanner entry point.
  * Params: file = File handle
@@ -76,15 +63,15 @@ void scan(File file)
         uint s = void;
         asm pure @nogc {
             lea ESI, sig;
-            mov EAX, [ESI];
-            mov s, EAX;
+            mov EBX, [ESI];
+            mov s, EBX;
         }
     } else version (X86_64) {
         uint s = void;
         asm pure @nogc {
             lea RSI, sig;
-            mov EAX, [RSI];
-            mov s, EAX;
+            mov EBX, [RSI];
+            mov s, EBX;
         }
     } else uint s = *cast(uint*)&sig[0];
     debug writefln("s::%08X", s);
