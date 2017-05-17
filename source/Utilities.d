@@ -12,7 +12,7 @@ import std.stdio, dfile : Base10;
 
 /**
  * Read file with a struct or array.
- * Note: 
+ * Note: MAKE SURE THE STRUCT IS BYTE-ALIGNED.
  * Params:
  *   file = Current file
  *   s = Void pointer to the first element
@@ -26,11 +26,6 @@ void scpy(File file, void* s, size_t size, bool rewind = false)
     ubyte[] buf = new ubyte[size];
     file.rawRead(buf);
     memcpy(s, buf.ptr, size);
-    version (unittest)
-    {
-        import std.stdio : writeln;
-        writeln("SCPY::BUF: ", buf);
-    }
 }
 
 /*
@@ -331,4 +326,5 @@ void print_array(void* arr, size_t length)
     ubyte* p = cast(ubyte*)arr;
     writef("%02X", p[--length]);
     do writef("-%02X", p[--length]); while (length);
+    writeln;
 }

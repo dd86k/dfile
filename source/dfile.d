@@ -79,8 +79,7 @@ void scan(File file)
     debug
     {
         dbgl("Magic: ");
-        foreach (b; sig) writef("%02X ", b);
-        writeln();
+        print_array(&sig[0], 4);
     }
 
     //TODO: Switch back to sig
@@ -1488,88 +1487,96 @@ void scan(File file)
     }
         return;
 
-    case 0x203C3C3C: { // "<<< ", VDI vdisk
-    //https://forums.virtualbox.org/viewtopic.php?p=29266#p29266
+    case 0x203C3C3C: { // "<<< ", Oracle VDI vdisk
+    //TODO: Move all virtualdisks-related scanning to another source
         enum {
-            VDI_OLDER = "Sun xVM VirtualBox Disk Image >>>",
-            VDI = "Oracle VM VirtualBox Disk Image >>>"
+            VDI_OLDER = "Sun xVM VirtualBox Disk Image >>>\n",
+            VDI =       "Oracle VM VirtualBox Disk Image >>>\n"
         }
-        enum VDIMAGIC = 0xBEDA107F;
+        enum VDIMAGIC = 0xBEDA107F, VDI_IMAGE_COMMENT_SIZE = 256;
         struct vdi_hdr { align(1):
+        // Should also include char[64] but it's faster to just "read line"
             uint magic;
             ushort majorv;
             ushort minorv;
-            uint hdrsize;
-            uint type;
-            uint flags;
-            char[28] description;
         }
-        struct svdi_hdr { align(1): // SEEK 0x150
-            uint offsetBlock;
-            uint offsetData;
-            uint cylinders;
-            uint heads;
-            uint sectors;
-            uint sectorSize;
-            uint reserved;
-            ulong diskSize;
-            uint blockSize;
-            uint extraBlockData;
-            uint blocksInHDD;
-            uint blocksAllocated;
-            ubyte[16] vdi_uuid;
-            ubyte[16] lastsnap_uuid;
-            ubyte[16] parent_uuid;
+        struct VDIDISKGEOMETRY { align(1):
+            uint cCylinders;
+            uint cHeads;
+            uint cSectors;
+            uint cbSector;
         }
-        const char[] magic = file.readln()[0..$-1];
-        switch (magic)
-        {
-            case VDI, VDI_OLDER: break;
+        struct VDIHEADER0 { align(1): // Major v0
+            uint u32Type;
+            uint fFlags;
+            char[VDI_IMAGE_COMMENT_SIZE] szComment;
+            VDIDISKGEOMETRY LegacyGeometry;
+            ulong cbDisk;
+            uint cbBlock;
+            uint cBlocks;
+            uint cBlocksAllocated;
+            ubyte[16] uuidCreate;
+            ubyte[16] uuidModify;
+            ubyte[16] uuidLinkage;
+        }
+        struct VDIHEADER1 { align(1): // Major v1
+            uint cbHeader;
+            uint u32Type;
+            uint fFlags;
+            char[VDI_IMAGE_COMMENT_SIZE] szComment;
+            uint offBlocks;
+            uint offData;
+            VDIDISKGEOMETRY LegacyGeometry;
+            uint u32Dummy;
+            ulong cbDisk;
+            uint cbBlock;
+            uint cbBlockExtra;
+            uint cBlocks;
+            uint cBlocksAllocated;
+            ubyte[16] uuidCreate;
+            ubyte[16] uuidModify;
+            ubyte[16] uuidLinkage;
+            ubyte[16] uuidParentModify;
+        }
+        const char[] magic = file.readln();
+        switch (magic) {
+            case VDI, VDI_OLDER:
+                file.seek(0x40);
+                break;
             default:
                 report_text(); // Coincidence
                 return;
         }
         vdi_hdr h;
-        file.seek(0x40);
         scpy(file, &h, h.sizeof);
         if (h.magic != VDIMAGIC) {
             report_text(); // Coincidence
             return;
         }
-        svdi_hdr sh;
-        file.seek(0x150);
-        scpy(file, &sh, sh.sizeof);
         report("VirtualBox VDI disk image v", false);
         write(h.majorv, ".", h.minorv, ", ");
-        switch (h.type)
-        {
-            case 1: write("Dynamic"); break;
-            case 2: write("Static"); break;
-            default: write("Unknown type"); break;
-        }
-        writeln(", ", formatsize(sh.diskSize));
-        if (More)
-        {
-            write("VDI UUID     : ");
-            writef("%02X", sh.vdi_uuid[0]);
-            for (uint i = 1; i < sh.vdi_uuid.length; ++i)
-                writef("-%02X", sh.vdi_uuid[i]);
-            writeln();
-            write("LASTSNAP UUID: ");
-            writef("%02X", sh.lastsnap_uuid[0]);
-            for (uint i = 1; i < sh.lastsnap_uuid.length; ++i)
-                writef("-%02X", sh.lastsnap_uuid[i]);
-            writeln();
-            write("PARENT UUID  : ");
-            writef("%02X", sh.parent_uuid[0]);
-            for (uint i = 1; i < sh.parent_uuid.length; ++i)
-                writef("-%02X", sh.parent_uuid[i]);
-            writeln();
-            writeln("Cylinders: ", sh.cylinders);
-            writeln("Heads: ", sh.heads);
-            writeln("Sectors: ", sh.sectors);
-            writeln("Sector size: ", sh.sectorSize);
-            writeln("Block size: ", sh.blockSize);
+        if (h.majorv == 1) {
+            VDIHEADER1 sh;
+            scpy(file, &sh, sh.sizeof);
+            switch (sh.u32Type) {
+                case 1: write("Dynamic"); break;
+                case 2: write("Static"); break;
+                default: write("Unknown type"); break;
+            }
+            writeln(", ", formatsize(sh.cbDisk));
+            if (More)
+            {
+                write("VDI UUID     : ");
+                print_array(&sh.uuidCreate[0], 16);
+                write("LASTSNAP UUID: ");
+                print_array(&sh.uuidModify[0], 16);
+                write("PARENT UUID  : ");
+                print_array(&sh.uuidLinkage[0], 16);
+                writeln("Cylinders (Legacy): ", sh.LegacyGeometry.cCylinders);
+                writeln("Heads (Legacy): ", sh.LegacyGeometry.cHeads);
+                writeln("Sectors (Legacy): ", sh.LegacyGeometry.cSectors);
+                writeln("Sector size: ", sh.LegacyGeometry.cbSector);
+            }
         }
     }
         return;
