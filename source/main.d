@@ -25,7 +25,7 @@ debug { } else
 /**
  * Main entry point from CLI.
  * Params: args = CLI arguments.
- * Returns: Errorcode
+ * Returns: Error code
  */
 int main(string[] args)
 {

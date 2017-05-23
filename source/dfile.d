@@ -60,26 +60,26 @@ void scan(File file)
     char[4] sig; // UTF-8, ASCII compatible.
     file.rawRead(sig);
     version (X86) {
-        uint s = void;
+        uint s;
         asm pure @nogc {
             lea ESI, sig;
             mov EBX, [ESI];
             mov s, EBX;
         }
     } else version (X86_64) {
-        uint s = void;
+        uint s;
         asm pure @nogc {
             lea RSI, sig;
             mov EBX, [RSI];
             mov s, EBX;
         }
     } else uint s = *cast(uint*)&sig[0];
-    debug writefln("s::%08X", s);
 
     debug
     {
-        dbgl("Magic: ");
-        print_array(&sig[0], 4);
+        writefln("Magic: %08X", s);
+        /*dbgl("Magic: ");
+        print_array(&sig[0], 4);*/
     }
 
     //TODO: Switch back to sig
@@ -1704,6 +1704,10 @@ void scan(File file)
 
     case 0x46494C46: // "FLIF"
         scan_flif(file);
+        return;
+
+    case 0x0000004C:
+        report("Microsoft Shortcut link (.LNK, MS-SHLLINK)");
         return;
 
     default:
