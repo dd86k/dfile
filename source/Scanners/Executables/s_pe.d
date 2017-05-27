@@ -196,55 +196,54 @@ void scan_pe(File file)
         break;
     }
 
-    switch (peoh.Subsystem)
-    {
-    default:
-        write("Unknown");
-        break;
-    case PE_SUBSYSTEM.NATIVE:
-        write("Native Windows");
-        break;
-    case PE_SUBSYSTEM.WINDOWS_GUI:
-        write("Windows GUI");
-        break;
-    case PE_SUBSYSTEM.WINDOWS_CUI:
-        write("Windows Console");
-        break;
-    case PE_SUBSYSTEM.POSIX_CUI:
-        write("Posix Console");
-        break;
-    case PE_SUBSYSTEM.WINDOWS_CE_GUI:
-        write("Windows CE GUI");
-        break;
-    case PE_SUBSYSTEM.EFI_APPLICATION :
-        write("EFI");
-        break;
-    case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
-        write("EFI Boot Service driver");
-        break;
-    case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
-        write("EFI Runtime driver");
-        break;
-    case PE_SUBSYSTEM.EFI_ROM:
-        write("EFI ROM");
-        break;
-    case PE_SUBSYSTEM.XBOX:
-        write("XBOX");
-        break;
-    case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
-        write("Windows Boot Application");
-        break;
-    }
-
-    if (dirs.CLRHeader)
-        write(" .NET");
-
-    if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
-        write(" Library");
-    else if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
+    if (peh.Characteristics & PE_CHARACTERISTIC.DLL) {
+        if (dirs.CLRHeader)
+            write(".NET ");
+        write("Library");
+    } else if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE) {
+        switch (peoh.Subsystem) {
+        default:
+            write("Unknown");
+            break;
+        case PE_SUBSYSTEM.NATIVE:
+            write("Native Windows");
+            break;
+        case PE_SUBSYSTEM.WINDOWS_GUI:
+            write("Windows GUI");
+            break;
+        case PE_SUBSYSTEM.WINDOWS_CUI:
+            write("Windows Console");
+            break;
+        case PE_SUBSYSTEM.POSIX_CUI:
+            write("Posix Console");
+            break;
+        case PE_SUBSYSTEM.WINDOWS_CE_GUI:
+            write("Windows CE GUI");
+            break;
+        case PE_SUBSYSTEM.EFI_APPLICATION :
+            write("EFI");
+            break;
+        case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
+            write("EFI Boot Service driver");
+            break;
+        case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
+            write("EFI Runtime driver");
+            break;
+        case PE_SUBSYSTEM.EFI_ROM:
+            write("EFI ROM");
+            break;
+        case PE_SUBSYSTEM.XBOX:
+            write("XBOX");
+            break;
+        case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
+            write("Windows Boot Application");
+            break;
+        }
+        if (dirs.CLRHeader)
+            write(" .NET");
         write(" Executable");
-    else
-        write(" Unknown");
+    } else
+        write("Unknown type");
 
     write(" for ");
 
