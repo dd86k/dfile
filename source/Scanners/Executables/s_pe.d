@@ -238,11 +238,11 @@ void scan_pe(File file)
 
     if (dirs.CLRHeader)
         write(" .NET");
-    
-    if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
-        write(" Executable");
-    else if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
+
+    if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
         write(" Library");
+    else if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
+        write(" Executable");
     else
         write(" Unknown");
 
