@@ -1108,9 +1108,11 @@ void scan(File file)
         return;
     }
 
-    case 0x6D736100: // "\0asm"
+    case 0x6D736100: { // "\0asm", WebAssembly binary
+        // http://webassembly.org/docs/binary-encoding/
         report("WebAssembly file (wasm)");
         return;
+    }
 
     case 0x45555254: { // "TRUE"
         char[12] b;
@@ -1143,9 +1145,9 @@ void scan(File file)
         switch (h.method)
         {
             case 0: write("Non-compressed"); break;
-            case 1: write("FFh-XORed data"); break;
+            case 1: write("0xFF-XOR'd data"); break;
             case 2: write("Regular SZDD Compressed"); break;
-            case 3: write("LZ + Huffman \"Jeff Johnson\" Compressed"); break;
+            case 3: write(`LZ + Huffman "Jeff Johnson" Compressed`); break;
             case 4: write("MS-ZIP Compressed"); break;
             default: write("Unknown compression");
         }
@@ -1205,7 +1207,7 @@ void scan(File file)
         else
             write("Non-valid SZDD");
 
-        writeln(" Compressed file (SZDD)");
+        writeln(" Compressed file");
     }
         break;
 
@@ -1243,7 +1245,7 @@ void scan(File file)
 
     case 0x0000FEFF, 0xFFFE0000:
         report("UTF-32 text file with Byte-Order Mark (", false);
-        if (s == 0x0000FEFF) writeln("LSB)");
+        if (s == 0xFEFF) writeln("LSB)");
         else  writeln("MSB)");
         return;
 

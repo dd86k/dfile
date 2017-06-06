@@ -8,8 +8,7 @@ import std.stdio;
 import dfile;
 import utils;
 
-private struct PE_HEADER
-{
+private struct PE_HEADER { align(1):
     char[4] Signature; // "PE\0\0"
     PE_MACHINE Machine;
     ushort NumberOfSections;
@@ -21,8 +20,7 @@ private struct PE_HEADER
 }
 
 /// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
-private struct PE_OPTIONAL_HEADER
-{
+private struct PE_OPTIONAL_HEADER { align(1):
     PE_FORMAT magic;
     byte MajorLinkerVersion;
     byte MinorLinkerVersion;
@@ -55,8 +53,8 @@ private struct PE_OPTIONAL_HEADER
     uint NumberOfRvaAndSizes;
 }
 
-private struct IMAGE_DATA_DIRECTORY
-{ // IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16
+// IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16
+private struct IMAGE_DATA_DIRECTORY { align(1):
     ulong ExportTable;
     ulong ImportTable;
     ulong ResourceTable;
@@ -160,24 +158,6 @@ void scan_pe(File file)
         if (peoh.magic == PE_FORMAT.HDR64)
             file.seek(16, SEEK_CUR);
         scpy(file, &dirs, dirs.sizeof);
-    }
-
-    if (More)
-    {
-        writefln("Machine type : %s", peh.Machine);
-        writefln("Number of sections : %s", peh.NumberOfSymbols);
-        writefln("Time stamp : %s", peh.TimeDateStamp);
-        writefln("Pointer to Symbol Table : %s", peh.PointerToSymbolTable);
-        writefln("Number of symbols : %s", peh.NumberOfSymbols);
-        writefln("Size of Optional Header : %s", peh.SizeOfOptionalHeader);
-        writefln("Characteristics : %Xh", peh.Characteristics);
-
-        if (peh.SizeOfOptionalHeader > 0)
-        {
-            writefln("Format    : %Xh", peoh.magic);
-            writefln("Subsystem : %Xh", peoh.Subsystem);
-            writefln("CLR Header: %Xh", dirs.CLRHeader);
-        }
     }
 
     report("PE32", false);
@@ -345,4 +325,22 @@ void scan_pe(File file)
     }
 
     writeln();
+
+    if (More)
+    {
+        writefln("Machine type : %s", peh.Machine);
+        writefln("Number of sections : %s", peh.NumberOfSymbols);
+        writefln("Time stamp : %s", peh.TimeDateStamp);
+        writefln("Pointer to Symbol Table : %s", peh.PointerToSymbolTable);
+        writefln("Number of symbols : %s", peh.NumberOfSymbols);
+        writefln("Size of Optional Header : %s", peh.SizeOfOptionalHeader);
+        writefln("Characteristics : %Xh", peh.Characteristics);
+
+        if (peh.SizeOfOptionalHeader > 0)
+        {
+            writefln("Format    : %Xh", peoh.magic);
+            writefln("Subsystem : %Xh", peoh.Subsystem);
+            writefln("CLR Header: %Xh", dirs.CLRHeader);
+        }
+    }
 }

@@ -100,7 +100,7 @@ int main(string[] args)
                 if (ShowingName)
                     writef("%s: ", filename);
                 
-                writeln("Not found.");
+                writeln("File not found.");
                 return 1;
             }
         }
@@ -155,7 +155,7 @@ FILE:
 /// Print description and synopsis.
 void PrintHelp()
 {
-    writeln("Determine the file type by its magic.");
+    writeln("Determine the file type via magic.");
     writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
     writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
 }
@@ -165,8 +165,8 @@ void PrintVersion()
 {
     import core.stdc.stdlib : exit;
     writefln("%s %s (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
+debug writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
     writeln("MIT License: Copyright (c) 2016-2017 dd86k");
     writeln("Project page: <https://github.com/dd86k/dfile>");
-    writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
     exit(0); // getopt hack
 }
