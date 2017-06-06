@@ -82,7 +82,6 @@ void scan(File file)
         print_array(&sig[0], 4);*/
     }
 
-    //TODO: Switch back to sig
     switch (s)
     {
     /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
