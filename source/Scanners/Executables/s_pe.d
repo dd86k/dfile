@@ -77,7 +77,7 @@ private struct IMAGE_DATA_DIRECTORY
 
 private enum PE_MACHINE : ushort
 {
-    UNKNOWN = 0x0,
+    UNKNOWN = 0,
     AM33 = 0x1d3,
     AMD64 = 0x8664,
     ARM = 0x1c0,
@@ -86,7 +86,7 @@ private enum PE_MACHINE : ushort
     EBC = 0xebc,
     I386 = 0x14c,
     IA64 = 0x200,
-    M32R = 0x9041,
+    M32R = 0x9041, // LE
     MIPS16 = 0x266,
     MIPSFPU = 0x366,
     MIPSFPU16 = 0x466,
@@ -99,7 +99,8 @@ private enum PE_MACHINE : ushort
     SH5 = 0x1a8,
     THUMB = 0x1c2,
     WCEMIPSV2 = 0x169,
-    CLR = 0xC0EE // https://en.wikibooks.org/wiki/X86_Disassembly/Windows_Executable_Files
+    // https://en.wikibooks.org/wiki/X86_Disassembly/Windows_Executable_Files
+    CLR = 0xC0EE,
 }
 
 private enum PE_CHARACTERISTIC : ushort
@@ -115,6 +116,7 @@ private enum PE_CHARACTERISTIC : ushort
     _32BIT_MACHINE = 0x0100,
     DEBUG_STRIPPED = 0x0200,
     REMOVABLE_RUN_FROM_SWAP = 0x0400,
+    NET_RUN_FROM_SWAP = 0x0800,
     SYSTEM = 0x1000,
     DLL = 0x2000,
     UP_SYSTEM_ONLY = 0x4000,
@@ -265,7 +267,7 @@ void scan_pe(File file)
         write("EFI (Byte Code)");
         break;
     case PE_MACHINE.CLR:
-        write("CLR (Pure MSIL)");
+        write("Common Language Runtime");
         break;
     case PE_MACHINE.ARM:
         write("ARM (Little Endian)");
@@ -325,15 +327,21 @@ void scan_pe(File file)
     if (peh.Characteristics)
     {
         if (peh.Characteristics & PE_CHARACTERISTIC.RELOCS_STRIPPED)
-            write(", relocs stripped");
+            write(", RELOCS_STRIPPED");
         if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
-            write(", large addresses aware");
+            write(", LARGE_ADDRESS_AWARE");
         if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
-            write(", 16-bit machines");
+            write(", 16BIT_MACHINE");
         if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
-            write(", 32-bit machines");
+            write(", 32BIT_MACHINE");
+        if (peh.Characteristics & PE_CHARACTERISTIC.DEBUG_STRIPPED)
+            write(", DEBUG_STRIPPED");
+        if (peh.Characteristics & PE_CHARACTERISTIC.REMOVABLE_RUN_FROM_SWAP)
+            write(", REMOVABLE_RUN_FROM_SWAP");
+        if (peh.Characteristics & PE_CHARACTERISTIC.NET_RUN_FROM_SWAP)
+            write(", NET_RUN_FROM_SWAP");
         if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
-            write(", system file");
+            write(", SYSTEM");
     }
 
     writeln();
