@@ -39,22 +39,25 @@ int main(string[] args)
         return 0;
     }
 
+    string[] files;
+
     GetoptResult r;
 	try {
 		r = getopt(args,
             config.bundling, config.caseSensitive,
-            "base10|b", "Use decimal metrics instead of binary.", &Base10,
+            "b|base10", "Use decimal metrics instead of a binary base.", &Base10,
             config.bundling, config.caseSensitive,
-            "continue|c", "Continue on soft symlink.", &cont,
+            "c|continue", "Continue on soft symlink.", &cont,
             config.bundling, config.caseSensitive,
-			"more|m", "Print more information if available.", &More,
+			"m|more", "Print more information if available.", &More,
             config.bundling, config.caseSensitive,
-			"showname|s", "Show filename before result.", &ShowingName,
+			"s|showname", "Show filename before result.", &ShowingName,
             config.bundling, config.caseSensitive,
-            "glob|g", "Use globbing.", &glob,
+            "g|glob", "Use globbing.", &glob,
             config.bundling, config.caseSensitive,
-			"recursive|r", "Recursive (for glob).", &recursive,
-            "version|v", "Print version information.", &PrintVersion);
+			"r|recursive", "Recursive (for glob).", &recursive,
+            "v|version", "Print version information.", &PrintVersion
+        );
 	} catch (GetOptException ex) {
 		stderr.writeln("Error: ", ex.msg);
         return 1;
@@ -71,9 +74,7 @@ int main(string[] args)
                 it.help);
         }
 	} else {
-        //TODO: Multiple entries (chained)
-        string filename = args[$ - 1]; // Last argument, no exceptions!
-
+        foreach (string filename; args[1..$])
         if (exists(filename)) {
             prescan(filename, cont);
         } else {
