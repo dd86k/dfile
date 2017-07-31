@@ -1,23 +1,20 @@
 /*
- * main.d : CLI Main entry point.
+ * main.d : Main entry point.
  */
 
 module main;
 
-import std.stdio, std.file;
+import std.stdio, std.file, std.getopt;
 import dfile;
-import std.getopt;
 
-/// Debugging version, usually ahead of stable.
-debug enum PROJECT_VERSION = "0.7.0-debug";
-else  enum PROJECT_VERSION = "0.7.0"; /// Project version.
+enum PROJECT_VERSION = "0.7.0"; /// Project version.
 
 /// Project name, usually the name of the executable.
 enum PROJECT_NAME = "dfile";
 
 debug { } else
 { // --DRT-gcopt related
-    extern (C) __gshared bool
+    extern(C) __gshared bool
         rt_envvars_enabled = false, /// Disables runtime environment variables
         rt_cmdline_enabled = false; /// Disables runtime CLI
 }
@@ -25,19 +22,19 @@ debug { } else
 /**
  * Main entry point from CLI.
  * Params: args = CLI arguments.
- * Returns: Error code
+ * Returns: Errorcode
  */
 int main(string[] args)
 {
-    bool cont, // Continue with symlinks
-         glob, // Use GLOBBING explicitly
-         recursive; // GLOB - Recursive (breath-first)
-
     if (args.length <= 1)
     {
         PrintHelp;
         return 0;
     }
+
+    bool cont,      // Continue with symlinks
+         glob,      // Use GLOBBING explicitly
+         recursive; // GLOB - Recursive (breath-first)
 
     GetoptResult r;
 	try {
@@ -49,11 +46,11 @@ int main(string[] args)
             config.bundling, config.caseSensitive,
 			"m|more", "Print more information if available.", &More,
             config.bundling, config.caseSensitive,
-			"s|showname", "Show filename before result.", &ShowingName,
+			"n|name", "Prepend filename to result.", &ShowingName,
             config.bundling, config.caseSensitive,
-            "g|glob", "Use globbing.", &glob,
+            "g|glob", "Use file match globbing.", &glob,
             config.bundling, config.caseSensitive,
-			"r|recursive", "Recursive (for glob).", &recursive,
+			"r|recursive", "Recursive (glob).", &recursive,
             "v|version", "Print version information.", &PrintVersion
         );
 	} catch (GetOptException ex) {
@@ -71,16 +68,15 @@ int main(string[] args)
                 it.required ? "Required: " : " ",
                 it.help);
         }
-	} else {
-        foreach (string filename; args[1..$])
+        return 0;
+	}
+
+    foreach (string filename; args[1..$]) {
         if (exists(filename)) {
             prescan(filename, cont);
         } else {
-            import std.string : indexOf;
-            
             if (glob) {
                 import std.path : globMatch, dirName;
-                debug dbg("GLOB ON");
                 int nbf; // Number of files
                 foreach (DirEntry e;
                     dirEntries(dirName(filename),
@@ -103,7 +99,7 @@ int main(string[] args)
                 return 1;
             }
         }
-	}
+    }
 
     return 0;
 }
@@ -118,8 +114,10 @@ void prescan(string filename, bool cont)
 {
     //TODO: #6 (Posix) -- Use stat(2)
     if (isSymlink(filename))
-        if (cont) goto FILE;
-        else report_link(filename);
+        if (cont)
+            goto FILE;
+        else
+            report_link(filename);
     else if (isFile(filename))
     {
 FILE:
@@ -134,10 +132,10 @@ FILE:
             writeln("Cannot open target file from symlink, exiting");
             return;
         }
-        
+
         debug dbg("Scanning...");
         scan(CurrentFile);
-        
+
         debug dbg("Closing file...");
         CurrentFile.close();
     }
@@ -155,7 +153,7 @@ FILE:
 void PrintHelp()
 {
     writeln("Determine the file type via magic.");
-    writefln("  Usage: %s [<Options>] <File>", PROJECT_NAME);
+    writefln("  Usage: %s [options] file", PROJECT_NAME);
     writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
 }
 
@@ -166,6 +164,6 @@ void PrintVersion()
     writefln("%s %s (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
 debug writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
     writeln("MIT License: Copyright (c) 2016-2017 dd86k");
-    writeln("Project page: <https://github.com/dd86k/dfile>");
+    writefln("Project page: <https://github.com/dd86k/%s>", PROJECT_NAME);
     exit(0); // getopt hack
 }
