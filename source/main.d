@@ -39,8 +39,6 @@ int main(string[] args)
         return 0;
     }
 
-    string[] files;
-
     GetoptResult r;
 	try {
 		r = getopt(args,
