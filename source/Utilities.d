@@ -88,7 +88,7 @@ string isostr(char[] str) pure
  * Params: size = Size to format.
  * Returns: Formatted string.
  */
-string formatsize(long size)
+string formatsize(ulong size)
 {
     import std.format : format;
 
@@ -138,19 +138,19 @@ string formatsize(long size)
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-ushort bswap(ushort num) pure
+ushort bswap(ushort num) pure nothrow @nogc
 {
-    version (X86) asm pure {
+    version (X86) asm pure nothrow @nogc {
         naked;
         xchg AH, AL;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure {
+        version (Windows) asm pure nothrow @nogc {
             naked;
             mov AX, CX;
             xchg AL, AH;
             ret;
-        } else asm pure { // System V AMD64 ABI
+        } else asm pure nothrow @nogc { // System V AMD64 ABI
             naked;
             mov EAX, EDI;
             xchg AL, AH;
@@ -166,22 +166,22 @@ ushort bswap(ushort num) pure
 
 /**
  * Byte swap a 4-byte number.
- * Params: num = 8-byte number to swap.
+ * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-uint bswap(uint num) pure
+uint bswap(uint num) pure nothrow @nogc
 {
-    version (X86) asm pure {
+    version (X86) asm pure nothrow @nogc {
         naked;
         bswap EAX;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure {
+        version (Windows) asm pure nothrow @nogc {
             naked;
             mov EAX, ECX;
             bswap EAX;
             ret;
-        } else asm pure { // System V AMD64 ABI
+        } else asm pure nothrow @nogc { // System V AMD64 ABI
             naked;
             mov RAX, RDI;
             bswap EAX;
@@ -200,21 +200,21 @@ uint bswap(uint num) pure
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-ulong bswap(ulong num) pure
+ulong bswap(ulong num) pure nothrow @nogc
 {
-    version (X86) asm pure {
+    version (X86) asm pure nothrow @nogc {
         naked;
         xchg EAX, EDX;
         bswap EDX;
         bswap EAX;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure {
+        version (Windows) asm pure nothrow @nogc {
             naked;
             mov RAX, RCX;
             bswap RAX;
             ret;
-        } else asm pure { // System V AMD64 ABI
+        } else asm pure nothrow @nogc { // System V AMD64 ABI
             naked;
             mov RAX, RDI;
             bswap RAX;
@@ -234,15 +234,31 @@ ulong bswap(ulong num) pure
     }
 }
 
+/**
+ * Turns a 2-byte buffer and transforms it into a 2-byte number.
+ * Params: buf = Buffer
+ * Returns: 2-byte number
+ */
 ushort make_ushort(char[] buf) pure
 {
     return buf[0] | buf[1] << 8;
 }
+/**
+ * Turns a 4-byte buffer and transforms it into a 4-byte number.
+ * Params: buf = Buffer
+ * Returns: 4-byte number
+ */
 uint make_uint(char[] buf) pure
 {
     return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
 }
 
+/**
+ * Prints an array on screen.
+ * Params:
+ *   arr = Array pointer
+ *   length = Array size
+ */
 void print_array(void* arr, size_t length)
 {
     ubyte* p = cast(ubyte*)arr;
