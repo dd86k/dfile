@@ -88,11 +88,11 @@ string isostr(char[] str) pure
  * Params: size = Size to format.
  * Returns: Formatted string.
  */
-string formatsize(long size) //BUG: %f is unpure?
+string formatsize(long size)
 {
     import std.format : format;
 
-    enum : long {
+    enum : double {
         KB = 1024,
         MB = KB * 1024,
         GB = MB * 1024,
@@ -103,204 +103,134 @@ string formatsize(long size) //BUG: %f is unpure?
         TiB = GiB * 1000
     }
 
-	const float s = size;
+	const double s = size;
 
 	if (Base10)
 	{
 		if (size > TiB)
-			if (size > 100 * TiB)
-				return format("%d TiB", size / TiB);
-			else if (size > 10 * TiB)
-				return format("%0.1f TiB", s / TiB);
-			else
-				return format("%0.2f TiB", s / TiB);
+            return format("%0.2f TiB", s / TiB);
 		else if (size > GiB)
-			if (size > 100 * GiB)
-				return format("%d GiB", size / GiB);
-			else if (size > 10 * GiB)
-				return format("%0.1f GiB", s / GiB);
-			else
-				return format("%0.2f GiB", s / GiB);
+            return format("%0.2f GiB", s / GiB);
 		else if (size > MiB)
-			if (size > 100 * MiB)
-				return format("%d MiB", size / MiB);
-			else if (size > 10 * MiB)
-				return format("%0.1f MiB", s / MiB);
-			else
-				return format("%0.2f MiB", s / MiB);
+            return format("%0.2f MiB", s / MiB);
 		else if (size > KiB)
-			if (size > 100 * MiB)
-				return format("%d KiB", size / KiB);
-			else if (size > 10 * KiB)
-				return format("%0.1f KiB", s / KiB);
-			else
-				return format("%0.2f KiB", s / KiB);
+            return format("%0.2f KiB", s / KiB);
 		else
 			return format("%d B", size);
 	}
 	else
 	{
 		if (size > TB)
-			if (size > 100 * TB)
-				return format("%d TB", size / TB);
-			else if (size > 10 * TB)
-				return format("%0.1f TB", s / TB);
-			else
-				return format("%0.2f TB", s / TB);
+            return format("%0.2f TB", s / TB);
 		else if (size > GB)
-			if (size > 100 * GB)
-				return format("%d GB", size / GB);
-			else if (size > 10 * GB)
-				return format("%0.1f GB", s / GB);
-			else
-				return format("%0.2f GB", s / GB);
+            return format("%0.2f GB", s / GB);
 		else if (size > MB)
-			if (size > 100 * MB)
-				return format("%d MB", size / MB);
-			else if (size > 10 * MB)
-				return format("%0.1f MB", s / MB);
-			else
-				return format("%0.2f MB", s / MB);
+            return format("%0.2f MB", s / MB);
 		else if (size > KB)
-			if (size > 100 * KB)
-				return format("%d KB", size / KB);
-			else if (size > 10 * KB)
-				return format("%0.1f KB", s / KB);
-			else
-				return format("%0.2f KB", s / KB);
+            return format("%0.2f KB", s / KB);
 		else
 			return format("%d B", size);
 	}
 }
 
-/*
- * 16-bit swapping
+/**
+ * Byte swap a 2-byte number.
+ * Params: num = 2-byte number to swap.
+ * Returns: Byte swapped number.
  */
-
-/// Byte swap 2 bytes.
 ushort bswap(ushort num) pure
 {
-    version (LittleEndian)
-        version (X86) asm pure {
+    version (X86) asm pure {
+        naked;
+        xchg AH, AL;
+        ret;
+    } else version (X86_64) {
+        version (Windows) asm pure {
             naked;
-            xchg AH, AL;
+            mov AX, CX;
+            xchg AL, AH;
             ret;
-        } else version (X86_64)
-            version (Windows) asm pure {
-                naked;
-                mov AX, CX;
-                xchg AL, AH;
-                ret;
-            } else asm pure { // System V AMD64 ABI
-                naked;
-                mov EAX, EDI;
-                xchg AL, AH;
-                ret;
-            }
-        else
-        {
-            if (num)
-            {
-                ubyte* p = cast(ubyte*)&num;
-                return p[1] | p[0] << 8;
-            }
+        } else asm pure { // System V AMD64 ABI
+            naked;
+            mov EAX, EDI;
+            xchg AL, AH;
+            ret;
         }
-    else return num;
+    } else {
+        if (num) {
+            ubyte* p = cast(ubyte*)&num;
+            return p[1] | p[0] << 8;
+        }
+    }
 }
 
-/*
- * 32-bit swapping
+/**
+ * Byte swap a 4-byte number.
+ * Params: num = 8-byte number to swap.
+ * Returns: Byte swapped number.
  */
-
-/// Byte swap 4 bytes.
 uint bswap(uint num) pure
 {
-    version (LittleEndian)
-        version (X86) asm pure {
+    version (X86) asm pure {
+        naked;
+        bswap EAX;
+        ret;
+    } else version (X86_64) {
+        version (Windows) asm pure {
             naked;
+            mov EAX, ECX;
             bswap EAX;
             ret;
-        } else version (X86_64)
-            version (Windows) asm pure {
-                naked;
-                mov EAX, ECX;
-                bswap EAX;
-                ret;
-            } else asm pure { // System V AMD64 ABI
-                naked;
-                mov RAX, RDI;
-                bswap EAX;
-                ret;
-            }
-        else
-        {
-            if (num)
-            {
-                ubyte* p = cast(ubyte*)&num;
-                return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
-            }
+        } else asm pure { // System V AMD64 ABI
+            naked;
+            mov RAX, RDI;
+            bswap EAX;
+            ret;
         }
-    else return num;
+    } else {
+        if (num) {
+            ubyte* p = cast(ubyte*)&num;
+            return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
+        }
+    }
 }
 
-/*
- * 64-bit swapping
+/**
+ * Byte swap a 8-byte number.
+ * Params: num = 8-byte number to swap.
+ * Returns: Byte swapped number.
  */
-
-/// Byte swap 8 bytes.
 ulong bswap(ulong num) pure
 {
-    version (LittleEndian)
-        version (X86) asm pure {
+    version (X86) asm pure {
+        naked;
+        xchg EAX, EDX;
+        bswap EDX;
+        bswap EAX;
+        ret;
+    } else version (X86_64) {
+        version (Windows) asm pure {
             naked;
-            xchg EAX, EDX;
-            bswap EDX;
-            bswap EAX;
+            mov RAX, RCX;
+            bswap RAX;
             ret;
-        } else version (X86_64)
-            version (Windows) asm pure {
-                naked;
-                mov RAX, RCX;
-                bswap RAX;
-                ret;
-            } else asm pure { // System V AMD64 ABI
-                naked;
-                mov RAX, RDI;
-                bswap RAX;
-                ret;
-            }
-        else
-        {
-            if (num)
-            {
-                ubyte* p = cast(ubyte*)&num;
-                ubyte c;
-                for (int a, b = 7; a < 4; ++a, --b) {
-                    c = *(p + b);
-                    *(p + b) = *(p + a);
-                    *(p + a) = c;
-                }
-                return num;
-            }
+        } else asm pure { // System V AMD64 ABI
+            naked;
+            mov RAX, RDI;
+            bswap RAX;
+            ret;
         }
-    else return num;
-}
-
-/// Swap an array of bytes.
-void bswap(ubyte* a, size_t length) pure
-{
-    size_t l = length / 2;
-    if (l)
-    {
-        ubyte* b = a + length - 1;
-        ubyte c;
-        while (l--)
-        {
-            c = *b;
-            *b = *a;
-            *a = c;
-            --b; ++a;
-        } 
+    } else {
+        if (num) {
+            ubyte* p = cast(ubyte*)&num;
+            ubyte c;
+            for (int a, b = 7; a < 4; ++a, --b) {
+                c = *(p + b);
+                *(p + b) = *(p + a);
+                *(p + a) = c;
+            }
+            return num;
+        }
     }
 }
 
@@ -308,15 +238,7 @@ ushort make_ushort(char[] buf) pure
 {
     return buf[0] | buf[1] << 8;
 }
-ushort make_ushort(ubyte[] buf) pure
-{
-    return buf[0] | buf[1] << 8;
-}
 uint make_uint(char[] buf) pure
-{
-    return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-}
-uint make_uint(ubyte[] buf) pure
 {
     return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
 }
@@ -324,7 +246,8 @@ uint make_uint(ubyte[] buf) pure
 void print_array(void* arr, size_t length)
 {
     ubyte* p = cast(ubyte*)arr;
-    writef("%02X", p[--length]);
-    do writef("-%02X", p[--length]); while (length);
+    writef("%02X", p[0]);
+    size_t i;
+    while (--length) writef("-%02X", p[++i]);
     writeln;
 }

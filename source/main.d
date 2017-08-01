@@ -7,10 +7,8 @@ module main;
 import std.stdio, std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.7.0"; /// Project version.
-
-/// Project name, usually the name of the executable.
-enum PROJECT_NAME = "dfile";
+enum PROJECT_VERSION = "0.7.0", /// Project version.
+     PROJECT_NAME = "dfile";    /// Usually executable name.
 
 debug { } else
 { // --DRT-gcopt related
@@ -34,7 +32,7 @@ int main(string[] args)
 
     bool cont,      // Continue with symlinks
          glob,      // Use GLOBBING explicitly
-         recursive; // GLOB - Recursive (breath-first)
+         recursive; // GLOB - Recursive (default: shallow)
 
     GetoptResult r;
 	try {
@@ -120,8 +118,8 @@ void prescan(string filename, bool cont)
             report_link(filename);
     else if (isFile(filename))
     {
-FILE:
         import std.exception : ErrnoException;
+FILE:
         try
         {
             debug dbg("Opening file...");
@@ -129,7 +127,7 @@ FILE:
         }
         catch (ErrnoException)
         { // At this point, it is a broken symbolic link.
-            writeln("Cannot open target file from symlink, exiting");
+            writeln("Couldn't open target file from symlink, exiting");
             return;
         }
 
@@ -162,7 +160,7 @@ void PrintVersion()
 {
     import core.stdc.stdlib : exit;
     writefln("%s %s (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
-debug writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
+    writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
     writeln("MIT License: Copyright (c) 2016-2017 dd86k");
     writefln("Project page: <https://github.com/dd86k/%s>", PROJECT_NAME);
     exit(0); // getopt hack
