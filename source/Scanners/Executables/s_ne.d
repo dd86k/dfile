@@ -52,6 +52,10 @@ private enum {
     NESOLO = 0x0001  /* Solo data */
 }
 
+/**
+ * 
+ * Params: file = Input file
+ */
 void scan_ne(File file)
 {
     ne_hdr h;
@@ -88,9 +92,8 @@ void scan_ne(File file)
         writefln("ne_psegrefbytes: %Xh", h.ne_psegrefbytes);
         writefln("ne_swaparea    : %Xh", h.ne_swaparea);
         write("ne_expver      : ");
-        foreach (b; h.ne_expver)
-            writef("%X ", b);
-        writeln();
+        writefln("%X %X", h.ne_expver[0], h.ne_expver[1]);
+        writeln;
     }
 
     report("NE ", false);
@@ -121,5 +124,5 @@ void scan_ne(File file)
             write(", solo data");
     }
 
-    writeln();
+    writeln;
 }

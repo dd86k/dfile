@@ -17,12 +17,7 @@ debug { } else
         rt_cmdline_enabled = false; /// Disables runtime CLI
 }
 
-/**
- * Main entry point from CLI.
- * Params: args = CLI arguments.
- * Returns: Errorcode
- */
-int main(string[] args)
+private int main(string[] args)
 {
     if (args.length <= 1)
     {

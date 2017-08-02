@@ -262,8 +262,6 @@ uint make_uint(char[] buf) pure
 void print_array(void* arr, size_t length)
 {
     ubyte* p = cast(ubyte*)arr;
-    writef("%02X", p[0]);
-    size_t i;
-    while (--length) writef("-%02X", p[++i]);
+    while (--length) writef("%02X ", *++p);
     writeln;
 }

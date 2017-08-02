@@ -61,6 +61,10 @@ enum : ushort // Public for FatELF
     EM_AARCH64 = 0xB7  /// 64-bit ARM
 }
 
+/**
+ * Scan an ELF image
+ * Params: file = Input file
+ */
 void scan_elf(File file)
 {
     import utils : scpy;
@@ -71,8 +75,9 @@ void scan_elf(File file)
 
     debug
     {
+        import utils : print_array;
         dbgl("e_ident: ");
-        foreach (c; h.e_ident) writef("%02X ", c);
+        print_array(&h.e_ident, h.e_ident.length);
         writeln();
     }
 
@@ -106,8 +111,13 @@ void scan_elf(File file)
 
 /*
  * ELF/ELF-FAT Methods
+ * Also used by FATELF
  */
 
+/**
+ * Print the ELF's class type (32/64-bit)
+ * Params: c = Unsigned byte
+ */
 void elf_print_class(ubyte c)
 {
     switch (c)
@@ -118,6 +128,10 @@ void elf_print_class(ubyte c)
     }
 }
 
+/**
+ * Print the ELF's data type (LE/BE)
+ * Params: c = Unsigned byte
+ */
 void elf_print_data(ubyte c)
 {
     switch (c)
@@ -128,6 +142,10 @@ void elf_print_data(ubyte c)
     }
 }
 
+/**
+ * Print the ELF's OS ABI (calling convention)
+ * Params: c = Unsigned byte
+ */
 void elf_print_osabi(ubyte c)
 {
     switch (c)
@@ -150,6 +168,10 @@ void elf_print_osabi(ubyte c)
     }
 }
 
+/**
+ * Print the ELF's type (exec/lib/etc.)
+ * Params: c = Unsigned byte
+ */
 void elf_print_type(ushort c)
 {
     switch (c)
@@ -165,6 +187,10 @@ void elf_print_type(ushort c)
     }
 }
 
+/**
+ * Print the ELF's machine type (system)
+ * Params: c = Unsigned byte
+ */
 void elf_print_machine(ushort c)
 {
     switch (c)
