@@ -1,5 +1,5 @@
 /*
- * General.d : Where the adventure begins.
+ * dfile.d : Where the adventure begins.
  */
 
 module dfile;
@@ -51,7 +51,7 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
  */
 void scan(File file)
 {
-    if (file.size == 0)
+    if (file.size == 0) //TODO: Workaround .size
     {
         report("Empty file");
         return;
@@ -61,26 +61,21 @@ void scan(File file)
     file.rawRead(sig);
     version (X86) {
         uint s;
-        asm pure @nogc {
-            lea ESI, sig;
-            mov EBX, [ESI];
+        asm pure @nogc nothrow {
+            lea ECX, sig;
+            mov EBX, [ECX];
             mov s, EBX;
         }
     } else version (X86_64) {
         uint s;
-        asm pure @nogc {
-            lea RSI, sig;
-            mov EBX, [RSI];
+        asm pure @nogc nothrow {
+            lea RCX, sig;
+            mov EBX, [RCX];
             mov s, EBX;
         }
     } else uint s = *cast(uint*)&sig[0];
 
-    debug
-    {
-        writefln("Magic: %08X", s);
-        /*dbgl("Magic: ");
-        print_array(&sig[0], 4);*/
-    }
+    debug writefln("Magic: %08X", s);
 
     switch (s)
     {
