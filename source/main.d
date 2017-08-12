@@ -79,10 +79,10 @@ private int main(string[] args)
                         ++nbf;
                         prescan(s, cont);
                     }
-                    if (!nbf) { // "Not found"-case if 0 files.
-                        writeln("No files were found.");
-                        return 1;
-                    }
+                }
+                if (!nbf) { // "Not found"-case if 0 files.
+                    writeln("No files were found.");
+                    return 1;
                 }
             } else {
                 if (ShowingName)
