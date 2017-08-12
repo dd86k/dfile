@@ -4,6 +4,11 @@
 
 module dfile;
 
+version (X86)
+    version = X86_ALL;
+version (X86_64)
+    version = X86_ALL;
+
 import std.stdio;
 import s_elf : scan_elf;
 import s_fatelf : scan_fatelf;
@@ -51,29 +56,17 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
  */
 void scan(File file)
 {
-    if (file.size == 0) //TODO: Workaround .size
-    {
+    char[4] sig; // UTF-8, ASCII compatible.
+    if (file.rawRead(sig).length == 0) {
         report("Empty file");
         return;
     }
-
-    char[4] sig; // UTF-8, ASCII compatible.
-    file.rawRead(sig);
-    version (X86) {
+    version (X86_ANY) {
         uint s;
         asm pure @nogc nothrow {
-            lea ECX, sig;
-            mov EBX, [ECX];
-            mov s, EBX;
+            mov s, dword ptr sig;
         }
-    } else version (X86_64) {
-        uint s;
-        asm pure @nogc nothrow {
-            lea RCX, sig;
-            mov EBX, [RCX];
-            mov s, EBX;
-        }
-    } else uint s = *cast(uint*)&sig[0];
+    } else uint s = *cast(uint*)&sig[0]; // As fallback, 2 instructions
 
     debug writefln("Magic: %08X", s);
 
