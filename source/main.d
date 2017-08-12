@@ -70,25 +70,22 @@ private int main(string[] args)
         } else {
             if (glob) {
                 import std.path : globMatch, dirName;
-                int nbf; // Number of files
+                int found; // Number of files
                 foreach (DirEntry e;
                     dirEntries(dirName(filename),
                     recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
                     immutable char[] s = e.name;
-                    if (isFile(s) && globMatch(s, filename)) {
-                        ++nbf;
+                    if (globMatch(s, filename)) {
+                        ++found;
                         prescan(s, cont);
                     }
                 }
-                if (!nbf) { // "Not found"-case if 0 files.
+                if (!found) { // "Not found"-case if 0 files.
                     writeln("No files were found.");
                     return 1;
                 }
-            } else {
-                if (ShowingName)
-                    writef("%s: ", filename);
-                
-                writeln("File not found.");
+            } else { // non-glob
+                report("File not found.", true, filename);
                 return 1;
             }
         }
@@ -122,7 +119,7 @@ FILE:
         }
         catch (ErrnoException)
         { // At this point, it is a broken symbolic link.
-            writeln("Couldn't open target file from symlink, exiting");
+            stderr.writeln("Couldn't open target file from symlink, exiting.");
             return;
         }
 
@@ -133,11 +130,7 @@ FILE:
         CurrentFile.close();
     }
     else if (isDir(filename))
-    {
-        if (ShowingName)
-            writef("%s: ", filename);
-        writeln("Directory");
-    }
+        report("Directory", true, filename);
     else
         report_unknown(filename);
 }
@@ -147,7 +140,7 @@ void PrintHelp()
 {
     writeln("Determine the file type via magic.");
     writefln("  Usage: %s [options] file", PROJECT_NAME);
-    writefln("         %s {-h|--help|-v|--version|/?}", PROJECT_NAME);
+    writefln("         %s {-h|--help|-v|--version}", PROJECT_NAME);
 }
 
 /// Print program version and exit.

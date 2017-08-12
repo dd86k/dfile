@@ -1936,14 +1936,15 @@ void report_link(string linkname)
  * Params:
  *   type = Type/format of file (String)
  *   nl = Print newline
+ *   filename = override filename
  */
-void report(string type, bool nl = true)
+void report(string type, bool nl = true, string filename = null)
 {
     if (ShowingName)
-        writef("%s: ", CurrentFile.name);
+        writef("%s: ", filename ? filename : CurrentFile.name);
 
     write(type);
 
     if (nl)
-        writeln();
+        writeln;
 }
