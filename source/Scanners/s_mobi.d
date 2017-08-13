@@ -31,11 +31,11 @@ private struct mobi_hdr
 
 private enum STARTPOS = 944;
 
-void palmdb_name(File file)
+void palmdb_name()
 {
     char[32] name;
-    file.rewind();
-    file.rawRead(name);
+    CurrentFile.rewind();
+    CurrentFile.rawRead(name);
     char* p = name.ptr; // &name[0]
     size_t n;
     while (*p++ != '\0') ++n;
@@ -43,14 +43,14 @@ void palmdb_name(File file)
     writefln(` "%s"`, name[0..n]);
 }
 
-void scan_palmdoc(File file)
+void scan_palmdoc()
 {
     palmdoc_hdr h;
     {
         import core.stdc.string : memcpy;
         ubyte[palmdoc_hdr.sizeof] b;
-        file.seek(STARTPOS);
-        file.rawRead(b);
+        CurrentFile.seek(STARTPOS);
+        CurrentFile.rawRead(b);
         memcpy(&h, &b, palmdoc_hdr.sizeof);
     }
 
@@ -61,16 +61,16 @@ void scan_palmdoc(File file)
     else if (h.Compression == 0x4844) // 17480
         write(", HUFF/CDIC compressed");
 
-    palmdb_name(file);
+    palmdb_name();
 }
 
-void scan_mobi(File file)
+void scan_mobi()
 {
     palmdoc_hdr h;
     mobi_hdr mh;
-    file.seek(STARTPOS);
-    scpy(file, &h, h.sizeof);
-    scpy(file, &mh, mh.sizeof);
+    CurrentFile.seek(STARTPOS);
+    scpy(CurrentFile, &h, h.sizeof);
+    scpy(CurrentFile, &mh, mh.sizeof);
     
     report("Mobipocket ", false);
 
@@ -133,5 +133,5 @@ void scan_mobi(File file)
     else if (h.Encryption == 0x0200)
         write(", Mobipocket encryption");
 
-    palmdb_name(file);
+    palmdb_name();
 }

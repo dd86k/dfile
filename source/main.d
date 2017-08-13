@@ -124,7 +124,7 @@ FILE:
         }
 
         debug dbg("Scanning...");
-        scan(CurrentFile);
+        scan();
 
         debug dbg("Closing file...");
         CurrentFile.close();

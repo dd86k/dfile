@@ -30,10 +30,11 @@ private struct fat_subheader_v1
     ulong size;
 }
 
-void scan_fatelf(File file)
+/// Scan a FATELF executable
+void scan_fatelf()
 {
     fat_header fh;
-    scpy(file, &fh, fh.sizeof, true);
+    scpy(CurrentFile, &fh, fh.sizeof, true);
 
     report("FatELF", false);
     
@@ -44,7 +45,7 @@ void scan_fatelf(File file)
             break;
         case 1: {
             fat_subheader_v1 fhv1;
-            scpy(file, &fhv1, fhv1.sizeof);
+            scpy(CurrentFile, &fhv1, fhv1.sizeof);
 
             elf_print_class(fhv1.word_size);
             elf_print_data(fhv1.byte_order);

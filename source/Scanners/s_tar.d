@@ -6,33 +6,33 @@ module s_tar;
 
 import std.stdio, dfile, utils;
 
-enum Tar = "ustar\000";
-enum GNUTar = "GNUtar\00";
+enum Tar = "ustar\000"; /// Tar signature
+enum GNUTar = "GNUtar\00"; /// GNU's Tar signature
 
-void scan_tar(File file)
+void scan_tar()
 { // http://www.fileformat.info/format/tar/corion.htm
     import core.stdc.string : memcpy;
     enum NAMSIZ = 100;
     enum TUNMLEN = 32, TGNMLEN = 32;
     struct tar_hdr { align(1):
         char[NAMSIZ] name;
-        char[8] mode;
-        char[8] uid;
-        char[8] gid;
+        char[8]  mode;
+        char[8]  uid;
+        char[8]  gid;
         char[12] size;
         char[12] mtime;
         char[8] chksum;
         char    linkflag;
-        char[NAMSIZ] linkname;
-        char[8] magic;
+        char[NAMSIZ]  linkname;
+        char[8]       magic;
         char[TUNMLEN] uname;
         char[TGNMLEN] gname;
-        char[8] devmajor;
-        char[8] devminor;
+        char[8]       devmajor;
+        char[8]       devminor;
     }
 
     tar_hdr h;
-    scpy(file, &h, h.sizeof, true);
+    scpy(CurrentFile, &h, h.sizeof, true);
 
     switch (h.linkflag)
     {

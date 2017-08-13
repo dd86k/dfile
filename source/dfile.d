@@ -13,17 +13,13 @@ import std.stdio;
 import s_elf : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz : scan_mz;
-import s_pe : scan_pe;
-import s_ne : scan_ne;
-import s_le : scan_le;
 import s_mach : scan_mach;
 import s_images, Etc, utils;
 
 bool More, /// -m : More flag
      ShowingName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
-/// Current file handle.
-File CurrentFile;
+File CurrentFile; /// Current file handle.
 
 /**
  * Prints debugging message with a FILE<at>LINE: MSG formatting.
@@ -54,10 +50,10 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
  * Scanner entry point.
  * Params: file = File handle
  */
-void scan(File file)
+void scan()
 {
     char[4] sig; // UTF-8, ASCII compatible.
-    if (file.rawRead(sig).length == 0) {
+    if (CurrentFile.rawRead(sig).length == 0) {
         report("Empty file");
         return;
     }
@@ -90,7 +86,7 @@ void scan(File file)
 
     case 0x00000100: {
         char[12] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b[0..4])
         {
             case "MSIS":
@@ -122,7 +118,7 @@ void scan(File file)
 
     case 0x4D53454E: { // "NESM"
         char[1] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
 
         switch (b)
         {
@@ -140,7 +136,7 @@ void scan(File file)
             }
 
             nesm_hdr h;
-            scpy(file, &h, h.sizeof, true);
+            scpy(CurrentFile, &h, h.sizeof, true);
             
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
@@ -180,7 +176,7 @@ void scan(File file)
 
     case 0x4350534B: { // "KSPC"
         char[1] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
             case x"1A": {
@@ -191,7 +187,7 @@ void scan(File file)
                 }
 
                 spc2_hdr h;
-                scpy(file, &h, h.sizeof, true);
+                scpy(CurrentFile, &h, h.sizeof, true);
 
                 report("SNES SPC2 v", false);
                 writeln(h.majorver, ".", h.minorver, " file with",
@@ -213,11 +209,11 @@ void scan(File file)
         return;
 
     case 0x4B434142: // "BACK"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "MIKE":
-            file.rawRead(sig);
+            CurrentFile.rawRead(sig);
             switch (sig)
             {
             case "DISK":
@@ -242,7 +238,7 @@ void scan(File file)
 
     case 0x002A4949: { // "II*\0"
         char[6] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
         case [0x10, 0, 0, 0, 'C', 'R']:
@@ -305,7 +301,7 @@ void scan(File file)
 
     case 0x47585432: { // "2TXG"
         uint[1] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         report("GTA Text 2 file with", false);
         writeln(bswap(b[0]), "entries");  // Byte swapped
     }
@@ -322,7 +318,7 @@ void scan(File file)
             int encrypted;
         }
         rpf_hdr h;
-        scpy(file, &h , h.sizeof);
+        scpy(CurrentFile, &h , h.sizeof);
         report("RPF", false);
         if (h.encrypted)
             write(" encrypted");
@@ -342,7 +338,7 @@ void scan(File file)
 
     case 0x14000000, 0x18000000, 0x1C000000, 0x20000000: {
         char[8] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b[0..4])
         {
         case "ftyp":
@@ -385,8 +381,8 @@ void scan(File file)
 
     case 0x4D524F46: { // "FORM"
         char[4] b;
-        file.seek(8);
-        file.rawRead(b);
+        CurrentFile.seek(8);
+        CurrentFile.rawRead(b);
         switch (b) {
         case "ILBM": report("IFF Interleaved Bitmap Image"); return;
         case "8SVX": report("IFF 8-Bit Sampled Voice"); return;
@@ -434,7 +430,7 @@ void scan(File file)
         }
 
         pkzip_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
 
         if (More)
         {
@@ -478,9 +474,9 @@ void scan(File file)
 
         if (h.fnlength)
         {
-            file.seek(-2, SEEK_CUR);
+            CurrentFile.seek(-2, SEEK_CUR);
             char[] filename = new char[h.fnlength];
-            file.rawRead(filename);
+            CurrentFile.rawRead(filename);
             write(` "`, filename, `"`);
         }
 
@@ -502,7 +498,7 @@ void scan(File file)
         return;
 
     case 0x21726152: { // "Rar!"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case [0x1A, 0x07, 0x01, 0x00]:
@@ -519,19 +515,19 @@ void scan(File file)
     }
 
     case 0x464C457F: // "\x7FELF"
-        scan_elf(file);
+        scan_elf();
         return;
 
     case 0x010E70FA: // FatELF - 0x1F0E70FA
-        scan_fatelf(file);
+        scan_fatelf();
         return;
 
     case 0x474E5089: // "\x89PNG"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case [0x0D, 0x0A, 0x1A, 0x0A]:
-            scan_png(file);
+            scan_png();
             return;
         default:
             report_unknown();
@@ -546,7 +542,7 @@ void scan(File file)
     case [0xBE, 0xBA, 0xFE, 0xCA]:*/
     case 0xCEFAEDFE, 0xCFFAEDFE, 0xFEEDFACE,
          0xFEEDFACF, 0xBEBAFECA, 0xCAFEBABE:
-        scan_mach(file);
+        scan_mach();
         return;
 
     case 0x53502125: // "%!PS"
@@ -554,14 +550,14 @@ void scan(File file)
         return;
 
     case 0x46445025: // "%PDF"
-        file.rawRead(sig); // for "-1.0"
+        CurrentFile.rawRead(sig); // for "-1.0"
         report("PDF", false);
         writeln(sig, " document");
         return;
 
     case 0x75B22630: {
         char[12] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
         case x"8E 66 CF 11 A6 D9 0 AA 0 62 CE 6C":
@@ -574,7 +570,7 @@ void scan(File file)
     }
 
     case 0x49445324: // "$SDI"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case [0x30, 0x30, 0x30, 0x31]:
@@ -597,7 +593,7 @@ void scan(File file)
             ubyte pages;
         }
         ogg_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         report("Ogg audio file v", false);
         writeln(h.version_, " with ", h.pages, " segments");
 
@@ -628,7 +624,7 @@ void scan(File file)
             ubyte[16] md5;
         }
         flac_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         report("FLAC audio file", false);
         if ((h.header & 0xFF) == 0) // Big endian
         {
@@ -663,7 +659,7 @@ void scan(File file)
     //http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
         //file.seek(2);
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         report("Photoshop Document v", false);
         write(bswap(h.version_), ", ",
             bswap(h.width), " x ", bswap(h.height), ", ",
@@ -685,8 +681,8 @@ void scan(File file)
         return;
 
     case 0x46464952: // "RIFF"
-        file.seek(8);
-        file.rawRead(sig);
+        CurrentFile.seek(8);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "WAVE": {
@@ -713,7 +709,7 @@ void scan(File file)
                 EXTENSIBLE = 0xFFFE
             }
             fmt_chunk h;
-            scpy(file, &h, h.sizeof);
+            scpy(CurrentFile, &h, h.sizeof);
             report("WAVE audio file (", false);
             if (h.id != "fmt ")
             {
@@ -755,7 +751,7 @@ void scan(File file)
         }
 
     case 0x504D4953: // "SIMP"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "LE  ":
@@ -774,7 +770,7 @@ void scan(File file)
         }
 
         midi_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
 
         report("MIDI, ", false);
 
@@ -798,7 +794,7 @@ void scan(File file)
         return;
 
     case 0xE011CFD0:
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case [0xA1, 0xB1, 0x1A, 0xE1]:
@@ -810,7 +806,7 @@ void scan(File file)
         }
 
     case 0x0A786564: // "dex\x0A"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "035\0":
@@ -831,7 +827,7 @@ void scan(File file)
 
     case 0x00000705: {
         char[6] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
         case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
@@ -855,7 +851,7 @@ void scan(File file)
         return;
 
     case 0x434F4D50: // "PMOC"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "CMOC":
@@ -875,7 +871,7 @@ void scan(File file)
         return;
 
     case 0x004D4344: // "DCM\0"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "PA30":
@@ -888,7 +884,7 @@ void scan(File file)
 
     case 0xAFBC7A37: {
         char[2] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
         case [0x27, 0x1C]:
@@ -921,7 +917,7 @@ void scan(File file)
             ushort seq;
         }
         cfh_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         report("Microsoft Cabinet archive v", false);
         writeln(h.major, ".", h.minor, ", ", formatsize(h.size), ", ",
             h.files, " files and ", h.folders, " folders");
@@ -943,7 +939,7 @@ void scan(File file)
             v5_00_000 = 0x00010050
         }
         iscab_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         report("InstallShield CAB archive", false);
         switch (h.version_)
         {
@@ -966,12 +962,12 @@ void scan(File file)
         return;
 
     case 0x54265441: // "AT&T"
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         switch (sig)
         {
         case "FORM":
-            file.seek(4, SEEK_CUR);
-            file.rawRead(sig);
+            CurrentFile.seek(4, SEEK_CUR);
+            CurrentFile.rawRead(sig);
             switch (sig)
             {
             case "DJVU":
@@ -1025,7 +1021,7 @@ void scan(File file)
         }
         enum DEBIANBIN = "debian-binary   ";
         deb_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
         if (h.file_iden != DEBIANBIN) {
             report_text();
             return;
@@ -1041,8 +1037,8 @@ void scan(File file)
                 import std.conv : parse;
                 string dps = isostr(h.ctl_filesize);
                 os = parse!int(dps);
-                file.seek(os, SEEK_CUR);
-                scpy(file, &dh, dh.sizeof, false);
+                CurrentFile.seek(os, SEEK_CUR);
+                scpy(CurrentFile, &dh, dh.sizeof, false);
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
             }
@@ -1068,7 +1064,7 @@ void scan(File file)
             //char[16] reserved;
         }
         rpm_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
         report("RPM ", false);
         switch (h.type)
         {
@@ -1089,7 +1085,7 @@ void scan(File file)
 
     case 0x44415749, 0x44415750: {// "IWAD", "PWAD"
         int[2] b; // Doom reads as int
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         report(sig.idup, false);
         writefln(" holding %d entries at %Xh", b[0], b[1]);
         return;
@@ -1103,7 +1099,7 @@ void scan(File file)
 
     case 0x45555254: { // "TRUE"
         char[12] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
         case "VISION-XFILE":
@@ -1125,7 +1121,7 @@ void scan(File file)
         }
 
         kwaj_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1161,15 +1157,15 @@ void scan(File file)
             if (h.header & UNKNOWN) offset += 2;
             if (h.header & DLENGHT) offset += 2;
 
-            if (offset) file.seek(offset, SEEK_CUR);
+            if (offset) CurrentFile.seek(offset, SEEK_CUR);
 
             write(" Out:");
 
             if (name)
-                write(file.readln('\0'));
+                write(CurrentFile.readln('\0'));
             write('.');
             if (ext)
-                write(file.readln('\0'));
+                write(CurrentFile.readln('\0'));
         }
 
         writeln();
@@ -1185,7 +1181,7 @@ void scan(File file)
         }
 
         szdd_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1204,7 +1200,7 @@ void scan(File file)
 
     case 0x001A0000: {
         char[3] b;
-        file.rawRead(b);
+        CurrentFile.rawRead(b);
         switch (b)
         {
         case [0, 0x10, 4]:
@@ -1246,7 +1242,7 @@ void scan(File file)
         }
 
         trx_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
 
         if (h.version_ == 1 || h.version_ == 2) {
             report("TRX v", false);
@@ -1284,7 +1280,7 @@ void scan(File file)
         }
 
         SparseExtentHeader h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
 
         report("VMware Disk image v", false);
         write(h.version_, ", ");
@@ -1347,7 +1343,7 @@ void scan(File file)
             //char[396] padding;
         }
         COWDisk_Header h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         if (h.flags != 3)
         {
             report_text();
@@ -1401,14 +1397,14 @@ void scan(File file)
             D_DYNAMIC = 3,
             D_DIFF = 4,
         }
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
         if (sig != VHDMAGIC[4..$])
         {
             report_text();
             return;
         }
         vhd_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         h.features = bswap(h.features);
         if ((h.features & F_RES) == 0)
         {
@@ -1520,17 +1516,17 @@ void scan(File file)
             ubyte[16] uuidLinkage;
             ubyte[16] uuidParentModify;
         }
-        const char[] magic = file.readln();
+        const char[] magic = CurrentFile.readln();
         switch (magic) {
             case VDI, VDI_OLDER:
-                file.seek(64); // Description size
+                CurrentFile.seek(64); // Description size
                 break;
             default:
                 report_text(); // Coincidence
                 return;
         }
         vdi_hdr h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
         if (h.magic != VDIMAGIC) {
             report_text(); // Coincidence
             return;
@@ -1540,11 +1536,11 @@ void scan(File file)
         VDIHEADER1 sh;
         switch (h.majorv) { // Use latest major version natively
             case 1:
-                scpy(file, &sh, sh.sizeof);
+                scpy(CurrentFile, &sh, sh.sizeof);
                 break;
             case 0:
                 VDIHEADER0 t;
-                scpy(file, &t, t.sizeof);
+                scpy(CurrentFile, &t, t.sizeof);
                 sh.cbDisk = t.cbDisk;
                 sh.u32Type = t.u32Type;
                 sh.uuidCreate = t.uuidCreate;
@@ -1603,7 +1599,7 @@ void scan(File file)
         }
 
         QCowHeader h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
 
         report("QEMU QCOW2 disk image v", false);
         write(bswap(h.version_), ", ", formatsize(bswap(h.size)));
@@ -1645,13 +1641,13 @@ void scan(File file)
         }
         report("QEMU QED disk image, ", false);
         qed_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof, true);
         write(formatsize(h.image_size));
 
         if (h.features & QED_F_BACKING_FILE) {
             char[] bfn = new char[h.backing_filename_size];
-            file.seek(h.backing_filename_offset);
-            file.rawRead(bfn);
+            CurrentFile.seek(h.backing_filename_offset);
+            CurrentFile.rawRead(bfn);
             write(", ");
             if (h.features & QED_F_BACKING_FORMAT_NO_PROBE)
                 write("raw ");
@@ -1687,12 +1683,12 @@ void scan(File file)
 
     case 0x20584D50: { // "PMX "
         import s_models : scan_pmx;
-        scan_pmx(file);
+        scan_pmx();
         return;
     }
 
     case 0x46494C46: // "FLIF"
-        scan_flif(file);
+        scan_flif();
         return;
 
     case 0x0000004C:
@@ -1711,7 +1707,7 @@ void scan(File file)
             return;
 
         case "MZ":
-            scan_mz(file);
+            scan_mz();
             return;
 
         case [0xFF, 0xFE]:
@@ -1738,7 +1734,7 @@ void scan(File file)
             switch (sig[0..3])
             {
             case "GIF":
-                scan_gif(file);
+                scan_gif();
                 break;
 
             case "BZh":
@@ -1766,7 +1762,7 @@ void scan(File file)
                 return;
 
             default:
-                scan_etc(file);
+                scan_etc;
                 return;
             } // 3 Byte signatures
         } // 2 Byte signatures

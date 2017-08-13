@@ -44,10 +44,11 @@ private const enum : uint {
     VirtualDeiveDriver = 0x28000
 }
 
-void scan_le(File file)
+/// Scan a LE executable
+void scan_le()
 {
     e32_hdr h;
-    scpy(file, &h, h.sizeof);
+    scpy(CurrentFile, &h, h.sizeof);
 
     if (More)
     {

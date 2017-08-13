@@ -30,7 +30,7 @@ private struct mz_hdr
 	uint   e_lfanew;       /* File address of new exe header, or @0x3c */
 }
 
-void scan_mz(File file)
+void scan_mz()
 {
     import utils : scpy;
     debug dbg("Started scanning MZ file");
@@ -38,8 +38,8 @@ void scan_mz(File file)
     int e_lfanew;
     {
         int[1] buf;
-        file.seek(0x3C);
-        file.rawRead(buf);
+        CurrentFile.seek(0x3C);
+        CurrentFile.rawRead(buf);
         e_lfanew = buf[0];
     }
 
@@ -48,25 +48,25 @@ void scan_mz(File file)
         import s_pe : scan_pe;
         import s_le : scan_le;
         import s_ne : scan_ne;
-        file.seek(e_lfanew);
+        CurrentFile.seek(e_lfanew);
         char[2] sig;
-        file.rawRead(sig);
+        CurrentFile.rawRead(sig);
 
         switch (sig)
         {
         case "PE":
-            file.seek(e_lfanew);
-            scan_pe(file);
+            CurrentFile.seek(e_lfanew);
+            scan_pe();
             return;
 
         case "NE":
-            file.seek(e_lfanew);
-            scan_ne(file);
+            CurrentFile.seek(e_lfanew);
+            scan_ne();
             return;
 
         case "LE", "LX":
-            file.seek(e_lfanew);
-            scan_le(file);
+            CurrentFile.seek(e_lfanew);
+            scan_le();
             return;
 
         default: break;
@@ -74,7 +74,7 @@ void scan_mz(File file)
     }
 
     mz_hdr h;
-    scpy(file, &h, h.sizeof, true);
+    scpy(CurrentFile, &h, h.sizeof, true);
 
     if (More)
     {

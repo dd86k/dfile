@@ -145,19 +145,20 @@ private enum PE_SUBSYSTEM : ushort
     WINDOWS_BOOT_APPLICATION = 16
 }
 
-void scan_pe(File file)
+/// Scan a PE32 executable
+void scan_pe()
 {
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
-    scpy(file, &peh, peh.sizeof);
+    scpy(CurrentFile, &peh, peh.sizeof);
 
     if (peh.SizeOfOptionalHeader > 0)
     { // PE Optional Header
-        scpy(file, &peoh, peoh.sizeof);
+        scpy(CurrentFile, &peoh, peoh.sizeof);
         if (peoh.magic == PE_FORMAT.HDR64)
-            file.seek(16, SEEK_CUR);
-        scpy(file, &dirs, dirs.sizeof);
+            CurrentFile.seek(16, SEEK_CUR);
+        scpy(CurrentFile, &dirs, dirs.sizeof);
     }
 
     report("PE32", false);

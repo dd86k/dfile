@@ -65,13 +65,13 @@ enum : ushort // Public for FatELF
  * Scan an ELF image
  * Params: file = Input file
  */
-void scan_elf(File file)
+void scan_elf()
 {
     import utils : scpy;
     debug dbg("Started scanning ELF file");
 
     Elf32_Ehdr h;
-    scpy(file, &h, h.sizeof, true);
+    scpy(CurrentFile, &h, h.sizeof, true);
 
     debug
     {

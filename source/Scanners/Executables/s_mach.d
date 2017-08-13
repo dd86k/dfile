@@ -304,16 +304,17 @@ private enum : uint {
     FAT_CIGAM =   0xBEBAFECA
 }
 
-void scan_mach(File file)
+/// Scan a Mach-O executable
+void scan_mach()
 {
     bool reversed, fat;
 
     uint sig;
     {
         uint[1] b;
-        file.rewind();
-        file.rawRead(b);
-        file.rewind();
+        CurrentFile.rewind();
+        CurrentFile.rawRead(b);
+        CurrentFile.rewind();
         sig = b[0];
     }
 
@@ -353,12 +354,12 @@ void scan_mach(File file)
     if (fat) // Java prefers Fat files
     {
         fat_header fh;
-        scpy(file, &fh, fh.sizeof);
+        scpy(CurrentFile, &fh, fh.sizeof);
 
         if (fh.nfat_arch)
         {
             fat_arch fa;
-            scpy(file, &fa, fa.sizeof);
+            scpy(CurrentFile, &fa, fa.sizeof);
 
             if (reversed)
             {
@@ -380,7 +381,7 @@ void scan_mach(File file)
     else
     {
         mach_header mh;
-        scpy(file, &mh, mh.sizeof);
+        scpy(CurrentFile, &mh, mh.sizeof);
 
         if (reversed)
         {

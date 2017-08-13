@@ -6,7 +6,8 @@ module s_images;
 
 import dfile, std.stdio, utils;
 
-void scan_png(File file) // Big Endian
+/// Scan a PNG image
+void scan_png() // Big Endian
 { // https://www.w3.org/TR/PNG-Chunks.html
     report("Portable Network Graphics image (PNG)");
 
@@ -37,64 +38,64 @@ void scan_png(File file) // Big Endian
         }*/
 
         ihdr_chunk_full h;
-        scpy(file, &h, h.sizeof);
+        scpy(CurrentFile, &h, h.sizeof);
 
         with (h) {
             write(bswap(width), " x ", bswap(height), " pixels, ");
 
             switch (color)
             {
-                case 0:
-                    switch (depth)
-                    {
-                        case 1, 2, 4, 8, 16:
-                            write(depth, "-bit ");
-                            break;
-                        default: break;
-                    }
-                    write("Grayscale");
+            case 0:
+                switch (depth)
+                {
+                case 1, 2, 4, 8, 16:
+                    write(depth, "-bit ");
                     break;
-                case 2:
-                    switch (depth)
-                    {
-                        case 8, 16:
-                            write(depth, "-bit ");
-                            break;
-                        default: break;
-                    }
-                    write("RGB");
+                default: break;
+                }
+                write("Grayscale");
+                break;
+            case 2:
+                switch (depth)
+                {
+                case 8, 16:
+                    write(depth, "-bit ");
                     break;
-                case 3:
-                    switch (depth)
-                    {
-                        case 1, 2, 4, 8:
-                            write("8-bit ");
-                            break;
-                        default: break;
-                    }
-                    write("PLTE Palette");
+                default: break;
+                }
+                write("RGB");
+                break;
+            case 3:
+                switch (depth)
+                {
+                case 1, 2, 4, 8:
+                    write("8-bit ");
                     break;
-                case 4:
-                    switch (depth)
-                    {
-                        case 8, 16:
-                            write(depth, "-bit ");
-                            break;
-                        default: break;
-                    }
-                    write("Grayscale+Alpha");
+                default: break;
+                }
+                write("PLTE Palette");
+                break;
+            case 4:
+                switch (depth)
+                {
+                case 8, 16:
+                    write(depth, "-bit ");
                     break;
-                case 6:
-                    switch (depth)
-                    {
-                        case 8, 16:
-                            write(depth, "-bit ");
-                            break;
-                        default: break;
-                    }
-                    write("RGBA");
+                default: break;
+                }
+                write("Grayscale+Alpha");
+                break;
+            case 6:
+                switch (depth)
+                {
+                case 8, 16:
+                    write(depth, "-bit ");
                     break;
-                default: write("Invalid color type"); break;
+                default: break;
+                }
+                write("RGBA");
+                break;
+            default: write("Invalid color type"); break;
             }
 
             write(", ");
@@ -127,7 +128,8 @@ void scan_png(File file) // Big Endian
     }
 }
 
-void scan_gif(File file)
+/// Scan a GIF image
+void scan_gif()
 { // http://www.fileformat.info/format/gif/egff.htm
     struct gif_header { align(1):
         char[3] magic;
@@ -140,7 +142,7 @@ void scan_gif(File file)
     }
 
     gif_header h;
-    scpy(file, &h, h.sizeof, true);
+    scpy(CurrentFile, &h, h.sizeof, true);
 
     switch (h.version_[1])
     { // 87a, 89a
@@ -179,7 +181,8 @@ void scan_gif(File file)
     writeln();
 }
 
-void scan_bpg(File file)
+/// Scan a BPG image
+void scan_bpg()
 { // Big Endian
     report("Better Portable Graphics image");
 
@@ -243,7 +246,8 @@ void scan_bpg(File file)
     }*/
 }
 
-void scan_flif(File file)
+/// Scan a FLIF image
+void scan_flif()
 {
     report("Free Lossless Image Format image");
 

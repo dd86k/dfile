@@ -52,14 +52,11 @@ private enum {
     NESOLO = 0x0001  /* Solo data */
 }
 
-/**
- * 
- * Params: file = Input file
- */
-void scan_ne(File file)
+/// Scan a NE executable
+void scan_ne()
 {
     ne_hdr h;
-    scpy(file, &h, h.sizeof);
+    scpy(CurrentFile, &h, h.sizeof);
 
     if (More)
     {

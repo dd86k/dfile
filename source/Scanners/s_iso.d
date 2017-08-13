@@ -5,93 +5,46 @@
 module s_iso;
 
 import std.stdio, dfile, utils;
+import core.stdc.stdio : fseek, FILE, SEEK_SET;
 
-enum ISO = "CD001";
+enum ISO = "CD001"; /// ISO signature
+private enum BLOCK_SIZE = 1024; // Half a block
+/*
+ * ISO strings
+ */
+    // PRIMARY_VOL_DESC
+private string label,
+    system, voliden,
+    copyright, publisher, app, abst, biblio,
+    ctime, mtime, etime, eftime,
+    // BOOT
+    bootsysiden, bootiden;
+private bool bootable;
+private long volume_size;
+private enum { // volume type
+    BOOT = 0,
+    PRIMARY_VOL_DESC,
+    /*SUPP_VOL_DESC,
+    VOL_PART_DESC,
+    VOL_TER = 255*/
+}
 
-void scan_iso(File file)
+/// Scan an ISO file
+void scan_iso()
 {
-    enum { // volume type
-        BOOT = 0,
-        PRIMARY_VOL_DESC,
-        /*SUPP_VOL_DESC,
-        VOL_PART_DESC,
-        VOL_TER = 255*/
-    }
-    enum s = 1024; // Half the data
-    ulong fs = file.size;
-    long volume_size;
-    int t;
-    char[s] buf;
-    bool bootable;
-    /*
-     * ISO strings
-     */
-        // PRIMARY_VOL_DESC
-    string label,
-        system, voliden,
-        copyright, publisher, app, abst, biblio,
-        ctime, mtime, etime, eftime,
-        // BOOT
-        bootsysiden, bootiden;
-    file.seek(0x8000);
-    goto ISO_READ;
-ISO_P0:
-    if (fs < 0x8800) goto ISO_END;
-    file.seek(0x8800);
-    goto ISO_READ;
-ISO_P1:
-    if (fs < 0x9000) goto ISO_END;
-    file.seek(0x9000);
-ISO_READ:
-    file.rawRead(buf);
-    if (buf[1..6] == ISO)
-        switch (buf[0])
-        {
-            case BOOT:
-                bootable = true;
-                if (More)
-                {
-                    bootsysiden = isostr(buf[7 .. 39]);
-                    bootiden = isostr(buf[39 .. 71]);
-                }
-                break;
-            case PRIMARY_VOL_DESC:
-                label = isostr(buf[40 .. 71]);
-                uint size = make_uint(buf[80..84]);
-                ushort blocksize = make_ushort(buf[128..130]);
-                volume_size = size * blocksize;
-                if (More)
-                {
-                    system = isostr(buf[8 .. 40]);
-                    voliden = isostr(buf[190 .. 318]);
-                    publisher = isostr(buf[318 .. 446]);
-                    app = isostr(buf[574 .. 702]);
-                    copyright = isostr(buf[702 .. 739]);
-                    abst = isostr(buf[739 .. 776]);
-                    biblio = isostr(buf[776 .. 813]);
-                    ctime = isostr(buf[813 .. 830]);
-                    mtime = isostr(buf[830 .. 847]);
-                    etime = isostr(buf[847 .. 864]);
-                    eftime = isostr(buf[864 .. 881]);
-                }
-                break;
-            default:
-        }
-    switch (t++) // Dumb system but hey, good stuff.
-    {
-        case  0: goto ISO_P0;
-        case  1: goto ISO_P1;
-        default: goto ISO_END;
-    }
-ISO_END:
+    char[BLOCK_SIZE] buf;
+    FILE* fp = CurrentFile.getFP;
+
+    if (check_seek(0x8000, buf, fp)) goto ISO_DONE;
+    if (check_seek(0x8800, buf, fp)) goto ISO_DONE;
+    if (check_seek(0x9000, buf, fp)) goto ISO_DONE;
+
+ISO_DONE:
     report("ISO-9660 CD/DVD image", false);
-    if (label)
-        write(` "`, label, `"`);
-    if (volume_size)
-        write(", ", formatsize(volume_size));
-    if (bootable)
-        write(", Bootable");
-    writeln();
+    if (label) writef(` "%s"`, label);
+    if (volume_size) write(", ", formatsize(volume_size));
+    if (bootable) write(", Bootable");
+    writeln;
 
     if (More)
     {
@@ -111,7 +64,56 @@ ISO_END:
     }
 }
 
-string isodate(string stamp)
+/**¸
+ * Returns: Returns true to stop.
+ */
+private bool check_seek(long pos, char[1024] buf, FILE* fp)
+{
+    // OKAY to cast to int since we only check up to 9000H
+    if (fseek(fp, cast(int)pos, SEEK_SET)) return true;
+    CurrentFile.seek(pos);
+    CurrentFile.rawRead(buf);
+    if (buf[1..6] == ISO) scan_block(&buf[0]);
+    return false;
+}
+
+private void scan_block(char* buf)
+{
+    switch (buf[0])
+    {
+    case BOOT:
+        bootable = true;
+        if (More)
+        {
+            bootsysiden = isostr(buf[7 .. 39]);
+            bootiden = isostr(buf[39 .. 71]);
+        }
+        break;
+    case PRIMARY_VOL_DESC:
+        label = isostr(buf[40 .. 71]);
+        const uint size = make_uint(buf[80..84]);
+        const ushort blocksize = make_ushort(buf[128..130]);
+        volume_size = size * blocksize;
+        if (More)
+        {
+            system = isostr(buf[8 .. 40]);
+            voliden = isostr(buf[190 .. 318]);
+            publisher = isostr(buf[318 .. 446]);
+            app = isostr(buf[574 .. 702]);
+            copyright = isostr(buf[702 .. 739]);
+            abst = isostr(buf[739 .. 776]);
+            biblio = isostr(buf[776 .. 813]);
+            ctime = isostr(buf[813 .. 830]);
+            mtime = isostr(buf[830 .. 847]);
+            etime = isostr(buf[847 .. 864]);
+            eftime = isostr(buf[864 .. 881]);
+        }
+        break;
+    default:
+    }
+}
+
+private string isodate(string stamp)
 {
     import std.format : format;
     return format("%s/%s/%s %s:%s:%s.%s+%d",

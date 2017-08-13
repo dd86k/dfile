@@ -7,7 +7,8 @@ module s_models;
 import std.stdio, dfile, utils;
 
 // https://gist.github.com/ulrikdamm/8274171
-void scan_pmx(File file)
+/// Scan a PMX model
+void scan_pmx()
 {
     struct pmx_hdr { align(1):
         //char[4] sig;
@@ -24,7 +25,7 @@ void scan_pmx(File file)
     }
 
     pmx_hdr h;
-    scpy(file, &h, h.sizeof);
+    scpy(CurrentFile, &h, h.sizeof);
 
     report("PMX model v", false);
     write(h.ver, " ", h.char_encoding ? "UTF-8" : "UTF-16");
@@ -34,20 +35,20 @@ void scan_pmx(File file)
         try
         {
             uint l;
-            scpy(file, &l, l.sizeof);
+            scpy(CurrentFile, &l, l.sizeof);
             writefln(" -- l : %X", l);
-            file.seek(l, SEEK_CUR); // Skip Japanese name
-            scpy(file, &l, l.sizeof);
+            CurrentFile.seek(l, SEEK_CUR); // Skip Japanese name
+            scpy(CurrentFile, &l, l.sizeof);
             writefln(" -- l : %X", l);
             if (l) {
                 if (h.char_encoding)
                 { // UTF-8
-                    char[] c = file.rawRead(new char[l]);
+                    char[] c = CurrentFile.rawRead(new char[l]);
                     write(c);
                 }
                 else
                 { // UTF-16
-                    wchar[] c = file.rawRead(new wchar[l/2]);
+                    wchar[] c = CurrentFile.rawRead(new wchar[l/2]);
                     write(c);
                 }
             }
