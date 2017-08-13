@@ -6,14 +6,15 @@ module Etc;
 
 import std.stdio : File;
 import dfile;
+import core.stdc.stdio : fseek, FILE, SEEK_SET;
 
 /// Search for signatures that's not at the beginning of the file.
 /// Params: file = File structure.
 void scan_etc(File file)
 {
-    const ulong fl = file.size;
+    FILE* fp = file.getFP;
 
-    if (fl > 0x40)
+    if (fseek(fp, 0x3C, SEEK_SET) == 0)
     { // Palm Database Format
         import s_mobi : palmdb_name, scan_palmdoc, scan_mobi;
         enum { // 4 bytes for type, 4 bytes for creator
@@ -33,7 +34,6 @@ void scan_etc(File file)
             WEASEL =     "zTXTGPlm", WORDSMITH =  "BDOCWrdS"
         }
         char[8] b;
-        file.seek(0x3C);
         file.rawRead(b);
         switch (b)
         {
@@ -145,11 +145,10 @@ void scan_etc(File file)
     }
     else goto CONTINUE;
 
-    if (fl > 0x108)
+    if (fseek(fp, 0x101, SEEK_SET) == 0)
     { // Tar files
         import s_tar : scan_tar, Tar, GNUTar;
         char[Tar.length] b;
-        file.seek(0x101);
         file.rawRead(b);
         if (b == Tar || b == GNUTar) {
             scan_tar(file);
@@ -158,19 +157,18 @@ void scan_etc(File file)
     }
     else goto CONTINUE;
 
-    if (fl > 0x9007)
+    if (fseek(fp, 0x8001, SEEK_SET) == 0)
     { // ISO files
         import s_iso : scan_iso, ISO;
         char[5] b;
-        file.seek(0x8001);
         file.rawRead(b);
         if (b == ISO) goto IS_ISO;
 
-        file.seek(0x8801);
+        if (fseek(fp, 0x8801, SEEK_SET)) goto CONTINUE;
         file.rawRead(b);
         if (b == ISO) goto IS_ISO;
 
-        file.seek(0x9001);
+        if (fseek(fp, 0x9001, SEEK_SET)) goto CONTINUE;
         file.rawRead(b);
         if (b == ISO) goto IS_ISO;
         goto NOT_ISO;
