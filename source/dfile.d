@@ -1794,7 +1794,9 @@ void report_text()
     report("Text file");
 }
 
-/*
+version (Windows) {
+version (Symlink) {
+/**
  * Some Microsoft thing used for DeviceIoCtl.
  * Params:
  *   t = Device type
@@ -1803,121 +1805,91 @@ void report_text()
  *   a = Access
  * Returns: BOOL
  */
-/*version (Windows)
-uint CTL_CODE(uint d, uint f, uint m, uint a) {
+BOOL CTL_CODE(uint d, uint f, uint m, uint a) {
     return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
-}*/
+}
+import core.sys.windows.windows;
+enum FILE_ANY_ACCESS = 0; /// 
+enum METHOD_BUFFERED = 0; /// 
+enum FILE_DEVICE_FILE_SYSTEM = 0x00000009; /// 
+enum FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000; /// 
+enum FILE_FLAG_BACKUP_SEMANTICS   = 0x02000000; /// 
+enum FSCTL_GET_REPARSE_POINT = CTL_CODE( /// FSCTL request, get reparse point
+        FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS
+    );
+/// 
+struct WIN32_SYMLINK_REPARSE_DATA_BUFFER {
+    DWORD             ReparseTag; /// Tag
+    DWORD             ReparseDataLength; /// Data length
+    WORD              Dummy; /// Unused
+    WORD              ReparseTargetLength; ///  Target length
+    WORD              ReparseTargetMaximumLength; /// Target maximum length
+    WORD              Dummy1; /// Unused
+    WCHAR[MAX_PATH]   ReparseTarget; /// Target path.
+}
+} // version (Symlink)
+} // version (Windows)
 
 /// Report a symbolic link.
 /// Params: linkname = Path to the link
 void report_link(string linkname)
 {
-    if (ShowingName)
-        write(linkname, ": ");
-
-    //TODO: Symlink location
-    // WINDOWS:
-//https://msdn.microsoft.com/en-us/library/aa365511(v=VS.85).aspx
-
-    write("Soft symbolic link");
+    report("Soft symbolic link", false, linkname);
 
     version (Windows)
-    { // Obviously this won't work.
-        /+import core.sys.windows.windows;
-        import std.utf;
-        import std.array;
-        // WinIoCtl.h
-        enum FILE_DEVICE_FILE_SYSTEM = 0x00000009;
-        enum METHOD_BUFFERED = 0;
-        enum FILE_ANY_ACCESS = 0;
-        enum FSCTL_GET_REPARSE_POINT =
-        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS);
-        struct REPARSE_JUNCTION_DATA_BUFFER {
-            ULONG ReparseTag;
-            USHORT ReparseDataLength;
-            USHORT Reserved;
-            union {
-                struct SymbolicLinkReparseBuffer{
-                    USHORT SubstituteNameOffset;
-                    USHORT SubstituteNameLength;
-                    USHORT PrintNameOffset;
-                    USHORT PrintNameLength;
-                    ULONG  Flags;
-                    WCHAR[1]  PathBuffer;
-                }
-                struct MountPointReparseBuffer{
-                    USHORT SubstituteNameOffset;
-                    USHORT SubstituteNameLength;
-                    USHORT PrintNameOffset;
-                    USHORT PrintNameLength;
-                    WCHAR[1]  PathBuffer;
-                }
-                struct GenericReparseBuffer{
-                    UCHAR[1] DataBuffer;
-                }
-            }
+    { // Works half the time, see the Wiki post.
+    version (Symlink)
+    {
+        HANDLE hFile;
+        DWORD returnedLength;
+        WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
+
+        const char* p = &linkname[0];
+        SECURITY_ATTRIBUTES* sa; // Default
+
+        hFile = CreateFileA(p, GENERIC_READ, 0u,
+            sa, OPEN_EXISTING,
+            FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, cast(void*)0);
+        if (hFile == INVALID_HANDLE_VALUE) { //TODO: Check why LDC2 fails here.
+            /* Error creating directory */
+            /* TclWinConvertError(GetLastError()); */
+            return;
         }
+        /* Get the link */
+        if (!DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, &buffer,
+                WIN32_SYMLINK_REPARSE_DATA_BUFFER.sizeof, &returnedLength, NULL)) {
+                /* Error setting junction */
+                /* TclWinConvertError(GetLastError()); */
+                CloseHandle(hFile);
+                return;
+            }
 
-        immutable wchar[] ws = linkname.byUTF!wchar().array;
+        CloseHandle(hFile);
 
-        HANDLE f = CreateFile(&ws[0],
-            GENERIC_READ | GENERIC_WRITE,
-            0,
-            NULL,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_READONLY | FILE_FLAG_BACKUP_SEMANTICS,
-            NULL
-        );
-
-        DWORD e = GetLastError;
-
-        if (e)
-        {
-            writefln("Error %X", e);
+        if (!IsReparseTagValid(buffer.ReparseTag)) {
+            /* Tcl_SetErrno(EINVAL); */
             return;
         }
 
-        //File f = File(linkname);
-        DWORD bytesRet;
+        DWORD wstrlen(const(void)* p) {
+            DWORD s;
+            wchar* wp = cast(wchar*)p;
+            while (*wp++ != wchar.init) ++s;
+            return s;
+        }
 
-        REPARSE_JUNCTION_DATA_BUFFER rbuf;
-        if (DeviceIoControl(f,
-            FSCTL_GET_REPARSE_POINT,
-            NULL,
-            0,
-            &rbuf,
-            rbuf.sizeof,
-            &bytesRet,
-            NULL)) { // Not-zero (BOOL)
-            writeln("!!!!! YES!? !!!!!!");
-        } else {
-            /*
-                Usually returns 0x00001126
-                ERROR_NOT_A_REPARSE_POINT
-                The file or directory is not a reparse point.
-            */
-            writefln("ERROR: %08X (%d B ret)", GetLastError, bytesRet);
-        }+/
-        // Solution 2
-        /*WIN32_FIND_DATA wd;
-
-        OSVERSIONINFO winver;
-        if (GetVersionEx(&winver))
-        {
-            if (winver.dwMajorVersion >= 6)
-            {
-                import std.utf : toUTF16z, count;
-                wchar[MAX_PATH] ws;
-                HANDLE = FindFirstFileNameW(
-                    linkname.toUTF16z,
-                    0,
-                    MAX_PATH,
-                    &ws[0]
-                );
-
-                writeln(ws);
-            }
-        }*/
+        write(" to ");
+        stdout.flush; // on x86-dmd builds, used to move cursor
+        const(void)* wp = &buffer.ReparseTarget[2];
+        DWORD c;
+        WriteConsoleW(
+            GetStdHandle(STD_OUTPUT_HANDLE),
+            wp,
+            wstrlen(wp) / 2,
+            &c,
+            cast(void*)0
+        );
+    }
     }
     version (Posix)
     {

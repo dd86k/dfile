@@ -8,10 +8,10 @@ import std.stdio, std.file, std.getopt;
 import dfile;
 
 enum PROJECT_VERSION = "0.7.0", /// Project version.
-     PROJECT_NAME = "dfile";    /// Usually executable name.
+     PROJECT_NAME = "dfile";    /// Project name, usually executable name.
 
 debug { } else
-{ // --DRT-gcopt related
+{ // --DRT-gcopt  related
     extern(C) __gshared bool
         rt_envvars_enabled = false, /// Disables runtime environment variables
         rt_cmdline_enabled = false; /// Disables runtime CLI
@@ -65,14 +65,14 @@ private int main(string[] args)
 	}
 
     foreach (string filename; args[1..$]) {
+        // Overrides glob in-case the filename contains specical characters
         if (exists(filename)) {
             prescan(filename, cont);
         } else {
             if (glob) {
                 import std.path : globMatch, dirName;
                 int found; // Number of files
-                foreach (DirEntry e;
-                    dirEntries(dirName(filename),
+                foreach (DirEntry e; dirEntries(dirName(filename),
                     recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
                     immutable char[] s = e.name;
                     if (globMatch(s, filename)) {
