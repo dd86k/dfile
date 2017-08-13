@@ -5,21 +5,22 @@
 module dfile;
 
 version (X86)
-    version = X86_ALL;
+    version = X86_ANY;
 version (X86_64)
-    version = X86_ALL;
+    version = X86_ANY;
 
 import std.stdio;
-import s_elf : scan_elf;
+import s_elf    : scan_elf;
 import s_fatelf : scan_fatelf;
-import s_mz : scan_mz;
-import s_mach : scan_mach;
-import s_images, Etc, utils;
+import s_mz     : scan_mz;
+import s_mach   : scan_mach;
+import Etc      : scan_etc;
+import s_images, utils;
 
 bool More, /// -m : More flag
      ShowingName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
-File CurrentFile; /// Current file handle.
+static File CurrentFile; /// Current file handle.
 
 /**
  * Prints debugging message with a FILE<at>LINE: MSG formatting.
@@ -48,7 +49,6 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
 
 /**
  * Scanner entry point.
- * Params: file = File handle
  */
 void scan()
 {
@@ -60,9 +60,10 @@ void scan()
     version (X86_ANY) {
         uint s;
         asm pure @nogc nothrow {
-            mov s, dword ptr sig;
+            mov ECX, dword ptr sig;
+            mov s, ECX;
         }
-    } else uint s = *cast(uint*)&sig[0]; // As fallback, 2 instructions
+    } else uint s = *cast(uint*)&sig[0]; // As fallback
 
     debug writefln("Magic: %08X", s);
 

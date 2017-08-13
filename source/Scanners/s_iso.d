@@ -117,6 +117,6 @@ private string isodate(string stamp)
 {
     import std.format : format;
     return format("%s/%s/%s %s:%s:%s.%s+%d",
-        stamp[0..4], stamp[4..6], stamp[6..8],
-        stamp[8..10], stamp[10..12], stamp[12..14], stamp[14..16], stamp[16] * 15);
+        stamp[0..4], stamp[4..6], stamp[6..8], stamp[8..10],
+        stamp[10..12], stamp[12..14], stamp[14..16], stamp[16] * 15);
 }
