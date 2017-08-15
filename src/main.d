@@ -117,9 +117,9 @@ FILE:
             debug dbg("Opening file...");
             CurrentFile = File(filename, "rb");
         }
-        catch (ErrnoException)
+        catch (ErrnoException ex)
         {
-            stderr.writeln("Couldn't open file, exiting.");
+            stderr.writefln("ERROR: %s.", ex.msg);
             return;
         }
 
