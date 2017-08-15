@@ -118,8 +118,8 @@ FILE:
             CurrentFile = File(filename, "rb");
         }
         catch (ErrnoException)
-        { // At this point, it is a broken symbolic link.
-            stderr.writeln("Couldn't open target file from symlink, exiting.");
+        {
+            stderr.writeln("Couldn't open file, exiting.");
             return;
         }
 
@@ -138,7 +138,7 @@ FILE:
 /// Print description and synopsis.
 void PrintHelp()
 {
-    writeln("Determine the file type via magic.");
+    writeln("Determine the file type via pre-determined magic.");
     writefln("  Usage: %s [options] file", PROJECT_NAME);
     writefln("         %s {-h|--help|-v|--version}", PROJECT_NAME);
 }
