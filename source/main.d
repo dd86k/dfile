@@ -35,15 +35,15 @@ private int main(string[] args)
             config.bundling, config.caseSensitive,
             "b|base10", "Use decimal metrics instead of a binary base.", &Base10,
             config.bundling, config.caseSensitive,
-            "c|continue", "Continue on soft symlink.", &cont,
+            "c|continue", "Continue on symlink.", &cont,
             config.bundling, config.caseSensitive,
 			"m|more", "Print more information if available.", &More,
             config.bundling, config.caseSensitive,
-			"n|name", "Prepend filename to result.", &ShowingName,
+			"s|showname", "Prepend filename to result.", &ShowingName,
             config.bundling, config.caseSensitive,
             "g|glob", "Use file match globbing.", &glob,
             config.bundling, config.caseSensitive,
-			"r|recursive", "Recursive (glob).", &recursive,
+			"r|recursive", "Recursive (with --glob).", &recursive,
             "v|version", "Print version information.", &PrintVersion
         );
 	} catch (GetOptException ex) {
