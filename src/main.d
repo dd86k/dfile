@@ -7,12 +7,12 @@ module main;
 import std.stdio, std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.7.0", /// Project version.
+enum PROJECT_VERSION = "0.8.0", /// Project version.
      PROJECT_NAME = "dfile";    /// Project name, usually executable name.
 
 debug { } else
 { // --DRT-gcopt  related
-    extern(C) __gshared bool
+    private extern(C) __gshared bool
         rt_envvars_enabled = false, /// Disables runtime environment variables
         rt_cmdline_enabled = false; /// Disables runtime CLI
 }
