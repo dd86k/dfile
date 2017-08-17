@@ -36,10 +36,10 @@ void scan_pmx()
         {
             uint l;
             scpy(CurrentFile, &l, l.sizeof);
-            writefln(" -- l : %X", l);
+            printf(" -- l : %X\n", l);
             CurrentFile.seek(l, SEEK_CUR); // Skip Japanese name
             scpy(CurrentFile, &l, l.sizeof);
-            writefln(" -- l : %X", l);
+            printf(" -- l : %X\n", l);
             if (l) {
                 if (h.char_encoding)
                 { // UTF-8

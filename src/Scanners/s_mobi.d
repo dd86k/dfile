@@ -31,8 +31,8 @@ private struct mobi_hdr
 
 private enum STARTPOS = 944;
 
-void palmdb_name()
-{
+/// Get PalmDB name
+void palmdb_name() {
     char[32] name;
     CurrentFile.rewind();
     CurrentFile.rawRead(name);
@@ -40,11 +40,11 @@ void palmdb_name()
     size_t n;
     while (*p++ != '\0') ++n;
     // %s takes .length instead of a null terminator
-    writefln(` "%s"`, name[0..n]);
+    writeln(` "`, name[0..n], `"`);
 }
 
-void scan_palmdoc()
-{
+/// Scan PalmDB file
+void scan_palmdoc() {
     palmdoc_hdr h;
     {
         import core.stdc.string : memcpy;
@@ -64,6 +64,7 @@ void scan_palmdoc()
     palmdb_name();
 }
 
+/// Scan a MOBI file
 void scan_mobi()
 {
     palmdoc_hdr h;

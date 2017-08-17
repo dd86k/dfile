@@ -60,6 +60,7 @@ void scan_ne()
 
     if (More)
     {
+        //TODO: remove writef
         writefln("ne_magic       : %s", h.ne_magic);
         writefln("ne_ver         : %Xh", h.ne_ver);
         writefln("ne_rev         : %Xh", h.ne_rev);

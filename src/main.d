@@ -119,7 +119,7 @@ FILE:
         }
         catch (ErrnoException ex)
         {
-            stderr.writefln("ERROR: %s.", ex.msg);
+            stderr.writeln("ERROR: ", ex.msg, ".");
             return;
         }
 
@@ -139,8 +139,8 @@ FILE:
 void PrintHelp()
 {
     writeln("Determine the file type via pre-determined magic.");
-    writefln("  Usage: %s [options] file", PROJECT_NAME);
-    writefln("         %s {-h|--help|-v|--version}", PROJECT_NAME);
+    writeln("  Usage: ", PROJECT_NAME, " [options] file");
+    writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version}");
 }
 
 /// Print program version and exit.

@@ -7,9 +7,9 @@ module s_le;
 import std.stdio;
 import dfile;
 import utils;
+import std.string : format;
 
-private struct e32_hdr
-{
+private struct e32_hdr {
     char[2] e32_magic; // "LX" or "LE"
     ubyte e32_border;  // Byte order
     ubyte e32_worder;  // Word order
@@ -53,37 +53,23 @@ void scan_le()
     if (More)
     {
         writeln("e32_magic : ",  h.e32_magic);
-        writefln("e32_border: %Xh", h.e32_border);
-        writefln("e32_worder: %Xh", h.e32_worder);
-        writefln("e32_level : %Xh", h.e32_level);
-        writefln("e32_cpu   : %Xh", h.e32_cpu);
-        writefln("e32_os    : %Xh", h.e32_os);
-        writefln("e32_ver   : %Xh", h.e32_ver);
-        writefln("e32_mflags: %Xh", h.e32_mflags);  // Module flags
+        printf("e32_border: %Xh\n", h.e32_border);
+        printf("e32_worder: %Xh\n", h.e32_worder);
+        printf("e32_level : %Xh\n", h.e32_level);
+        printf("e32_cpu   : %Xh\n", h.e32_cpu);
+        printf("e32_os    : %Xh\n", h.e32_os);
+        printf("e32_ver   : %Xh\n", h.e32_ver);
+        printf("e32_mflags: %Xh\n", h.e32_mflags);  // Module flags
     }
 
-    {
-        import std.string : format;
-        report(format("%s ", h.e32_magic), false);
-    }
+    report(format("%s ", h.e32_magic), false);
 
-    switch (h.e32_os)
-    {
-    default:
-        write("Unknown ");
-        break;
-    case OS2:
-        write("OS/2 ");
-        break;
-    case Windows:
-        write("Windows ");
-        break;
-    case DOS4:
-        write("DOS 4.x ");
-        break;
-    case Windows386:
-        write("Windows 386 ");
-        break;
+    switch (h.e32_os) {
+    default: write("Unknown "); break;
+    case OS2: write("OS/2 "); break;
+    case Windows: write("Windows "); break;
+    case DOS4: write("DOS 4.x "); break;
+    case Windows386: write("Windows 386 "); break;
     }
 
     if (h.e32_mflags & Library)
@@ -99,20 +85,11 @@ void scan_le()
 
     write(" for ");
 
-    switch (h.e32_cpu)
-    {
-    default:
-        write("Unknown");
-        break;
-    case i286:
-        write("i286");
-        break;
-    case i386:
-        write("i386");
-        break;
-    case i486:
-        write("i486");
-        break;
+    switch (h.e32_cpu) {
+    default: write("Unknown"); break;
+    case i286: write("i286"); break;
+    case i386: write("i386"); break;
+    case i486: write("i486"); break;
     }
 
     write(" machines, ");

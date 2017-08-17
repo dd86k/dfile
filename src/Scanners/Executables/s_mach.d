@@ -14,7 +14,7 @@ import utils;
 }*/
 
 private struct mach_header
-{ // 64-bit version just adds a reserved field
+{ // 64-bit version just adds a reserved field at the end.
     uint magic;          /* mach magic number identifier */
     cpu_type_t cputype;  /* cpu specifier */
     uint cpusubtype;     /* machine specifier */
@@ -24,14 +24,12 @@ private struct mach_header
     flag_t flags;        /* flags */
 }
 
-private struct fat_header
-{
+private struct fat_header {
     uint magic;
     uint nfat_arch;
 }
 
-private struct fat_arch
-{
+private struct fat_arch {
     cpu_type_t cputype;
     uint cpusubtype;
     uint offset;
@@ -39,8 +37,7 @@ private struct fat_arch
     uint align_;
 }
 
-private enum cpu_type_t : uint
-{
+private enum cpu_type_t : uint {
     ANY = -1,
     VAX = 1,
     ROMP = 2,
@@ -70,8 +67,7 @@ private enum cpu_type_t : uint
 // =============================
 
 // VAX subtypes
-private enum SUBTYPE_VAX
-{
+private enum SUBTYPE_VAX {
     VAX_ALL = 0,
     VAX780 = 1,
     VAX785 = 2,
@@ -88,8 +84,7 @@ private enum SUBTYPE_VAX
 }
 
 // ROMP subtypes
-private enum SUBTYPE_ROMP
-{
+private enum SUBTYPE_ROMP {
     RT_ALL = 0,
     RT_PC = 1,
     RT_APC = 2,
@@ -97,8 +92,7 @@ private enum SUBTYPE_ROMP
 }
 
 // 32032/32332/32532 subtypes
-private enum SUBTYPE_32032
-{
+private enum SUBTYPE_32032 {
     MMAX_ALL = 0,
     MMAX_DPC = 1, /* 032 CPU */
     SQT = 2,
@@ -108,8 +102,7 @@ private enum SUBTYPE_32032
 }
 
 // x86 subtypes
-private enum SUBTYPE_I386
-{
+private enum SUBTYPE_I386 {
     I386_ALL = 3,
     X86_64_ALL = I386_ALL,
     i386 = 3,
@@ -126,8 +119,7 @@ private enum SUBTYPE_I386
 private uint SUBTYPE_INTEL(short f, short m) { return f + (m << 4); }
 
 // MIPS subty
-private enum SUBTYPE_MIPS
-{
+private enum SUBTYPE_MIPS {
     ALL = 0,
     R2300 = 1,
     R2600 = 2,
@@ -136,8 +128,7 @@ private enum SUBTYPE_MIPS
 }
 
 // 680x0 subtypes (m68k)
-private enum SUBTYPE_680x0
-{
+private enum SUBTYPE_680x0 {
     MC680x0_ALL = 1,
     MC68030 = 1,
     MC68040 = 2,
@@ -145,16 +136,14 @@ private enum SUBTYPE_680x0
 }
 
 // HPPA subtypes
-private enum SUBTYPE_HPPA
-{
+private enum SUBTYPE_HPPA {
     HPPA7100 = 0,
     HPPA7100LC = 1,
     ALL = 0,
 }
 
 // Acorn subtypes
-private enum SUBTYPE_ARM
-{
+private enum SUBTYPE_ARM {
     ALL = 0,
     A500_ARCH = 1,
     A500 = 2,
@@ -168,8 +157,7 @@ private enum SUBTYPE_ARM
 }
 
 // MC88000 subtypes
-private enum SUBTYPE_MC88000
-{
+private enum SUBTYPE_MC88000 {
     MC88000 = 0, //_ALL
     MMAX_JPC = 1,
     MC88100 = 1,
@@ -177,50 +165,43 @@ private enum SUBTYPE_MC88000
 }
 
 // MC98000 (PowerPC) subtypes
-private enum SUBTYPE_MC98000
-{
+private enum SUBTYPE_MC98000 {
     MC98000 = 0, //_ALL
     MC98601 = 1,
 }
 
 // I860 subtypes
-private enum SUBTYPE_I860
-{
+private enum SUBTYPE_I860 {
     ALL = 0,
     i860 = 1,
 }
 
 // I860_LITTLE subtypes
-private enum SUBTYPE_I860_LITTLE
-{
+private enum SUBTYPE_I860_LITTLE {
     ALL = 0,
     LITTLE = 1
 }
 
 // RS6000 subtypes
-private enum SUBTYPE_RS6000
-{
+private enum SUBTYPE_RS6000 {
     RS6000_ALL = 0,
     RS6000 = 1,
 }
 
 // Sun4 subtypes (port done at CMU (?))
-private enum SUBTYPE_Sun4
-{
+private enum SUBTYPE_Sun4 {
     SUN4_ALL = 0,
     SUN4_260 = 1,
     SUN4_110 = 2,
 }
 
 // SPARC subtypes
-private enum SUBTYPE_SPARC
-{
+private enum SUBTYPE_SPARC {
     ALL = 0
 }
 
 // PowerPC subtypes
-private enum SUBTYPE_PowerPC
-{
+private enum SUBTYPE_PowerPC {
     ALL	 = 0,
     _601 = 1,
     _602 = 2,
@@ -237,8 +218,7 @@ private enum SUBTYPE_PowerPC
 }
 
 // VEO subtypes
-private enum SUBTYPE_VEO
-{
+private enum SUBTYPE_VEO {
     VEO_1 = 1,
     VEO_2 = 2,
     VEO_3 = 3,
@@ -249,8 +229,7 @@ private enum SUBTYPE_VEO
 // ========================
 /// File types
 // ========================
-private enum filetype_t : uint
-{
+private enum filetype_t : uint {
     Unknown        = 0,
     MH_OBJECT      = 0x1,
     MH_EXECUTE     = 0x2,
@@ -265,8 +244,7 @@ private enum filetype_t : uint
     MH_KEXT_BUNDLE = 0xB,
 }
 
-private enum flag_t : uint // Reserved for future use
-{
+private enum flag_t : uint { // Reserved for future use
     MH_NOUNDEFS                = 0x00000001,
     MH_INCRLINK                = 0x00000002,
     MH_DYLDLINK                = 0x00000004,
@@ -305,10 +283,8 @@ private enum : uint {
 }
 
 /// Scan a Mach-O executable
-void scan_mach()
-{
+void scan_mach() {
     bool reversed, fat;
-
     uint sig;
     {
         uint[1] b;
@@ -324,8 +300,7 @@ void scan_mach()
 
     report("Mach-O ", false);
 
-    final switch (sig)
-    {
+    final switch (sig) {
         case MH_MAGIC:
             write("32-bit");
             break;
@@ -351,46 +326,34 @@ void scan_mach()
             break;
     }
 
-    if (fat) // Java prefers Fat files
-    {
+    if (fat) { // Java prefers Fat files
         fat_header fh;
         scpy(CurrentFile, &fh, fh.sizeof);
 
-        if (fh.nfat_arch)
-        {
+        if (fh.nfat_arch) {
             fat_arch fa;
             scpy(CurrentFile, &fa, fa.sizeof);
 
-            if (reversed)
-            {
+            if (reversed) {
                 cpu_type = cast(cpu_type_t)bswap(fa.cputype);
                 cpu_subtype = bswap(fa.cpusubtype);
-            }
-            else
-            {
+            } else {
                 cpu_type = fa.cputype;
                 cpu_subtype = fa.cpusubtype;
             }
-        }
-        else
-        {
+        } else {
             writeln(" binary file");
             return;
         }
-    }
-    else
-    {
+    } else {
         mach_header mh;
         scpy(CurrentFile, &mh, mh.sizeof);
 
-        if (reversed)
-        {
+        if (reversed) {
             filetype = cast(filetype_t)bswap(mh.filetype);
             cpu_type = cast(cpu_type_t)bswap(mh.cputype);
             cpu_subtype = bswap(mh.cpusubtype);
-        }
-        else
-        {
+        } else {
             filetype = mh.filetype;
             cpu_type = mh.cputype;
             cpu_subtype = mh.cpusubtype;
@@ -400,8 +363,7 @@ void scan_mach()
     if (!fat)
         write(' ');
 
-    switch (filetype)
-    {
+    switch (filetype) {
         default: // Fat files have no filetypes.
             if (!fat)
                 write("Unknown type");
@@ -441,65 +403,62 @@ void scan_mach()
             break;
     }
 
-    writef(" for %s (", cpu_type);
+    write(" for ", cpu_type, " (");
 
-    switch (cpu_type)
-    {
+    switch (cpu_type) {
     default:
         write("any");
         break;
     case cpu_type_t.VAX:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_VAX)cpu_subtype);
+            write(cast(SUBTYPE_VAX)cpu_subtype);
         else
             write("any");
         break;
     case cpu_type_t.ROMP:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_ROMP)cpu_subtype);
+            write(cast(SUBTYPE_ROMP)cpu_subtype);
         else
             write("any");
         break;
-    case cpu_type_t.NS32032:
-    case cpu_type_t.NS32332:
-    case cpu_type_t.NS32532:
+    case cpu_type_t.NS32032, cpu_type_t.NS32332, cpu_type_t.NS32532:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_32032)cpu_subtype);
+            write(cast(SUBTYPE_32032)cpu_subtype);
         else
             write("any");
         break;
     case cpu_type_t.I386:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_I386)cpu_subtype);
+            write(cast(SUBTYPE_I386)cpu_subtype);
         else
             write("any");
         break;
     case cpu_type_t.MIPS:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_MIPS)cpu_subtype);
+            write(cast(SUBTYPE_MIPS)cpu_subtype);
         else
             write("any");
         break;
     case cpu_type_t.MC680x0:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_680x0)cpu_subtype);
+            write(cast(SUBTYPE_680x0)cpu_subtype);
         else
             write("any");
         break;
     case cpu_type_t.HPPA:
-        writef("%s", cast(SUBTYPE_HPPA)cpu_subtype);
+        write(cast(SUBTYPE_HPPA)cpu_subtype);
         break;
     case cpu_type_t.ARM:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_680x0)cpu_subtype);
+            write(cast(SUBTYPE_680x0)cpu_subtype);
         else
             write("any");
         break;
     case cpu_type_t.MC88000:
-        writef("%s", cast(SUBTYPE_MC88000)cpu_subtype);
+        write(cast(SUBTYPE_MC88000)cpu_subtype);
         break;
     case cpu_type_t.MC98000:
-        writef("%s", cast(SUBTYPE_MC98000)cpu_subtype);
+        write(cast(SUBTYPE_MC98000)cpu_subtype);
         break;
     case cpu_type_t.I860:
         if (cpu_subtype) write("i860 (MSB)");
@@ -513,10 +472,9 @@ void scan_mach()
         if (cpu_type) write("RS6000");
         else write("any");
         break;
-    case cpu_type_t.POWERPC64:
-    case cpu_type_t.POWERPC:
+    case cpu_type_t.POWERPC64, cpu_type_t.POWERPC:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_PowerPC)cpu_subtype);
+            write(cast(SUBTYPE_PowerPC)cpu_subtype);
         else
             write("any");
         
@@ -525,7 +483,7 @@ void scan_mach()
         break;
     case cpu_type_t.VEO:
         if (cpu_subtype)
-            writef("%s", cast(SUBTYPE_VEO)cpu_subtype);
+            write(cast(SUBTYPE_VEO)cpu_subtype);
         else
             write("any");
         break;

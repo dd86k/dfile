@@ -77,8 +77,8 @@ void scan_mz()
     mz_hdr h;
     scpy(CurrentFile, &h, h.sizeof, true);
 
-    if (More)
-    {
+    if (More) {
+        //TODO: remove those writefln
         writefln("e_magic   : %Xh", h.e_magic);
         writefln("e_cblp    : %Xh", h.e_cblp);
         writefln("e_cp      : %Xh", h.e_cp);

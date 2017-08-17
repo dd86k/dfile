@@ -329,6 +329,7 @@ void scan_pe()
 
     if (More)
     {
+        //TODO: replace all writefln
         writefln("Machine type : %s", peh.Machine);
         writefln("Number of sections : %s", peh.NumberOfSymbols);
         writefln("Time stamp : %s", peh.TimeDateStamp);

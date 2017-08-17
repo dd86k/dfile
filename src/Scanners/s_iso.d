@@ -41,7 +41,7 @@ void scan_iso()
 
 ISO_DONE:
     report("ISO-9660 CD/DVD image", false);
-    if (label) writef(` "%s"`, label);
+    if (label) write(` "`, label, `"`);
     if (volume_size) write(", ", formatsize(volume_size));
     if (bootable) write(", Bootable");
     writeln;

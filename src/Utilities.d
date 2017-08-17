@@ -75,8 +75,8 @@ string isostr(char[] str) pure
  * Number utilities.
  */
 
-// https://en.wikipedia.org/wiki/Exponential-Golomb_coding
 //TODO: EXP-GOLOMB UTIL
+// https://en.wikipedia.org/wiki/Exponential-Golomb_coding
 /// Get a Exp-Golomb-Encoded number
 /*ulong expgol(uint n)
 {
@@ -262,6 +262,6 @@ uint make_uint(char[] buf) pure
 void print_array(void* arr, size_t length)
 {
     ubyte* p = cast(ubyte*)arr;
-    while (--length) writef("%02X ", *++p);
+    while (--length) printf("%02X ", *++p);
     writeln;
 }

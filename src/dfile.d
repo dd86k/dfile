@@ -14,6 +14,7 @@ import s_elf    : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz     : scan_mz;
 import s_mach   : scan_mach;
+import s_models : scan_pmx;
 import Etc      : scan_etc;
 import s_images, utils;
 
@@ -120,9 +121,7 @@ void scan()
     case 0x4D53454E: { // "NESM"
         char[1] b;
         CurrentFile.rawRead(b);
-
-        switch (b)
-        {
+        switch (b) {
         case x"1A": {
             struct nesm_hdr { align(1):
                 char[5] magic;
@@ -138,7 +137,7 @@ void scan()
 
             nesm_hdr h;
             scpy(CurrentFile, &h, h.sizeof, true);
-            
+
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
             else if (h.flag & 1)
@@ -146,24 +145,22 @@ void scan()
             else
                 report("PAL", false);
 
-            writef(" Nintendo Sound Format file with %d songs, using ", h.total_song);
+            write(" Nintendo Sound Format, ", h.total_song, " songs, ");
 
             if (h.chip & 1)
-                write("VRCVI");
+                printf("VRCVI");
             else if (h.chip & 0b10)
-                write("VRCVII");
+                printf("VRCVII");
             else if (h.chip & 0b100)
-                write("FDS");
+                printf("FDS");
             else if (h.chip & 0b1000)
-                write("MMC5");
+                printf("MMC5");
             else if (h.chip & 0b1_0000)
-                write("Namco 106");
+                printf("Namco 106");
             else if (h.chip & 0b10_0000)
-                write("Sunsoft FME-07");
-            else
-                write("no");
+                printf("Sunsoft FME-07");
 
-            writefln(" extra chip\n%s - %s\nCopyrights:%s",
+            writefln("\n%s - %s\nCopyrights:%s",
                 asciz(h.song_artist),
                 asciz(h.song_name),
                 asciz(h.song_copyright));
@@ -178,8 +175,7 @@ void scan()
     case 0x4350534B: { // "KSPC"
         char[1] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
             case x"1A": {
                 struct spc2_hdr { align(1):
                     char[5] magic;
@@ -191,8 +187,8 @@ void scan()
                 scpy(CurrentFile, &h, h.sizeof, true);
 
                 report("SNES SPC2 v", false);
-                writeln(h.majorver, ".", h.minorver, " file with",
-                    h.number, " of SPC entries");
+                printf("%d.%d file with %d of SPC entries",
+                    h.majorver, h.minorver, h.number);
             }
                 return;
             default:
@@ -202,7 +198,7 @@ void scan()
     }
 
     case 0x00010000:
-        report("Icon, ICO format");
+        report("Icon file, ICO format");
         return;
 
     case 0x08000100:
@@ -211,12 +207,10 @@ void scan()
 
     case 0x4B434142: // "BACK"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "MIKE":
             CurrentFile.rawRead(sig);
-            switch (sig)
-            {
+            switch (sig) {
             case "DISK":
                 report("AmiBack backup");
                 return;
@@ -240,8 +234,7 @@ void scan()
     case 0x002A4949: { // "II*\0"
         char[6] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
         case [0x10, 0, 0, 0, 'C', 'R']:
             report("Canon RAW Format Version 2 image (TIFF)");
             return;
@@ -286,11 +279,9 @@ void scan()
         return;
 
     //case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
-    case 0x454C4247, 0x464C4247, 0x474C4247,
-         0x494C4247, 0x534C4247, 0x4A4C4247:
-        report("%s: GTA Text (GTA2+) file in ", false);
-        final switch (sig[3])
-        {
+    case 0x454C4247, 0x464C4247, 0x474C4247, 0x494C4247, 0x534C4247, 0x4A4C4247:
+        report("GTA Text (GTA2+) file, ", false);
+        final switch (sig[3]) {
         case 'E': writeln("English");  break;
         case 'F': writeln("French");   break;
         case 'G': writeln("German");   break;
@@ -303,14 +294,13 @@ void scan()
     case 0x47585432: { // "2TXG"
         uint[1] b;
         CurrentFile.rawRead(b);
-        report("GTA Text 2 file with", false);
-        writeln(bswap(b[0]), "entries");  // Byte swapped
+        report("GTA Text 2 file, ", false);
+        printf("%d entries", bswap(b[0]));  // Byte swapped
     }
         return;
 
     //case "RPF0", "RPF2", "RPF3", "RPF4", "RPF6", "RPF7": {
-    case 0x30465052, 0x32465052, 0x33465052,
-         0x34465052, 0x36465052, 0x37465052: {
+    case 0x30465052, 0x32465052, 0x33465052, 0x34465052, 0x36465052, 0x37465052: {
         struct rpf_hdr { align(1):
             //int magic;
             int tablesize;
@@ -320,31 +310,28 @@ void scan()
         }
         rpf_hdr h;
         scpy(CurrentFile, &h , h.sizeof);
-        report("RPF", false);
+        report("RPF ", false);
         if (h.encrypted)
-            write(" encrypted");
-        write(" archive v", sig[3], " (");
-        final switch (sig[3])
-        {
-            case '0': write("Table Tennis"); break;
-            case '2': write("GTA IV"); break;
-            case '3': write("GTA IV:A&MC:LA"); break;
-            case '4': write("Max Payne 3"); break;
-            case '6': write("Red Dead Redemption"); break;
-            case '7': write("GTA V"); break;
+            printf("encrypted");
+        printf("archive v%c (", sig[3]);
+        final switch (sig[3]) {
+        case '0': write("Table Tennis"); break;
+        case '2': write("GTA IV"); break;
+        case '3': write("GTA IV:A&MC:LA"); break;
+        case '4': write("Max Payne 3"); break;
+        case '6': write("Red Dead Redemption"); break;
+        case '7': write("GTA V"); break;
         }
-        writefln(") with ", h.numentries, " entries");
+        printf("), %d entries", h.numentries);
     }
         return;
 
     case 0x14000000, 0x18000000, 0x1C000000, 0x20000000: {
         char[8] b;
         CurrentFile.rawRead(b);
-        switch (b[0..4])
-        {
+        switch (b[0..4]) {
         case "ftyp":
-            switch (b[4..8])
-            {
+            switch (b[4..8]) {
             case "isom":
                 report("ISO Base Media file (MPEG-4) v1");
                 return;
@@ -364,8 +351,7 @@ void scan()
                 report("Apple Lossless Audio Codec file (M4A)");
                 return;
             default:
-                switch (b[4..7])
-                {
+                switch (b[4..7]) {
                 case "3gp":
                     report("3rd Generation Partnership Project multimedia file (3GP)");
                     return;
@@ -413,9 +399,9 @@ void scan()
         report("LZIP Archive");
         return;
 
-    //case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08": {
-    case 0x04034B42, 0x06054B42, 0x08074B42: {
-        struct pkzip_hdr {  align(1): // PKWare ZIP
+    // Only the last signature is within the doc.
+    case 0x04034B42, 0x06054B42, 0x08074B42, 0x04034B50: {
+        struct pkzip_hdr { align(1): // PKWare ZIP
             //uint magic;
             //ushort magic;
             ushort version_;
@@ -433,8 +419,7 @@ void scan()
         pkzip_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
 
-        if (More)
-        {
+        if (More) {
             //writeln("magic      : ", h.magic);
             writeln("Version    : ", h.version_);
             writeln("Flag       : ", h.flag);
@@ -448,38 +433,36 @@ void scan()
             writeln("Extra field Size   : ", h.eflength);
         }
 
-        debug writefln("FNLENGTH: %X", h.fnlength);
+        debug writeln("FNLENGTH: ", formatsize(h.fnlength));
 
-        report("ZIP ", false); // JAR, ODF, OOXML, EPUB
+        report("PKWare ZIP ", false); // JAR, ODF, OOXML, EPUB
 
-        switch (h.compression)
-        {
-            case 0: write("Uncompressed"); break;
-            case 1: write("Shrunk"); break;
-            case 2: .. // 2 to 5
-            case 5: write("Reduced by ", h.compression - 1); break;
-            case 6: write("Imploded"); break;
-            case 8: write("Deflated"); break;
-            case 9: write("Enhanced Deflated"); break;
-            case 10: write("DCL Imploded (PKWare)"); break;
-            case 12: write("BZIP2"); break;
-            case 14: write("LZMA"); break;
-            case 18: write("IBM TERSE"); break;
-            case 19: write("IBM LZ77 z"); break;
-            case 98: write("PPMd Version I, Rev 1"); break;
-            default: write("Unknown"); break;
+        switch (h.compression) {
+        case 0: write("Uncompressed"); break;
+        case 1: write("Shrunk"); break;
+        case 2: .. // 2 to 5
+        case 5: write("Reduced by ", h.compression - 1); break;
+        case 6: write("Imploded"); break;
+        case 8: write("Deflated"); break;
+        case 9: write("Enhanced Deflated"); break;
+        case 10: write("DCL Imploded (PKWare)"); break;
+        case 12: write("BZIP2"); break;
+        case 14: write("LZMA"); break;
+        case 18: write("IBM TERSE"); break;
+        case 19: write("IBM LZ77 z"); break;
+        case 98: write("PPMd Version I, Rev 1"); break;
+        default: write("Unknown"); break;
         }
 
-        write(" Archive (v", h.version_ / 10, ".", h.version_ % 10, "), ",
-            formatsize(h.csize), "/", formatsize(h.usize));
+        printf(" Archive (v%d.%d), ", h.version_ / 10, h.version_ % 10);
 
-        if (h.fnlength)
-        {
-            CurrentFile.seek(-2, SEEK_CUR);
+        if (h.fnlength > 0) {
             char[] filename = new char[h.fnlength];
             CurrentFile.rawRead(filename);
-            write(` "`, filename, `"`);
+            write(`"`, filename, `", `);
         }
+        
+        write(formatsize(h.csize), "/", formatsize(h.usize));
 
         enum {
             ENCRYPTED = 1, // 1
@@ -494,15 +477,20 @@ void scan()
         if (h.flag & STRONG_ENCRYPTION)
             write(", Strongly encrypted");
 
-        writeln();
+        if (h.flag & COMPRESSED_PATCH)
+            write(", Compression patch");
+
+        if (h.flag & ENHANCED_DEFLATION)
+            write(", Enhanced deflation");
+
+        writeln;
     }
         return;
 
     case 0x21726152: { // "Rar!"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
-        case [0x1A, 0x07, 0x01, 0x00]:
+        switch (sig) {
+        case x"1A 07 01":
             //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
@@ -525,22 +513,11 @@ void scan()
 
     case 0x474E5089: // "\x89PNG"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
-        case [0x0D, 0x0A, 0x1A, 0x0A]:
-            scan_png();
-            return;
-        default:
-            report_unknown();
-            return;
+        switch (sig) {
+        case x"0D 0A 1A 0A": scan_png(); return;
+        default: report_unknown(); return;
         }
-    
-    /*case [0xFE, 0xED, 0xFA, 0xCE]:
-    case [0xFE, 0xED, 0xFA, 0xCF]:
-    case [0xCE, 0xFA, 0xED, 0xFE]:
-    case [0xCF, 0xFA, 0xED, 0xFE]:
-    case [0xCA, 0xFE, 0xBA, 0xBE]:
-    case [0xBE, 0xBA, 0xFE, 0xCA]:*/
+
     case 0xCEFAEDFE, 0xCFFAEDFE, 0xFEEDFACE,
          0xFEEDFACF, 0xBEBAFECA, 0xCAFEBABE:
         scan_mach();
@@ -553,14 +530,13 @@ void scan()
     case 0x46445025: // "%PDF"
         CurrentFile.rawRead(sig); // for "-1.0"
         report("PDF", false);
-        writeln(sig, " document");
+        printf("%s document", &sig[0]);
         return;
 
     case 0x75B22630: {
         char[12] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
         case x"8E 66 CF 11 A6 D9 0 AA 0 62 CE 6C":
             report("Advanced Systems Format file (ASF, WMA, WMV)");
             return;
@@ -572,8 +548,7 @@ void scan()
 
     case 0x49445324: // "$SDI"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case [0x30, 0x30, 0x30, 0x31]:
             report("System Deployment Image (Microsoft disk image)");
             return;
@@ -596,11 +571,10 @@ void scan()
         ogg_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
         report("Ogg audio file v", false);
-        writeln(h.version_, " with ", h.pages, " segments");
+        printf("%d with %d segments\n", h.version_, h.pages);
 
-        if (More)
-        {
-            writefln("CRC32: %X", h.crc32);
+        if (More) {
+            writefln("CRC32: %08X", h.crc32);
         }
     }
         return;
@@ -628,14 +602,13 @@ void scan()
         scpy(CurrentFile, &h, h.sizeof);
         report("FLAC audio file", false);
         if ((h.header & 0xFF) == 0) // Big endian
-        {
+        { // Yeah, I'm not a fan.
             const int bits = ((h.stupid[8] & 1) << 4 | (h.stupid[9] >>> 4)) + 1;
             const int chan = ((h.stupid[8] >> 1) & 7) + 1;
             const int rate =
                 ((h.stupid[6] << 12) | h.stupid[7] << 4 | h.stupid[8] >>> 4);
             writeln(", ", rate, " Hz, ", bits, " bit, ", chan, " channels");
-            if (More)
-            {
+            if (More) {
                 write("MD5: ");
                 print_array(&h.md5[0], h.md5.length);
                 writeln();
@@ -659,33 +632,29 @@ void scan()
         }
     //http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
-        //file.seek(2);
         scpy(CurrentFile, &h, h.sizeof);
         report("Photoshop Document v", false);
-        write(bswap(h.version_), ", ",
-            bswap(h.width), " x ", bswap(h.height), ", ",
-            bswap(h.depth), "-bit ");
-        switch (bswap(h.colormode))
-        {
-            case 0: write("Bitmap"); break;
-            case 1: write("Grayscale"); break;
-            case 2: write("Indexed"); break;
-            case 3: write("RGB"); break;
-            case 4: write("CMYK"); break;
-            case 7: write("Multichannel"); break;
-            case 8: write("Duotone"); break;
-            case 9: write("Lab"); break;
-            default: write("Unknown type"); break;
+        printf("%d, %d x %d, %d-bit",
+            bswap(h.version_), bswap(h.width), bswap(h.height), bswap(h.depth));
+        switch (bswap(h.colormode)) {
+        case 0: printf("Bitmap"); break;
+        case 1: printf("Grayscale"); break;
+        case 2: printf("Indexed"); break;
+        case 3: printf("RGB"); break;
+        case 4: printf("CMYK"); break;
+        case 7: printf("Multichannel"); break;
+        case 8: printf("Duotone"); break;
+        case 9: printf("Lab"); break;
+        default: printf("Unknown type"); break;
         }
-        writeln(" image, ", bswap(h.channels), " channel(s)");
+        printf(" image, %d channel(s)", bswap(h.channels));
     }
         return;
 
     case 0x46464952: // "RIFF"
         CurrentFile.seek(8);
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "WAVE": {
             //http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
             struct fmt_chunk { align(1):
@@ -712,31 +681,26 @@ void scan()
             fmt_chunk h;
             scpy(CurrentFile, &h, h.sizeof);
             report("WAVE audio file (", false);
-            if (h.id != "fmt ")
-            {
-                writeln();
-                return;
+            if (h.id != "fmt ") {
+                writeln; return;
             }
-            switch (h.format)
-            {
-                case PCM: write("PCM"); break;
-                case IEEE_FLOAT: write("IEEE Float"); break;
-                case ALAW:  write("8-bit ITU G.711 A-law"); break;
-                case MULAW: write("8-bit ITU G.711 u-law"); break;
+            switch (h.format) {
+                case PCM: printf("PCM"); break;
+                case IEEE_FLOAT: printf("IEEE Float"); break;
+                case ALAW:  printf("8-bit ITU G.711 A-law"); break;
+                case MULAW: printf("8-bit ITU G.711 u-law"); break;
                 case EXTENSIBLE:
-                    write("EXTENDED");
-                    if (More)
-                    {
-                        write(":");
+                    printf("EXTENDED");
+                    if (More) {
+                        printf(":");
                         print_array(&h.guid[0], h.guid.length);
                     }
                     break;
-                default: writeln("Unknown type"); return;
+                default: printf("Unknown type\n"); return;
             }
-            write(") ", h.samplerate, " Hz, ", h.datarate / 1024 * 8,
-                " kbps, ", h.samplebits, "-bit, ");
-            switch (h.channels)
-            {
+            printf(") %d Hz, %d kbps, %d-bit, ",
+                h.samplerate, h.datarate / 1024 * 8, h.samplebits);
+            switch (h.channels) {
                 case 1: writeln("Mono"); break;
                 case 2: writeln("Stereo"); break;
                 default: writeln(h.channels, " channels"); break;
@@ -753,8 +717,7 @@ void scan()
 
     case 0x504D4953: // "SIMP"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "LE  ":
             report("Flexible Image Transport System (FITS)");
             return;
@@ -775,29 +738,25 @@ void scan()
 
         report("MIDI, ", false);
 
-        switch (bswap(h.format))
-        {
-            case 0: write("Single track"); break;
-            case 1: write("Multiple tracks"); break;
-            case 2: write("Multiple songs"); break;
-            default: write("Unknown format"); return;
+        switch (bswap(h.format)) {
+        case 0: printf("Single track"); break;
+        case 1: printf("Multiple tracks"); break;
+        case 2: printf("Multiple songs"); break;
+        default: printf("Unknown format"); return;
         }
 
-        h.number = bswap(h.number);
-        h.division = bswap(h.division);
-        writef(": %d tracks at ", h.number);
-        if (h.division & 0x8000) // Negative, SMPTE units
-            writefln("%d ticks/frame (SMPTE: %d)",
-                h.division & 0xFF, h.division >> 8 & 0xFF);
+        const ushort div = bswap(h.division);
+        printf(": %d tracks at ", bswap(h.number));
+        if (div & 0x8000) // Negative, SMPTE units
+            printf("%d ticks/frame (SMPTE: %d)\n", div & 0xFF, div >>> 8 & 0xFF);
         else // Ticks per beat
-            writefln("%d ticks/quarter-note", h.division);
+            printf("%d ticks/quarter-note\n", div);
     }
         return;
 
     case 0xE011CFD0:
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case [0xA1, 0xB1, 0x1A, 0xE1]:
             report("Compound File Binary Format document (doc, xls, ppt, etc.)");
             return;
@@ -808,8 +767,7 @@ void scan()
 
     case 0x0A786564: // "dex\x0A"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "035\0":
             report("Dalvik Executable");
             return;
@@ -829,8 +787,7 @@ void scan()
     case 0x00000705: {
         char[6] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
         case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
             report("AppleWorks 5 document (cwk)");
             return;
@@ -853,8 +810,7 @@ void scan()
 
     case 0x434F4D50: // "PMOC"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "CMOC":
             report("USMT, Windows Files And Settings Transfer Repository (dat)");
             return;
@@ -873,8 +829,7 @@ void scan()
 
     case 0x004D4344: // "DCM\0"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "PA30":
             report("Windows Update Binary Delta Compression file");
             return;
@@ -886,8 +841,7 @@ void scan()
     case 0xAFBC7A37: {
         char[2] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
         case [0x27, 0x1C]:
             report("7-Zip compressed file (7z)");
             return;
@@ -920,8 +874,9 @@ void scan()
         cfh_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
         report("Microsoft Cabinet archive v", false);
-        writeln(h.major, ".", h.minor, ", ", formatsize(h.size), ", ",
-            h.files, " files and ", h.folders, " folders");
+        printf("%d.%d, ", h.major, h.minor);
+        write(formatsize(h.size));
+        printf(", %d files and %d folders\n", h.files, h.folders);
     }
         return;
 
@@ -942,15 +897,14 @@ void scan()
         iscab_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
         report("InstallShield CAB archive", false);
-        switch (h.version_)
-        {
-            case LEGACY:    write(" (Legacy)");  break;
-            case v2_20_905: write(" v2.20.905"); break;
-            case v3_00_065: write(" v3.00.065"); break;
-            case v5_00_000: write(" v5.00.000"); break;
-            default: writef(" (Version:0x%08X)", h.version_); break;
+        switch (h.version_) {
+        case LEGACY:    write(" (Legacy)");  break;
+        case v2_20_905: write(" v2.20.905"); break;
+        case v3_00_065: write(" v3.00.065"); break;
+        case v5_00_000: write(" v5.00.000"); break;
+        default: writef(" (Version: 0x%08X)", h.version_); break;
         }
-        writefln(" at 0x%X", h.desc_offset);
+        printf(" at 0x%X", h.desc_offset);
     }
         return;
 
@@ -964,13 +918,11 @@ void scan()
 
     case 0x54265441: // "AT&T"
         CurrentFile.rawRead(sig);
-        switch (sig)
-        {
+        switch (sig) {
         case "FORM":
             CurrentFile.seek(4, SEEK_CUR);
             CurrentFile.rawRead(sig);
-            switch (sig)
-            {
+            switch (sig) {
             case "DJVU":
                 report("DjVu document, single page");
                 return;
@@ -1029,12 +981,10 @@ void scan()
         }
         report("Debian Package v", false);
         writeln(h.version_);
-        if (More)
-        {
+        if (More) {
             deb_data_hdr dh;
             int os, dos;
-            try
-            {
+            try {
                 import std.conv : parse;
                 string dps = isostr(h.ctl_filesize);
                 os = parse!int(dps);
@@ -1042,13 +992,11 @@ void scan()
                 scpy(CurrentFile, &dh, dh.sizeof, false);
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
-            }
-            catch (Exception)
-            {
+            } catch (Exception) {
                 return;
             }
-            writeln(isostr(h.ctl_file_ident), " - ", os / 1024, " KB");
-            writeln(isostr(dh.file_ident), " - ", dos / 1024, " KB");
+            writeln("%s - %s KB", isostr(h.ctl_file_ident), os / 1024);
+            writeln("%s - %s KB", isostr(dh.file_ident), dos / 1024);
         }
     }
         return;
@@ -1067,16 +1015,14 @@ void scan()
         rpm_hdr h;
         scpy(CurrentFile, &h, h.sizeof, true);
         report("RPM ", false);
-        switch (h.type)
-        {
+        switch (h.type) {
             case 0: write("Binary"); break;
             case 0x100: write("Source"); break;
             default: write("Unknown type"); break;
         }
         write(" Package v");
         write(h.major, ".", h.minor, " \"", asciz(h.name), "\" for ");
-        switch (h.osnum)
-        {
+        switch (h.osnum) {
             case 0x100: write("linux"); break;
             default: write("other"); break;
         }
@@ -1088,7 +1034,7 @@ void scan()
         int[2] b; // Doom reads as int
         CurrentFile.rawRead(b);
         report(sig.idup, false);
-        writefln(" holding %d entries at %Xh", b[0], b[1]);
+        printf(" holding %d entries at %Xh", b[0], b[1]);
         return;
     }
 
@@ -1101,8 +1047,7 @@ void scan()
     case 0x45555254: { // "TRUE"
         char[12] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
         case "VISION-XFILE":
             report("Truevision Targa Graphic image file");
             return;
@@ -1126,8 +1071,7 @@ void scan()
 
         report("MS-DOS ", false);
 
-        switch (h.method)
-        {
+        switch (h.method) {
             case 0: write("Non-compressed"); break;
             case 1: write("0xFF-XOR'd data"); break;
             case 2: write("Regular SZDD Compressed"); break;
@@ -1136,10 +1080,10 @@ void scan()
             default: write("Unknown compression");
         }
 
-        write(" file (KWAJ)");
+        printf(" file (KWAJ)");
 
         if (h.offset)
-            writef(" (offset:%Xh)", h.offset);
+            printf(" (offset:%Xh)", h.offset);
 
         enum { // Header flags
             ULENGHT = 1, // 4 bytes, uncompressed data length
@@ -1151,8 +1095,7 @@ void scan()
 
         const int ext = h.header & EXT, name = h.header & NAME;
 
-        if (ext || name)
-        {
+        if (ext || name) {
             int offset;
             if (h.header & ULENGHT) offset += 4;
             if (h.header & UNKNOWN) offset += 2;
@@ -1160,7 +1103,7 @@ void scan()
 
             if (offset) CurrentFile.seek(offset, SEEK_CUR);
 
-            write(" Out:");
+            printf(" Out:");
 
             if (name)
                 write(CurrentFile.readln('\0'));
@@ -1187,11 +1130,11 @@ void scan()
         report("MS-DOS ", false);
 
         if (h.compression == 'A')
-            write("SZDD");
+            printf("SZDD");
         else
-            write("Non-valid SZDD");
+            printf("Non-valid SZDD");
 
-        writeln(" Compressed file");
+        printf(" compressed file\n");
     }
         break;
 
@@ -1202,8 +1145,7 @@ void scan()
     case 0x001A0000: {
         char[3] b;
         CurrentFile.rawRead(b);
-        switch (b)
-        {
+        switch (b) {
         case [0, 0x10, 4]:
             report("Lotus 1-2-3 spreadsheet (v3) file");
             return;
@@ -1229,8 +1171,8 @@ void scan()
 
     case 0x0000FEFF, 0xFFFE0000:
         report("UTF-32 text file with Byte-Order Mark (", false);
-        if (s == 0xFEFF) writeln("LSB)");
-        else  writeln("MSB)");
+        if (s == 0xFEFF) printf("LSB)\n");
+        else printf("MSB)\n");
         return;
 
     case 0x30524448: { // "HDR0"
@@ -1247,10 +1189,9 @@ void scan()
 
         if (h.version_ == 1 || h.version_ == 2) {
             report("TRX v", false);
-            writefln("%d firmware (Length: %d, CRC32: %Xh)",
+            printf("%d firmware (Length: %d, CRC32: %Xh)",
                 h.version_, h.length, h.crc);
-        }
-        else
+        } else
             report_unknown();
     }
         return;
@@ -1284,27 +1225,25 @@ void scan()
         scpy(CurrentFile, &h, h.sizeof, true);
 
         report("VMware Disk image v", false);
-        write(h.version_, ", ");
+        printf("%d, ", h.version_);
 
         //if (h.flags & COMPRESSED)
-        switch (h.compressAlgorithm)
-        {
-        case 0: write("no"); break;
-        case 1: write("DEFLATE"); break;
-        default: write("unknown"); break;
+        switch (h.compressAlgorithm) {
+        case 0: printf("no"); break;
+        case 1: printf("DEFLATE"); break;
+        default: printf("unknown"); break;
         }
-        write(" compression");
+        printf(" compression");
 
         if (h.uncleanShutdown)
             write(", unclean shutdown");
 
         writeln();
 
-        if (More)
-        {
-            writefln("Capacity: %d Sectors", h.capacity);
-            writefln("Overhead: %d Sectors", h.overHead);
-            writefln("Grain size (Raw): %d Sectors", h.grainSize);
+        if (More) {
+            printf("Capacity: %d Sectors\n", h.capacity);
+            printf("Overhead: %d Sectors\n", h.overHead);
+            printf("Grain size (Raw): %d Sectors\n", h.grainSize);
         }
     }
         return;
@@ -1345,20 +1284,18 @@ void scan()
         }
         COWDisk_Header h;
         scpy(CurrentFile, &h, h.sizeof);
-        if (h.flags != 3)
-        {
+        if (h.flags != 3) {
             report_text();
             return;
         }
         const long size = h.numSectors * 512;
         report("ESXi COW disk image v", false);
-        writeln(h.version_, ", ", formatsize(size), ", \"", asciz(h.name), "\"");
+        write(h.version_, ", ", formatsize(size), ", \"", asciz(h.name), "\"");
 
-        if (More)
-        {
-            writeln("Cylinders: ", h.root.cylinders);
-            writeln("Heads: ", h.root.heads);
-            writeln("Sectors: ", h.root.sectors);
+        if (More) {
+            printf("Cylinders: %d\n", h.root.cylinders);
+            printf("Heads: %d\n", h.root.heads);
+            printf("Sectors: %d\n", h.root.sectors);
             //writeln("Child filename: ", asciz(h.u.child.parentFileName));
         }
     }
@@ -1399,69 +1336,63 @@ void scan()
             D_DIFF = 4,
         }
         CurrentFile.rawRead(sig);
-        if (sig != VHDMAGIC[4..$])
-        {
+        if (sig != VHDMAGIC[4..$]) {
             report_text();
             return;
         }
         vhd_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
         h.features = bswap(h.features);
-        if ((h.features & F_RES) == 0)
-        {
+        if ((h.features & F_RES) == 0) {
             report_text();
             return;
         }
         report("Microsoft VHD disk image v", false);
-        write(bswap(h.major), ".", bswap(h.minor));
+        printf("%d.%d, ", bswap(h.major), bswap(h.minor));
 
         h.disk_type = bswap(h.disk_type);
-        switch(h.disk_type)
-        {
-            case D_FIXED: write(", Fixed"); break;
-            case D_DYNAMIC: write(", Dynamic"); break;
-            case D_DIFF: write(", Differencing"); break;
+        switch(h.disk_type) {
+            case D_FIXED: printf("Fixed"); break;
+            case D_DYNAMIC: printf("Dynamic"); break;
+            case D_DIFF: printf("Differencing"); break;
             default:
                 if (h.disk_type < 7)
-                    write(", Reserved (deprecated)");
+                    printf("Reserved (deprecated)");
                 else
-                    write(", Invalid type");
+                    printf("Invalid type");
                 break;
         }
 
-        write(", ", h.creator_app, " v",
-            bswap(h.creator_major), ".", bswap(h.creator_minor));
+        printf(", %s v%d.%d on ",
+            &h.creator_app[0], bswap(h.creator_major), bswap(h.creator_minor));
 
-        switch (h.creator_os)
-        {
-            case OS_WINDOWS: write(" on Windows"); break;
-            case OS_MAC:     write(" on macOS"); break;
-            default: break;
+        switch (h.creator_os) {
+            case OS_WINDOWS: printf("Windows"); break;
+            case OS_MAC:     printf("macOS"); break;
+            default: printf("Unknown"); break;
         }
-
+/* TODO: Fix VHD Size
         h.size_current = bswap(h.size_current);
         h.size_original = bswap(h.size_original);
-        if (h.size_current && h.size_original)
-        {
-            write(", ", formatsize(h.size_current), "/",
-                formatsize(h.size_original), " used");
+        if (h.size_current && h.size_original) {
+            writef(", %s/%s used",
+                formatsize(h.size_current), formatsize(h.size_original));
         }
-
+*/
         if (h.features & F_TEMPORARY)
-            write(", Temporary");
+            printf(", Temporary");
         
         if (h.savedState)
-            write(", Saved State");
+            printf(", Saved State");
 
         writeln();
 
-        if (More)
-        {
-            write("UUID: ");
+        if (More) {
+            printf("UUID: ");
             print_array(&h.uuid[0], h.uuid.length);
-            writeln("Cylinders: ", h.cylinders);
-            writeln("Heads: ", h.heads);
-            writeln("Sectors: ", h.sectors);
+            printf("Cylinders: %d\n", h.cylinders);
+            printf("Heads: %d\n", h.heads);
+            printf("Sectors: %d\n", h.sectors);
         }
     }
         return;
@@ -1533,7 +1464,7 @@ void scan()
             return;
         }
         report("VirtualBox VDI disk image v", false);
-        write(h.majorv, ".", h.minorv, ", ");
+        printf("%d.%d, ", h.majorv, h.minorv);
         VDIHEADER1 sh;
         switch (h.majorv) { // Use latest major version natively
             case 1:
@@ -1552,20 +1483,20 @@ void scan()
             default: return;
         }
         switch (sh.u32Type) {
-            case 1: write("Dynamic"); break;
-            case 2: write("Static"); break;
-            default: write("Unknown type"); break;
+            case 1: printf("Dynamic"); break;
+            case 2: printf("Static"); break;
+            default: printf("Unknown type"); break;
         }
-        writeln(", ", formatsize(sh.cbDisk), " Maximum");
+        writeln(", ", formatsize(sh.cbDisk), " capacity");
         if (More) {
-            write("Create UUID : ");
+            printf("Create UUID : ");
             print_array(&sh.uuidCreate[0], 16);
-            write("Modify UUID : ");
+            printf("Modify UUID : ");
             print_array(&sh.uuidModify[0], 16);
-            write("Link UUID   : ");
+            printf("Link UUID   : ");
             print_array(&sh.uuidLinkage[0], 16);
             if (h.majorv >= 1) {
-                write("ParentModify UUID: ");
+                printf("ParentModify UUID: ");
                 print_array(&sh.uuidParentModify[0], 16);
                 writeln("Header size: ", sh.cbHeader);
             }
@@ -1603,19 +1534,17 @@ void scan()
         scpy(CurrentFile, &h, h.sizeof, true);
 
         report("QEMU QCOW2 disk image v", false);
-        write(bswap(h.version_), ", ", formatsize(bswap(h.size)));
+        write(bswap(h.version_), ", ", formatsize(bswap(h.size)), " capacity");
 
-        switch (bswap(h.crypt_method))
-        {
+        switch (bswap(h.crypt_method)) {
             case C_AES: write(", AES encrypted"); break;
             default: break;
         }
 
         writeln();
 
-        if (More)
-        {
-            writeln("Snapshots: ", bswap(h.nb_snapshots));
+        if (More) {
+            printf("Snapshots: %d\n", bswap(h.nb_snapshots));
         }
     }
         return;
@@ -1623,7 +1552,7 @@ void scan()
     case 0x00444551: { // "QED\0", QED
     //http://wiki.qemu-project.org/Features/QED/Specification
         struct qed_hdr { align(1):
-            uint magic;
+            //uint magic;
             uint cluster_size;
             uint table_size;
             uint header_size;
@@ -1642,21 +1571,21 @@ void scan()
         }
         report("QEMU QED disk image, ", false);
         qed_hdr h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(CurrentFile, &h, h.sizeof);
         write(formatsize(h.image_size));
 
         if (h.features & QED_F_BACKING_FILE) {
             char[] bfn = new char[h.backing_filename_size];
             CurrentFile.seek(h.backing_filename_offset);
             CurrentFile.rawRead(bfn);
-            write(", ");
+            printf(", ");
             if (h.features & QED_F_BACKING_FORMAT_NO_PROBE)
-                write("raw ");
+                printf("raw ");
             write("backing file: ", bfn);
         }
 
         if (h.features & QED_F_NEED_CHECK)
-            write(", check needed");
+            printf(", check needed");
 
         writeln();
     }
@@ -1667,6 +1596,7 @@ void scan()
         report("Apple Disk Image file (dmg)");
         return;
 
+//TODO: Check Apple DMG extra
     /*case 0x6B6F6C79: // "koly", Apple DMG disk image
 
         return;
@@ -1675,18 +1605,16 @@ void scan()
 
         return;*/
 
+    //TODO: Parallels HDD (Lacks verification/documentation)
     /*case "With": { // WithoutFreeSpace -- Parallels HDD
-        //TODO: Parallels HDD (Lacks verification/documentation)
         char[12]
         report("Parallels HDD disk image");
         return;
     }*/
 
-    case 0x20584D50: { // "PMX "
-        import s_models : scan_pmx;
+    case 0x20584D50: // "PMX "
         scan_pmx();
         return;
-    }
 
     case 0x46494C46: // "FLIF"
         scan_flif();
@@ -1697,8 +1625,7 @@ void scan()
         return;
 
     default:
-        switch (sig[0..2])
-        {
+        switch (sig[0..2]) {
         case [0x1F, 0x9D]:
             report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
             return;
@@ -1732,8 +1659,7 @@ void scan()
             return;
 
         default:
-            switch (sig[0..3])
-            {
+            switch (sig[0..3]) {
             case "GIF":
                 scan_gif();
                 break;
@@ -1774,14 +1700,10 @@ void scan()
 /// Params: filename = Filename in CLI phase
 void report_unknown(string filename = null)
 {
-    if (ShowingName) {
-        if (filename)
-            write(filename, ": ");
-        else
-            write(CurrentFile.name, ": ");
-    }
+    if (ShowingName)
+        write(filename ? filename : CurrentFile.name, ": ");
     
-    writeln("Unknown type");
+    writeln("Unknown type\n");
 }
 
 /// Report a text file.
@@ -1806,15 +1728,16 @@ BOOL CTL_CODE(uint d, uint f, uint m, uint a) {
     return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
 }
 import core.sys.windows.windows;
-enum FILE_ANY_ACCESS = 0; /// 
-enum METHOD_BUFFERED = 0; /// 
-enum FILE_DEVICE_FILE_SYSTEM = 0x00000009; /// 
-enum FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000; /// 
-enum FILE_FLAG_BACKUP_SEMANTICS   = 0x02000000; /// 
-enum FSCTL_GET_REPARSE_POINT = CTL_CODE( /// FSCTL request, get reparse point
+enum FILE_ANY_ACCESS = 0; /// Any access to files.
+enum METHOD_BUFFERED = 0; /// Buffered access.
+enum FILE_DEVICE_FILE_SYSTEM = 0x00000009; /// File system access.
+enum FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000; /// Reparse point (symlink).
+enum FILE_FLAG_BACKUP_SEMANTICS   = 0x02000000; /// Backup semantics.
+/// FSCTL request, get reparse point
+enum FSCTL_GET_REPARSE_POINT = CTL_CODE(
         FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS
     );
-/// 
+/// Symlink struct.
 struct WIN32_SYMLINK_REPARSE_DATA_BUFFER {
     DWORD             ReparseTag; /// Tag
     DWORD             ReparseDataLength; /// Data length
@@ -1886,8 +1809,8 @@ void report_link(string linkname)
             &c,
             cast(void*)0
         );
-    }
-    }
+    } // version (Symlink)
+    } // version (Windows)
     version (Posix)
     {
         import core.stdc.stdio : printf;
@@ -1900,20 +1823,17 @@ void report_link(string linkname)
 
 /**
  * Report to the user information.
- *
- * If the newline is false, the developper must end the information with a new line manually.
+ * If the newline is false, the developper must end the information with a new
+ * line manually.
  * Params:
- *   type = Type/format of file (String)
+ *   type = File type
  *   nl = Print newline
  *   filename = override filename
  */
 void report(string type, bool nl = true, string filename = null)
 {
-    if (ShowingName)
+    if (ShowingName) // tfw no ?? operator
         writef("%s: ", filename ? filename : CurrentFile.name);
-
-    write(type);
-
-    if (nl)
-        writeln;
+    printf("%s", &type[0]);
+    if (nl) writeln;
 }

@@ -186,6 +186,7 @@ void scan_bpg()
 { // Big Endian
     report("Better Portable Graphics image");
 
+    //TODO: Continue BPG
     /*if (More)
     {
         struct heic_hdr { align(1):
@@ -206,7 +207,6 @@ void scan_bpg()
 
         heic_hdr h;
         scpy(file, &h, h.sizeof, true);
-        //TODO: https://en.wikipedia.org/wiki/Exponential-Golomb_coding
         write(expgol(h.width), " x ", h.height, ", ");
 
         switch (h.color & 0b1111_0000)
@@ -251,6 +251,7 @@ void scan_flif()
 {
     report("Free Lossless Image Format image");
 
+    //TODO: Continue FLIF
     /*if (More)
     {
         struct flif_hdr { align(1):
@@ -262,7 +263,6 @@ void scan_flif()
         flif_hdr h;
         scpy(file, &h, h.sizeof, true);
 
-        //TODO: Continue FLIF
         //1 byte determines the variable's length in bytes, first bit is set
     }*/
 }
