@@ -1401,7 +1401,7 @@ void scan()
     //TODO: Move all virtualdisks-related scanning to another source
         enum {
             VDI_SUN = "Sun xVM VirtualBox Disk Image >>>\n",
-            VDI =       "Oracle VM VirtualBox Disk Image >>>\n"
+            VDI =     "Oracle VM VirtualBox Disk Image >>>\n"
         }
         enum VDIMAGIC = 0xBEDA107F, VDI_IMAGE_COMMENT_SIZE = 256;
         struct vdi_hdr { align(1):
