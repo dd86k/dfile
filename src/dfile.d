@@ -1400,7 +1400,7 @@ void scan()
     case 0x203C3C3C: { // "<<< ", Oracle VDI vdisk
     //TODO: Move all virtualdisks-related scanning to another source
         enum {
-            VDI_OLDER = "Sun xVM VirtualBox Disk Image >>>\n",
+            VDI_SUN = "Sun xVM VirtualBox Disk Image >>>\n",
             VDI =       "Oracle VM VirtualBox Disk Image >>>\n"
         }
         enum VDIMAGIC = 0xBEDA107F, VDI_IMAGE_COMMENT_SIZE = 256;
@@ -1450,7 +1450,7 @@ void scan()
         }
         const char[] magic = CurrentFile.readln();
         switch (magic) {
-            case VDI, VDI_OLDER:
+            case VDI, VDI_SUN:
                 CurrentFile.seek(64); // Description size
                 break;
             default:
