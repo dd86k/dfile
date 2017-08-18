@@ -145,22 +145,20 @@ void scan() {
             write(" Nintendo Sound Format, ", h.total_song, " songs, ");
 
             if (h.chip & 1)
-                printf("VRCVI");
+                printf("VRCVI, ");
             else if (h.chip & 0b10)
-                printf("VRCVII");
+                printf("VRCVII, ");
             else if (h.chip & 0b100)
-                printf("FDS");
+                printf("FDS, ");
             else if (h.chip & 0b1000)
-                printf("MMC5");
+                printf("MMC5, ");
             else if (h.chip & 0b1_0000)
-                printf("Namco 106");
+                printf("Namco 106, ");
             else if (h.chip & 0b10_0000)
-                printf("Sunsoft FME-07");
+                printf("Sunsoft FME-07, ");
 
-            writefln("\n%s - %s\nCopyrights:%s",
-                asciz(h.song_artist),
-                asciz(h.song_name),
-                asciz(h.song_copyright));
+            printf("\"%s - %s\", (c) %s\n",
+                &h.song_artist[0], &h.song_name[0], &h.song_copyright[0]);
             }
             return;
         default:
@@ -1018,7 +1016,7 @@ void scan() {
             default: write("Unknown type"); break;
         }
         write(" Package v");
-        write(h.major, ".", h.minor, " \"", asciz(h.name), "\" for ");
+        printf(`%d.%d, "%s", `, h.major, h.minor, &h.name[0]);
         switch (h.osnum) {
             case 0x100: write("linux"); break;
             default: write("other"); break;
@@ -1028,10 +1026,10 @@ void scan() {
         return;
 
     case 0x44415749, 0x44415750: {// "IWAD", "PWAD"
-        int[2] b; // Doom reads as int
+        int[2] b; // Reads as ints.
         CurrentFile.rawRead(b);
-        report(sig.idup, false);
-        printf(" holding %d entries at %Xh", b[0], b[1]);
+        report(cast(immutable)sig~'\0', false);
+        printf(" holding %d entries at %Xh\n", b[0], b[1]);
         return;
     }
 
@@ -1214,9 +1212,7 @@ void scan() {
             ushort compressAlgorithm;
             //ubyte[433] pad;
         }
-        enum {
-            COMPRESSED = 1 << 16
-        }
+        //enum COMPRESSED = 1 << 16;
 
         SparseExtentHeader h;
         scpy(CurrentFile, &h, h.sizeof, true);
@@ -1287,7 +1283,9 @@ void scan() {
         }
         const long size = h.numSectors * 512;
         report("ESXi COW disk image v", false);
-        write(h.version_, ", ", formatsize(size), ", \"", asciz(h.name), "\"");
+        string cows = formatsize(size);
+        printf("%d, %s, \"%s\"\n",
+            h.version_, &cows[0], &h.name[0]);
 
         if (More) {
             printf("Cylinders: %d\n", h.root.cylinders);
@@ -1319,6 +1317,7 @@ void scan() {
             ubyte[16] uuid;
             ubyte savedState;
             //ubyte[427] reserved;
+
         }
         enum {
             VHDMAGIC = "conectix",
@@ -1378,7 +1377,7 @@ void scan() {
 */
         if (h.features & F_TEMPORARY)
             printf(", Temporary");
-        
+
         if (h.savedState)
             printf(", Saved State");
 
@@ -1468,7 +1467,7 @@ void scan() {
             case 1:
                 scpy(CurrentFile, &sh, sh.sizeof);
                 break;
-            case 0:
+            case 0: {
                 VDIHEADER0 t;
                 scpy(CurrentFile, &t, t.sizeof);
                 sh.cbDisk = t.cbDisk;
@@ -1477,6 +1476,7 @@ void scan() {
                 sh.uuidModify = t.uuidModify;
                 sh.uuidLinkage = t.uuidLinkage;
                 sh.LegacyGeometry = t.LegacyGeometry;
+            }
                 break;
             default: return;
         }
@@ -1700,7 +1700,6 @@ void report_unknown(string filename = null)
 {
     if (ShowingName)
         write(filename ? filename : CurrentFile.name, ": ");
-    
     writeln("Unknown type");
 }
 

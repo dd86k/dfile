@@ -33,19 +33,6 @@ void scpy(File file, void* s, size_t size, bool rewind = false)
  */
 
 /**
- * Get a string from a  null-terminated buffer.
- * Params: str = ASCIZ sting
- * Returns: String (UTF-8)
- */
-string asciz(char[] str) pure
-{
-    if (str[0] == '\0') return null;
-    char* p, ip; p = ip = &str[0];
-    while (*++p != '\0') {}
-    return str[0 .. p - ip].idup;
-}
-
-/**
  * Get a string from a '0'-padded buffer.
  * Params: str = tar sting
  * Returns: String (UTF-8)
@@ -58,7 +45,7 @@ string tarstr(char[] str) pure
 }
 
 /**
- * Get a ' '-padded string from a buffer.
+ * Get a space-padded string from a buffer.
  * Params: str = iso-string
  * Returns: String (UTF-8)
  */
@@ -105,8 +92,7 @@ string formatsize(ulong size)
 
 	const double s = size;
 
-	if (Base10)
-	{
+	if (Base10) {
 		if (size > TiB)
             return format("%0.2f TiB", s / TiB);
 		else if (size > GiB)
@@ -117,9 +103,7 @@ string formatsize(ulong size)
             return format("%0.2f KiB", s / KiB);
 		else
 			return format("%d B", size);
-	}
-	else
-	{
+	} else {
 		if (size > TB)
             return format("%0.2f TB", s / TB);
 		else if (size > GB)
@@ -140,18 +124,15 @@ string formatsize(ulong size)
  */
 ushort bswap(ushort num) pure nothrow @nogc
 {
-    version (X86) asm pure nothrow @nogc {
-        naked;
+    version (X86) asm pure nothrow @nogc { naked;
         xchg AH, AL;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc {
-            naked;
+        version (Windows) asm pure nothrow @nogc { naked;
             mov AX, CX;
             xchg AL, AH;
             ret;
-        } else asm pure nothrow @nogc { // System V AMD64 ABI
-            naked;
+        } else asm pure nothrow @nogc { naked; // System V AMD64 ABI
             mov EAX, EDI;
             xchg AL, AH;
             ret;
@@ -171,18 +152,15 @@ ushort bswap(ushort num) pure nothrow @nogc
  */
 uint bswap(uint num) pure nothrow @nogc
 {
-    version (X86) asm pure nothrow @nogc {
-        naked;
+    version (X86) asm pure nothrow @nogc { naked;
         bswap EAX;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc {
-            naked;
+        version (Windows) asm pure nothrow @nogc { naked;
             mov EAX, ECX;
             bswap EAX;
             ret;
-        } else asm pure nothrow @nogc { // System V AMD64 ABI
-            naked;
+        } else asm pure nothrow @nogc { naked; // System V AMD64 ABI
             mov RAX, RDI;
             bswap EAX;
             ret;
@@ -202,20 +180,17 @@ uint bswap(uint num) pure nothrow @nogc
  */
 ulong bswap(ulong num) pure nothrow @nogc
 {
-    version (X86) asm pure nothrow @nogc {
-        naked;
+    version (X86) asm pure nothrow @nogc { naked;
         xchg EAX, EDX;
         bswap EDX;
         bswap EAX;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc {
-            naked;
+        version (Windows) asm pure nothrow @nogc { naked;
             mov RAX, RCX;
             bswap RAX;
             ret;
-        } else asm pure nothrow @nogc { // System V AMD64 ABI
-            naked;
+        } else asm pure nothrow @nogc { naked; // System V AMD64 ABI
             mov RAX, RDI;
             bswap RAX;
             ret;
@@ -240,7 +215,7 @@ ulong bswap(ulong num) pure nothrow @nogc
  * Returns: 2-byte number
  */
 ushort make_ushort(char[] buf) pure
-{
+{ //TODO: asm optimize this
     return buf[0] | buf[1] << 8;
 }
 /**
@@ -249,7 +224,7 @@ ushort make_ushort(char[] buf) pure
  * Returns: 4-byte number
  */
 uint make_uint(char[] buf) pure
-{
+{ //TODO: asm optimize this
     return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
 }
 
