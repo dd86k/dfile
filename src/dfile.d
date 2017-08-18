@@ -1703,7 +1703,7 @@ void report_unknown(string filename = null)
     if (ShowingName)
         write(filename ? filename : CurrentFile.name, ": ");
     
-    writeln("Unknown type\n");
+    writeln("Unknown type");
 }
 
 /// Report a text file.
