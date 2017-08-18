@@ -5,8 +5,7 @@
 module s_pe;
 
 import std.stdio;
-import dfile;
-import utils;
+import dfile, utils : scpy;
 
 private struct PE_HEADER { align(1):
     char[4] Signature; // "PE\0\0"
@@ -22,8 +21,8 @@ private struct PE_HEADER { align(1):
 /// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
 private struct PE_OPTIONAL_HEADER { align(1):
     PE_FORMAT magic;
-    byte MajorLinkerVersion;
-    byte MinorLinkerVersion;
+    ubyte MajorLinkerVersion;
+    ubyte MinorLinkerVersion;
     uint SizeOfCode;
     uint SizeOfInitializedData;
     uint SizeOfUninitializedData;
