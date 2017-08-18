@@ -327,12 +327,12 @@ void scan_pe() {
 
     if (More)
     {
-        printf("Machine type : %s\n", peh.Machine);
-        printf("Number of sections : %s\n", peh.NumberOfSymbols);
-        printf("Time stamp : %s\n", peh.TimeDateStamp);
-        printf("Pointer to Symbol Table : %s\n", peh.PointerToSymbolTable);
-        printf("Number of symbols : %s\n", peh.NumberOfSymbols);
-        printf("Size of Optional Header : %s\n", peh.SizeOfOptionalHeader);
+        printf("Machine type : %Xh\n", peh.Machine);
+        printf("Number of sections : %Xh\n", peh.NumberOfSymbols);
+        printf("Time stamp : %Xh\n", peh.TimeDateStamp);
+        printf("Pointer to Symbol Table : %Xh\n", peh.PointerToSymbolTable);
+        printf("Number of symbols : %Xh\n", peh.NumberOfSymbols);
+        printf("Size of Optional Header : %Xh\n", peh.SizeOfOptionalHeader);
         printf("Characteristics : %Xh\n", peh.Characteristics);
 
         if (peh.SizeOfOptionalHeader > 0)
