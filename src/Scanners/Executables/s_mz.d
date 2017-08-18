@@ -39,22 +39,20 @@ void scan_mz()
     uint e_lfanew;
     {
         uint[1] buf;
-        CurrentFile.seek(0x3C);
+        CurrentFile.seek(0x3C); //TODO: fseek
         CurrentFile.rawRead(buf);
         e_lfanew = buf[0];
     }
 
-    if (e_lfanew)
-    {
+    if (e_lfanew) {
         import s_pe : scan_pe;
         import s_le : scan_le;
         import s_ne : scan_ne;
         char[2] sig;
-        CurrentFile.seek(e_lfanew);
+        CurrentFile.seek(e_lfanew); //TODO: if (fseek) -> MZ
         CurrentFile.rawRead(sig);
 
-        switch (sig)
-        {
+        switch (sig) {
         case "PE":
             CurrentFile.seek(e_lfanew);
             scan_pe();
@@ -78,28 +76,27 @@ void scan_mz()
     scpy(CurrentFile, &h, h.sizeof, true);
 
     if (More) {
-        //TODO: remove those writefln
-        writefln("e_magic   : %Xh", h.e_magic);
-        writefln("e_cblp    : %Xh", h.e_cblp);
-        writefln("e_cp      : %Xh", h.e_cp);
-        writefln("e_crlc    : %Xh", h.e_crlc);
-        writefln("e_cparh   : %Xh", h.e_cparh);
-        writefln("e_minalloc: %Xh", h.e_minalloc);
-        writefln("e_maxalloc: %Xh", h.e_maxalloc);
-        writefln("e_ss      : %Xh", h.e_ss);
-        writefln("e_sp      : %Xh", h.e_sp);
-        writefln("e_csum    : %Xh", h.e_csum);
-        writefln("e_ip      : %Xh", h.e_ip);
-        writefln("e_cs      : %Xh", h.e_cs);
-        writefln("e_lfarlc  : %Xh", h.e_lfarlc);
-        writefln("e_ovno    : %Xh", h.e_ovno);
-        writefln("e_lfanew  : %Xh", h.e_lfanew);
+        printf("e_magic   : %Xh\n", h.e_magic);
+        printf("e_cblp    : %Xh\n", h.e_cblp);
+        printf("e_cp      : %Xh\n", h.e_cp);
+        printf("e_crlc    : %Xh\n", h.e_crlc);
+        printf("e_cparh   : %Xh\n", h.e_cparh);
+        printf("e_minalloc: %Xh\n", h.e_minalloc);
+        printf("e_maxalloc: %Xh\n", h.e_maxalloc);
+        printf("e_ss      : %Xh\n", h.e_ss);
+        printf("e_sp      : %Xh\n", h.e_sp);
+        printf("e_csum    : %Xh\n", h.e_csum);
+        printf("e_ip      : %Xh\n", h.e_ip);
+        printf("e_cs      : %Xh\n", h.e_cs);
+        printf("e_lfarlc  : %Xh\n", h.e_lfarlc);
+        printf("e_ovno    : %Xh\n", h.e_ovno);
+        printf("e_lfanew  : %Xh\n", h.e_lfanew);
     }
 
     report("MZ Executable", false);
 
     if (h.e_ovno)
-        writef(" (Overlay: %d)", h.e_ovno);
+        printf(" (Overlay: %d)", h.e_ovno);
 
     writeln(" for MS-DOS");
 }

@@ -45,14 +45,12 @@ private const enum : uint {
 }
 
 /// Scan a LE executable
-void scan_le()
-{
+void scan_le() {
     e32_hdr h;
     scpy(CurrentFile, &h, h.sizeof);
 
-    if (More)
-    {
-        writeln("e32_magic : ",  h.e32_magic);
+    if (More) {
+        printf("e32_magic : %s\n", &h.e32_magic[0]);
         printf("e32_border: %Xh\n", h.e32_border);
         printf("e32_worder: %Xh\n", h.e32_worder);
         printf("e32_level : %Xh\n", h.e32_level);
@@ -62,14 +60,14 @@ void scan_le()
         printf("e32_mflags: %Xh\n", h.e32_mflags);  // Module flags
     }
 
-    report(format("%s ", h.e32_magic), false);
+    report(cast(immutable)h.e32_magic, false);
 
     switch (h.e32_os) {
-    default: write("Unknown "); break;
-    case OS2: write("OS/2 "); break;
-    case Windows: write("Windows "); break;
-    case DOS4: write("DOS 4.x "); break;
-    case Windows386: write("Windows 386 "); break;
+    default: write(" Unknown "); break;
+    case OS2: write(" OS/2 "); break;
+    case Windows: write(" Windows "); break;
+    case DOS4: write(" DOS 4.x "); break;
+    case Windows386: write(" Windows 386 "); break;
     }
 
     if (h.e32_mflags & Library)

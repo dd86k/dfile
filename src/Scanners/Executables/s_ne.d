@@ -53,44 +53,41 @@ private enum {
 }
 
 /// Scan a NE executable
-void scan_ne()
-{
+void scan_ne() {
     ne_hdr h;
     scpy(CurrentFile, &h, h.sizeof);
 
-    if (More)
-    {
-        //TODO: remove writef
-        writefln("ne_magic       : %s", h.ne_magic);
-        writefln("ne_ver         : %Xh", h.ne_ver);
-        writefln("ne_rev         : %Xh", h.ne_rev);
-        writefln("ne_enttab      : %Xh", h.ne_enttab);
-        writefln("ne_cbenttab    : %Xh", h.ne_cbenttab);
-        writefln("ne_crc         : %Xh", h.ne_crc);
-        writefln("ne_flags       : %Xh", h.ne_flags);
-        writefln("ne_autodata    : %Xh", h.ne_autodata);
-        writefln("ne_heap        : %Xh", h.ne_heap);
-        writefln("ne_stack       : %Xh", h.ne_stack);
-        writefln("ne_csip        : %Xh", h.ne_csip);
-        writefln("ne_sssp        : %Xh", h.ne_sssp);
-        writefln("ne_cseg        : %Xh", h.ne_cseg);
-        writefln("ne_cmod        : %Xh", h.ne_cmod);
-        writefln("ne_cbnrestab   : %Xh", h.ne_cbnrestab);
-        writefln("ne_segtab      : %Xh", h.ne_segtab);
-        writefln("ne_rsrctab     : %Xh", h.ne_rsrctab);
-        writefln("ne_restab      : %Xh", h.ne_restab);
-        writefln("ne_modtab      : %Xh", h.ne_modtab);
-        writefln("ne_imptab      : %Xh", h.ne_imptab);
-        writefln("ne_nrestab     : %Xh", h.ne_nrestab);
-        writefln("ne_cmovent     : %Xh", h.ne_cmovent);
-        writefln("ne_align       : %Xh", h.ne_align);
-        writefln("ne_cres        : %Xh", h.ne_cres);
-        writefln("ne_psegcsum    : %Xh", h.ne_psegcsum);
-        writefln("ne_pretthunks  : %Xh", h.ne_pretthunks);
-        writefln("ne_psegrefbytes: %Xh", h.ne_psegrefbytes);
-        writefln("ne_swaparea    : %Xh", h.ne_swaparea);
+    if (More) {
+        printf("ne_magic       : %s\n", &h.ne_magic[0]);
+        printf("ne_ver         : %Xh\n", h.ne_ver);
+        printf("ne_rev         : %Xh\n", h.ne_rev);
+        printf("ne_enttab      : %Xh\n", h.ne_enttab);
+        printf("ne_cbenttab    : %Xh\n", h.ne_cbenttab);
+        printf("ne_crc         : %Xh\n", h.ne_crc);
+        printf("ne_flags       : %Xh\n", h.ne_flags);
+        printf("ne_autodata    : %Xh\n", h.ne_autodata);
+        printf("ne_heap        : %Xh\n", h.ne_heap);
+        printf("ne_stack       : %Xh\n", h.ne_stack);
+        printf("ne_csip        : %Xh\n", h.ne_csip);
+        printf("ne_sssp        : %Xh\n", h.ne_sssp);
+        printf("ne_cseg        : %Xh\n", h.ne_cseg);
+        printf("ne_cmod        : %Xh\n", h.ne_cmod);
+        printf("ne_cbnrestab   : %Xh\n", h.ne_cbnrestab);
+        printf("ne_segtab      : %Xh\n", h.ne_segtab);
+        printf("ne_rsrctab     : %Xh\n", h.ne_rsrctab);
+        printf("ne_restab      : %Xh\n", h.ne_restab);
+        printf("ne_modtab      : %Xh\n", h.ne_modtab);
+        printf("ne_imptab      : %Xh\n", h.ne_imptab);
+        printf("ne_nrestab     : %Xh\n", h.ne_nrestab);
+        printf("ne_cmovent     : %Xh\n", h.ne_cmovent);
+        printf("ne_align       : %Xh\n", h.ne_align);
+        printf("ne_cres        : %Xh\n", h.ne_cres);
+        printf("ne_psegcsum    : %Xh\n", h.ne_psegcsum);
+        printf("ne_pretthunks  : %Xh\n", h.ne_pretthunks);
+        printf("ne_psegrefbytes: %Xh\n", h.ne_psegrefbytes);
+        printf("ne_swaparea    : %Xh\n", h.ne_swaparea);
         write("ne_expver      : ");
-        writefln("%X %X", h.ne_expver[0], h.ne_expver[1]);
+        printf("%X %X\n", h.ne_expver[0], h.ne_expver[1]);
         writeln;
     }
 
@@ -104,7 +101,7 @@ void scan_ne()
     write(" file");
 
     if (h.ne_expver[0])
-        writef(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
+        printf(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
 
     if (h.ne_flags)
     {

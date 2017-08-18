@@ -112,13 +112,10 @@ void prescan(string filename, bool cont)
     {
         import std.exception : ErrnoException;
 FILE:
-        try
-        {
+        try {
             debug dbg("Opening file...");
             CurrentFile = File(filename, "rb");
-        }
-        catch (ErrnoException ex)
-        {
+        } catch (ErrnoException ex) {
             stderr.writeln("ERROR: ", ex.msg, ".");
             return;
         }

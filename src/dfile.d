@@ -48,11 +48,8 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
     writef("%s@L%d: %s", baseName(file), line, msg);
 }
 
-/**
- * Scanner entry point.
- */
-void scan()
-{
+/// Scanner entry point.
+void scan() {
     char[4] sig; // UTF-8, ASCII compatible.
     if (CurrentFile.rawRead(sig).length == 0) {
         report("Empty file");
@@ -1397,8 +1394,9 @@ void scan()
     }
         return;
 
+//TODO: Move all virtualdisks-related scanning to another source file.
+
     case 0x203C3C3C: { // "<<< ", Oracle VDI vdisk
-    //TODO: Move all virtualdisks-related scanning to another source
         enum {
             VDI_SUN = "Sun xVM VirtualBox Disk Image >>>\n",
             VDI =     "Oracle VM VirtualBox Disk Image >>>\n"

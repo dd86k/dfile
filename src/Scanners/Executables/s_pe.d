@@ -146,8 +146,7 @@ private enum PE_SUBSYSTEM : ushort
 }
 
 /// Scan a PE32 executable
-void scan_pe()
-{
+void scan_pe() {
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
@@ -162,9 +161,8 @@ void scan_pe()
     }
 
     report("PE32", false);
-    
-    switch (peoh.magic)
-    {
+
+    switch (peoh.magic) {
     case PE_FORMAT.ROM: // HDR
         write("-ROM ");
         break;
@@ -329,20 +327,19 @@ void scan_pe()
 
     if (More)
     {
-        //TODO: replace all writefln
-        writefln("Machine type : %s", peh.Machine);
-        writefln("Number of sections : %s", peh.NumberOfSymbols);
-        writefln("Time stamp : %s", peh.TimeDateStamp);
-        writefln("Pointer to Symbol Table : %s", peh.PointerToSymbolTable);
-        writefln("Number of symbols : %s", peh.NumberOfSymbols);
-        writefln("Size of Optional Header : %s", peh.SizeOfOptionalHeader);
-        writefln("Characteristics : %Xh", peh.Characteristics);
+        printf("Machine type : %s\n", peh.Machine);
+        printf("Number of sections : %s\n", peh.NumberOfSymbols);
+        printf("Time stamp : %s\n", peh.TimeDateStamp);
+        printf("Pointer to Symbol Table : %s\n", peh.PointerToSymbolTable);
+        printf("Number of symbols : %s\n", peh.NumberOfSymbols);
+        printf("Size of Optional Header : %s\n", peh.SizeOfOptionalHeader);
+        printf("Characteristics : %Xh\n", peh.Characteristics);
 
         if (peh.SizeOfOptionalHeader > 0)
         {
-            writefln("Format    : %Xh", peoh.magic);
-            writefln("Subsystem : %Xh", peoh.Subsystem);
-            writefln("CLR Header: %Xh", dirs.CLRHeader);
+            printf("Format    : %Xh\n", peoh.magic);
+            printf("Subsystem : %Xh\n", peoh.Subsystem);
+            printf("CLR Header: %Xh\n", dirs.CLRHeader);
         }
     }
 }
