@@ -677,7 +677,7 @@ void scan() {
             scpy(CurrentFile, &h, h.sizeof);
             report("WAVE audio file (", false);
             if (h.id != "fmt ") {
-                writeln; return;
+                writeln("Invalid ID)"); return;
             }
             switch (h.format) {
                 case PCM: printf("PCM"); break;
