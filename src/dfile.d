@@ -175,16 +175,16 @@ void scan() {
         switch (b) {
             case x"1A": {
                 struct spc2_hdr { align(1):
-                    char[5] magic;
+                    //char[5] magic;
                     ubyte majorver, minorver;
                     ushort number;
                 }
 
                 spc2_hdr h;
-                scpy(CurrentFile, &h, h.sizeof, true);
+                scpy(CurrentFile, &h, h.sizeof);
 
                 report("SNES SPC2 v", false);
-                printf("%d.%d file with %d of SPC entries",
+                printf("%d.%d, %d of SPC entries\n",
                     h.majorver, h.minorver, h.number);
             }
                 return;
@@ -251,8 +251,7 @@ void scan() {
         return;
 
     case 0x01434E52, 0x02434E52: // RNC\x01 or \x02
-        report("Rob Northen Compressed archive v" ~
-            (sig[3] == 1 ? '1' : '2') ~ ")");
+        report("Rob Northen Compressed archive v" ~ (sig[3] == 1 ? '1' : '2') ~ ")");
         return;
 
     case 0x58504453, 0x53445058: // "SDPX", "XPDS"
@@ -264,7 +263,7 @@ void scan() {
         return;
 
     case 0xFB475042: // BPGû
-        report("Better Portable Graphics image (BPG)");
+        scan_bpg;
         return;
 
     case 0xDBFFD8FF, 0xE0FFD8FF, 0xE1FFD8FF:
@@ -292,7 +291,7 @@ void scan() {
         uint[1] b;
         CurrentFile.rawRead(b);
         report("GTA Text 2 file, ", false);
-        printf("%d entries", bswap(b[0]));  // Byte swapped
+        printf("%d entries\n", bswap(b[0]));  // Byte swapped
     }
         return;
 
@@ -319,7 +318,7 @@ void scan() {
         case '6': printf("Red Dead Redemption"); break;
         case '7': printf("GTA V"); break;
         }
-        printf("), %d entries", h.numentries);
+        printf("), %d entries\n", h.numentries);
     }
         return;
 
@@ -416,20 +415,6 @@ void scan() {
         pkzip_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
 
-        if (More) {
-            //writeln("magic      : ", h.magic);
-            writeln("Version    : ", h.version_);
-            writeln("Flag       : ", h.flag);
-            writeln("Compression: ", h.compression);
-            writeln("Time       : ", h.time);
-            writeln("Date       : ", h.date);
-            writeln("CRC32      : ", h.crc32);
-            writeln("Size (Uncompressed): ", h.usize);
-            writeln("Size (Compressed)  : ", h.csize);
-            writeln("Filename Size      : ", h.fnlength);
-            writeln("Extra field Size   : ", h.eflength);
-        }
-
         debug writeln("FNLENGTH: ", formatsize(h.fnlength));
 
         report("PKWare ZIP ", false); // JAR, ODF, OOXML, EPUB
@@ -481,6 +466,20 @@ void scan() {
             printf(", Enhanced deflation");
 
         writeln;
+
+        if (More) {
+            //writeln("magic      : ", h.magic);
+            writeln("Version    : ", h.version_);
+            writeln("Flag       : ", h.flag);
+            writeln("Compression: ", h.compression);
+            writeln("Time       : ", h.time);
+            writeln("Date       : ", h.date);
+            writeln("CRC32      : ", h.crc32);
+            writeln("Size (Uncompressed): ", h.usize);
+            writeln("Size (Compressed)  : ", h.csize);
+            writeln("Filename Size      : ", h.fnlength);
+            writeln("Extra field Size   : ", h.eflength);
+        }
     }
         return;
 
@@ -527,7 +526,7 @@ void scan() {
     case 0x46445025: // "%PDF"
         CurrentFile.rawRead(sig); // for "-1.0"
         report("PDF", false);
-        printf("%s document", &sig[0]);
+        printf("%s document\n", &sig[0]);
         return;
 
     case 0x75B22630: {
@@ -571,7 +570,7 @@ void scan() {
         printf("%d with %d segments\n", h.version_, h.pages);
 
         if (More) {
-            writefln("CRC32: %08X", h.crc32);
+            printf("CRC32: %08X\n", h.crc32);
         }
     }
         return;
@@ -604,7 +603,7 @@ void scan() {
             const int chan = ((h.stupid[8] >> 1) & 7) + 1;
             const int rate =
                 ((h.stupid[6] << 12) | h.stupid[7] << 4 | h.stupid[8] >>> 4);
-            writeln(", ", rate, " Hz, ", bits, " bit, ", chan, " channels");
+            printf(", %d Hz, %d-bit, %d channels\n", rate, bits, chan);
             if (More) {
                 printf("MD5: ");
                 print_array(&h.md5[0], h.md5.length);
@@ -912,7 +911,7 @@ WAV_C:
         case v5_00_000: printf(" v5.00.000"); break;
         default: writef(" (Version: 0x%08X)", h.version_); break;
         }
-        printf(" at 0x%X", h.desc_offset);
+        printf(" at 0x%X\n", h.desc_offset);
     }
         return;
 
@@ -1200,7 +1199,7 @@ WAV_C:
 
         if (h.version_ == 1 || h.version_ == 2) {
             report("TRX v", false);
-            printf("%d firmware (Length: %d, CRC32: %Xh)",
+            printf("%d firmware (Length: %d, CRC32: %Xh)\n",
                 h.version_, h.length, h.crc);
         } else
             report_unknown();
@@ -1540,9 +1539,7 @@ WAV_C:
             uint nb_snapshots;
             ulong snapshots_offset;
         }
-        enum {
-            C_AES = 1,
-        }
+        enum C_AES = 1;
 
         QCowHeader h;
         scpy(CurrentFile, &h, h.sizeof, true);
