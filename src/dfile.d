@@ -1035,7 +1035,10 @@ void scan() {
 
     case 0x6D736100: { // "\0asm", WebAssembly binary
         // http://webassembly.org/docs/binary-encoding/
-        report("WebAssembly file (wasm)");
+        report("WebAssembly file (wasm) v", false);
+        ubyte[1] ver;
+        CurrentFile.rawRead(ver);
+        printf("%d binary file\n", ver[0]);
         return;
     }
 
@@ -1051,7 +1054,7 @@ void scan() {
             return;
         }
     }
-    
+
     // http://www.cabextract.org.uk/libmspack/doc/szdd_kwaj_format.html
     case 0x4A41574B: { // "KWAJ"
         struct kwaj_hdr { align(1):
@@ -1067,12 +1070,12 @@ void scan() {
         report("MS-DOS ", false);
 
         switch (h.method) {
-            case 0: write("Non-compressed"); break;
-            case 1: write("0xFF-XOR'd data"); break;
-            case 2: write("Regular SZDD Compressed"); break;
-            case 3: write(`LZ + Huffman "Jeff Johnson" Compressed`); break;
-            case 4: write("MS-ZIP Compressed"); break;
-            default: write("Unknown compression");
+        case 0: write("Non-compressed"); break;
+        case 1: write("0xFF-XOR'd data"); break;
+        case 2: write("Regular SZDD Compressed"); break;
+        case 3: write(`LZ + Huffman "Jeff Johnson" Compressed`); break;
+        case 4: write("MS-ZIP Compressed"); break;
+        default: write("Unknown compression");
         }
 
         printf(" file (KWAJ)");
