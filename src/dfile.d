@@ -658,12 +658,12 @@ void scan() {
                 ushort format;
                 ushort channels;
                 uint samplerate; // Blocks per second
-                uint datarate;
-                ushort blocksize;
-                ushort samplebits;
+                uint datarate; // Bytes/s
+                ushort blockalign;
+                ushort samplebits; // Bits per sample
                 ushort extensionsize;
                 ushort nbvalidbits;
-                uint speakmask;
+                uint speakmask; // Speaker position mask
                 char[16] guid;
             }
             enum {
@@ -676,8 +676,13 @@ void scan() {
             fmt_chunk h;
             scpy(CurrentFile, &h, h.sizeof);
             report("WAVE audio file (", false);
-            if (h.id != "fmt ") {
-                writeln("Invalid ID)"); return;
+            switch (h.id) {
+            case "fmt ": break;
+            case "fact": writeln("fact chunk)"); return;
+            case "data": writeln("data chunk)"); return;
+            default:
+                writeln("Unknown chunk), chunk: ", h.id);
+                return;
             }
             switch (h.format) {
                 case PCM: printf("PCM"); break;
