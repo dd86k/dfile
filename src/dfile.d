@@ -61,7 +61,7 @@ void scan() {
             mov ECX, dword ptr sig;
             mov s, ECX;
         }
-    } else uint s = *cast(uint*)&sig[0]; // As fallback
+    } else const uint s = fint(sig); // As fallback
 
     debug writefln("Magic: %08X", s);
 
@@ -673,17 +673,21 @@ void scan() {
                 MULAW = 7,
                 EXTENSIBLE = 0xFFFE
             }
-            fmt_chunk h;
-            scpy(CurrentFile, &h, h.sizeof);
-            report("WAVE audio file (", false);
-            switch (h.id) {
-            case "fmt ": break;
-            case "fact": writeln("fact chunk)"); return;
-            case "data": writeln("data chunk)"); return;
-            default:
-                writeln("Unknown chunk), chunk: ", h.id);
-                return;
+            enum FMT_CHUNK = "fmt ";
+            CurrentFile.rawRead(sig);
+            while (sig != FMT_CHUNK) {
+                CurrentFile.rawRead(sig);
+                const uint p = fint(sig);
+                CurrentFile.seek(p, SEEK_CUR);
+                CurrentFile.rawRead(sig);
+                if (sig == FMT_CHUNK)
+                    goto WAV_C;
             }
+WAV_C:
+            fmt_chunk h;
+            report("WAVE audio file (", false);
+            CurrentFile.seek(-4, SEEK_CUR);
+            scpy(CurrentFile, &h, h.sizeof);
             switch (h.format) {
                 case PCM: printf("PCM"); break;
                 case IEEE_FLOAT: printf("IEEE Float"); break;
@@ -696,7 +700,7 @@ void scan() {
                         print_array(&h.guid[0], h.guid.length);
                     }
                     break;
-                default: printf("Unknown type\n"); return;
+                default: printf("Unknown type)\n"); return;
             }
             printf(") %d Hz, %d kbps, %d-bit, ",
                 h.samplerate, h.datarate / 1024 * 8, h.samplebits);

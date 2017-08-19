@@ -4,7 +4,8 @@
 
 module utils;
 
-import std.stdio, dfile : Base10;
+import std.stdio : File;
+import dfile : Base10;
 
 /*
  * File utilities.
@@ -26,6 +27,15 @@ void scpy(File file, void* s, size_t size, bool rewind = false)
     ubyte[] buf = new ubyte[size];
     file.rawRead(buf);
     memcpy(s, buf.ptr, size);
+}
+
+/**
+ * Fast int.
+ * Params: sig = 4-byte array
+ * Returns: 4-byte number
+ */
+pragma(inline, true) uint fint(char[4] sig) {
+    return *cast(int*)&sig;
 }
 
 /*
@@ -60,7 +70,7 @@ string isostr(char[] str) pure
 
 /*
  * Number utilities.
- */
+ */ 
 
 //TODO: EXP-GOLOMB UTIL
 // https://en.wikipedia.org/wiki/Exponential-Golomb_coding
@@ -209,13 +219,16 @@ ulong bswap(ulong num) pure nothrow @nogc
     }
 }
 
+//TODO: ASM-optimize these two functions
+//TODO: Check what other places could use these functions
+
 /**
  * Turns a 2-byte buffer and transforms it into a 2-byte number.
  * Params: buf = Buffer
  * Returns: 2-byte number
  */
 ushort make_ushort(char[] buf) pure
-{ //TODO: asm optimize this
+{
     return buf[0] | buf[1] << 8;
 }
 /**
@@ -224,7 +237,7 @@ ushort make_ushort(char[] buf) pure
  * Returns: 4-byte number
  */
 uint make_uint(char[] buf) pure
-{ //TODO: asm optimize this
+{
     return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
 }
 
@@ -236,7 +249,8 @@ uint make_uint(char[] buf) pure
  */
 void print_array(void* arr, size_t length)
 {
+    import core.stdc.stdio : printf;
     ubyte* p = cast(ubyte*)arr;
     while (--length) printf("%02X ", *++p);
-    writeln;
+    printf("\n");
 }
