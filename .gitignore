@@ -11,6 +11,7 @@ dfile
 bin
 .dub
 dub.selections.json
+*.zip
 # Personal sample folder
 t
 
