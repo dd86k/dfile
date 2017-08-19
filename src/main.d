@@ -7,7 +7,7 @@ module main;
 import std.stdio, std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.8.1", /// Project version.
+enum PROJECT_VERSION = "0.8.2", /// Project version.
      PROJECT_NAME = "dfile";    /// Project name, usually executable name.
 
 debug { } else
