@@ -21,7 +21,7 @@ import s_images, utils;
 bool More, /// -m : More flag
      ShowingName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
-static File CurrentFile; /// Current file handle.
+File CurrentFile; /// Current file handle.
 
 /**
  * Prints debugging message with a FILE<at>LINE: MSG formatting.
@@ -68,7 +68,7 @@ void scan() {
     switch (s)
     {
     /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
-        write("LD2000 Frame file (LDS)");
+        printf("LD2000 Frame file (LDS)");
         break;*/
 
     /*case [0xBE, 0xBA, 0xFE, 0xCA]: // Conflicts with Mach-O
@@ -142,7 +142,7 @@ void scan() {
             else
                 report("PAL", false);
 
-            write(" Nintendo Sound Format, ", h.total_song, " songs, ");
+            printf(" Nintendo Sound Format, %d songs, ", h.total_song);
 
             if (h.chip & 1)
                 printf("VRCVI, ");
@@ -310,12 +310,12 @@ void scan() {
             printf("encrypted");
         printf("archive v%c (", sig[3]);
         final switch (sig[3]) {
-        case '0': write("Table Tennis"); break;
-        case '2': write("GTA IV"); break;
-        case '3': write("GTA IV:A&MC:LA"); break;
-        case '4': write("Max Payne 3"); break;
-        case '6': write("Red Dead Redemption"); break;
-        case '7': write("GTA V"); break;
+        case '0': printf("Table Tennis"); break;
+        case '2': printf("GTA IV"); break;
+        case '3': printf("GTA IV:A&MC:LA"); break;
+        case '4': printf("Max Payne 3"); break;
+        case '6': printf("Red Dead Redemption"); break;
+        case '7': printf("GTA V"); break;
         }
         printf("), %d entries", h.numentries);
     }
@@ -433,20 +433,20 @@ void scan() {
         report("PKWare ZIP ", false); // JAR, ODF, OOXML, EPUB
 
         switch (h.compression) {
-        case 0: write("Uncompressed"); break;
-        case 1: write("Shrunk"); break;
+        case 0: printf("Uncompressed"); break;
+        case 1: printf("Shrunk"); break;
         case 2: .. // 2 to 5
-        case 5: write("Reduced by ", h.compression - 1); break;
-        case 6: write("Imploded"); break;
-        case 8: write("Deflated"); break;
-        case 9: write("Enhanced Deflated"); break;
-        case 10: write("DCL Imploded (PKWare)"); break;
-        case 12: write("BZIP2"); break;
-        case 14: write("LZMA"); break;
-        case 18: write("IBM TERSE"); break;
-        case 19: write("IBM LZ77 z"); break;
-        case 98: write("PPMd Version I, Rev 1"); break;
-        default: write("Unknown"); break;
+        case 5: printf("Reduced by ", h.compression - 1); break;
+        case 6: printf("Imploded"); break;
+        case 8: printf("Deflated"); break;
+        case 9: printf("Enhanced Deflated"); break;
+        case 10: printf("DCL Imploded (PKWare)"); break;
+        case 12: printf("BZIP2"); break;
+        case 14: printf("LZMA"); break;
+        case 18: printf("IBM TERSE"); break;
+        case 19: printf("IBM LZ77 z"); break;
+        case 98: printf("PPMd Version I, Rev 1"); break;
+        default: printf("Unknown"); break;
         }
 
         printf(" Archive (v%d.%d), ", h.version_ / 10, h.version_ % 10);
@@ -454,7 +454,7 @@ void scan() {
         if (h.fnlength > 0) {
             char[] filename = new char[h.fnlength];
             CurrentFile.rawRead(filename);
-            write(`"`, filename, `", `);
+            printf("%s, ", &filename[0]);
         }
         
         write(formatsize(h.csize), "/", formatsize(h.usize));
@@ -467,16 +467,16 @@ void scan() {
         }
 
         if (h.flag & ENCRYPTED)
-            write(", Encrypted");
+            printf(", Encrypted");
 
         if (h.flag & STRONG_ENCRYPTION)
-            write(", Strongly encrypted");
+            printf(", Strongly encrypted");
 
         if (h.flag & COMPRESSED_PATCH)
-            write(", Compression patch");
+            printf(", Compression patch");
 
         if (h.flag & ENHANCED_DEFLATION)
-            write(", Enhanced deflation");
+            printf(", Enhanced deflation");
 
         writeln;
     }
@@ -604,7 +604,7 @@ void scan() {
                 ((h.stupid[6] << 12) | h.stupid[7] << 4 | h.stupid[8] >>> 4);
             writeln(", ", rate, " Hz, ", bits, " bit, ", chan, " channels");
             if (More) {
-                write("MD5: ");
+                printf("MD5: ");
                 print_array(&h.md5[0], h.md5.length);
                 writeln();
             }
@@ -893,10 +893,10 @@ void scan() {
         scpy(CurrentFile, &h, h.sizeof);
         report("InstallShield CAB archive", false);
         switch (h.version_) {
-        case LEGACY:    write(" (Legacy)");  break;
-        case v2_20_905: write(" v2.20.905"); break;
-        case v3_00_065: write(" v3.00.065"); break;
-        case v5_00_000: write(" v5.00.000"); break;
+        case LEGACY:    printf(" (Legacy)");  break;
+        case v2_20_905: printf(" v2.20.905"); break;
+        case v3_00_065: printf(" v3.00.065"); break;
+        case v5_00_000: printf(" v5.00.000"); break;
         default: writef(" (Version: 0x%08X)", h.version_); break;
         }
         printf(" at 0x%X", h.desc_offset);
@@ -1011,15 +1011,15 @@ void scan() {
         scpy(CurrentFile, &h, h.sizeof, true);
         report("RPM ", false);
         switch (h.type) {
-            case 0: write("Binary"); break;
-            case 0x100: write("Source"); break;
-            default: write("Unknown type"); break;
+            case 0: printf("Binary"); break;
+            case 0x100: printf("Source"); break;
+            default: printf("Unknown type"); break;
         }
-        write(" Package v");
+        printf(" Package v");
         printf(`%d.%d, "%s", `, h.major, h.minor, &h.name[0]);
         switch (h.osnum) {
-            case 0x100: write("linux"); break;
-            default: write("other"); break;
+            case 0x100: printf("linux"); break;
+            default: printf("other"); break;
         }
         writeln(" platforms");
     }
@@ -1070,12 +1070,12 @@ void scan() {
         report("MS-DOS ", false);
 
         switch (h.method) {
-        case 0: write("Non-compressed"); break;
-        case 1: write("0xFF-XOR'd data"); break;
-        case 2: write("Regular SZDD Compressed"); break;
-        case 3: write(`LZ + Huffman "Jeff Johnson" Compressed`); break;
-        case 4: write("MS-ZIP Compressed"); break;
-        default: write("Unknown compression");
+        case 0: printf("Non-compressed"); break;
+        case 1: printf("0xFF-XOR'd data"); break;
+        case 2: printf("Regular SZDD Compressed"); break;
+        case 3: printf(`LZ + Huffman "Jeff Johnson" Compressed`); break;
+        case 4: printf("MS-ZIP Compressed"); break;
+        default: printf("Unknown compression");
         }
 
         printf(" file (KWAJ)");
@@ -1083,7 +1083,7 @@ void scan() {
         if (h.offset)
             printf(" (offset:%Xh)", h.offset);
 
-        enum { // Header flags
+        enum : ushort {  // Header flags
             ULENGHT = 1, // 4 bytes, uncompressed data length
             UNKNOWN = 2, // 2 bytes
             DLENGHT = 4, // 2 bytes, data length?
@@ -1105,7 +1105,7 @@ void scan() {
 
             if (name)
                 write(CurrentFile.readln('\0'));
-            write('.');
+            printf(".");
             if (ext)
                 write(CurrentFile.readln('\0'));
         }
@@ -1232,7 +1232,7 @@ void scan() {
         printf(" compression");
 
         if (h.uncleanShutdown)
-            write(", unclean shutdown");
+            printf(", unclean shutdown");
 
         writeln();
 
@@ -1538,7 +1538,7 @@ void scan() {
         write(bswap(h.version_), ", ", formatsize(bswap(h.size)), " capacity");
 
         switch (bswap(h.crypt_method)) {
-            case C_AES: write(", AES encrypted"); break;
+            case C_AES: printf(", AES encrypted"); break;
             default: break;
         }
 
@@ -1798,7 +1798,7 @@ void report_link(string linkname)
             return s;
         }
 
-        write(" to ");
+        printf(" to ");
         stdout.flush; // on x86-dmd builds, used to move cursor
         const(void)* wp = &buffer.ReparseTarget[2];
         DWORD c;
