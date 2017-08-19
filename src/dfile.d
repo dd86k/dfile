@@ -526,7 +526,7 @@ void scan() {
     case 0x46445025: // "%PDF"
         CurrentFile.rawRead(sig); // for "-1.0"
         report("PDF", false);
-        printf("%s document\n", &sig[0]);
+        writeln(sig, " document");
         return;
 
     case 0x75B22630: {
