@@ -65,6 +65,8 @@ void scan() {
 
     debug writefln("Magic: %08X", s);
 
+    FILE* fp = CurrentFile.getFP;
+
     switch (s)
     {
     /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
@@ -629,7 +631,7 @@ void scan() {
         psd_hdr h;
         scpy(CurrentFile, &h, h.sizeof);
         report("Photoshop Document v", false);
-        printf("%d, %d x %d, %d-bit",
+        printf("%d, %d x %d, %d-bit ",
             bswap(h.version_), bswap(h.width), bswap(h.height), bswap(h.depth));
         switch (bswap(h.colormode)) {
         case 0: printf("Bitmap"); break;
@@ -642,7 +644,7 @@ void scan() {
         case 9: printf("Lab"); break;
         default: printf("Unknown type"); break;
         }
-        printf(" image, %d channel(s)", bswap(h.channels));
+        printf(" image, %d channel(s)\n", bswap(h.channels));
     }
         return;
 
@@ -666,6 +668,7 @@ void scan() {
                 uint speakmask; // Speaker position mask
                 char[16] guid;
             }
+            enum FMT_CHUNK = "fmt ";
             enum {
                 PCM = 1,
                 IEEE_FLOAT = 3,
@@ -673,21 +676,22 @@ void scan() {
                 MULAW = 7,
                 EXTENSIBLE = 0xFFFE
             }
-            enum FMT_CHUNK = "fmt ";
             CurrentFile.rawRead(sig);
-            while (sig != FMT_CHUNK) {
+            while (sig != FMT_CHUNK) { // Skip useless chunks
                 CurrentFile.rawRead(sig);
-                const uint p = fint(sig);
-                CurrentFile.seek(p, SEEK_CUR);
+                const uint p = fint(sig); // Chunk length
+                if (fseek(fp, p, SEEK_CUR)) {
+                    report_unknown;
+                    return;
+                }
                 CurrentFile.rawRead(sig);
-                if (sig == FMT_CHUNK)
-                    goto WAV_C;
+                if (sig == FMT_CHUNK) goto WAV_C;
             }
 WAV_C:
             fmt_chunk h;
-            report("WAVE audio file (", false);
             CurrentFile.seek(-4, SEEK_CUR);
             scpy(CurrentFile, &h, h.sizeof);
+            report("WAVE audio file (", false);
             switch (h.format) {
                 case PCM: printf("PCM"); break;
                 case IEEE_FLOAT: printf("IEEE Float"); break;

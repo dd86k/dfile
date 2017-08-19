@@ -43,8 +43,8 @@ pragma(inline, true) uint fint(char[4] sig) {
  */
 
 /**
- * Get a string from a '0'-padded buffer.
- * Params: str = tar sting
+ * Get a tar string from a character buffer.
+ * Params: str = tar-string
  * Returns: String (UTF-8)
  */
 string tarstr(char[] str) pure
@@ -55,15 +55,15 @@ string tarstr(char[] str) pure
 }
 
 /**
- * Get a space-padded string from a buffer.
+ * Get an ISO string from a character buffer.
  * Params: str = iso-string
  * Returns: String (UTF-8)
  */
 string isostr(char[] str) pure
 {
     if (str[0] == ' ') return null;
-    if (str[$ - 1] != ' ') return str.idup;
     size_t p = str.length - 1;
+    if (str[p] != ' ') return str.idup;
     while (str[p] == ' ') --p;
     return str[0 .. p + 1].idup;
 }
