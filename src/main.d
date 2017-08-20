@@ -81,8 +81,8 @@ private int main(string[] args)
                             prescan(s, cont);
                         }
                     }
-                } catch (FileException ex) {
-                    stderr.writeln("Error: ", ex.msg);
+                } catch (FileException ex) { // dirEntries may throw
+                    stderr.writeln(ex.msg);
                     return 1;
                 }
                 if (!found) { // "Not found"-case if 0 files.
@@ -108,12 +108,14 @@ private int main(string[] args)
 void prescan(string filename, bool cont)
 {
     //TODO: #6 (Posix) -- Use stat(2)
-    if (isSymlink(filename))
+    // Or rather, figure a few linux things
+    const uint a = getAttributes(filename);
+    if (attrIsSymlink(a))
         if (cont)
             goto FILE;
         else
             report_link(filename);
-    else if (isFile(filename))
+    else if (attrIsFile(a))
     {
         import std.exception : ErrnoException;
 FILE:
@@ -121,7 +123,7 @@ FILE:
             debug dbg("Opening file...");
             CurrentFile = File(filename, "rb");
         } catch (ErrnoException ex) {
-            stderr.writeln("ERROR: ", ex.msg, ".");
+            stderr.writeln("Error: ", ex.msg, ".");
             return;
         }
 
@@ -131,7 +133,7 @@ FILE:
         debug dbg("Closing file...");
         CurrentFile.close();
     }
-    else if (isDir(filename))
+    else if (attrIsDir(a))
         report("Directory", true, filename);
     else
         report_unknown(filename);
@@ -141,17 +143,19 @@ FILE:
 void PrintHelp()
 {
     writeln("Determine the file type via pre-determined magic.");
-    writeln("  Usage: ", PROJECT_NAME, " [options] file");
-    writeln("         ", PROJECT_NAME, " {-h|--help|-v|--version}");
+    printf("  Usage: %s [options] file\n", &PROJECT_NAME[0]);
+    printf("         %s {-h|--help|-v|--version}\n", &PROJECT_NAME[0]);
 }
 
 /// Print program version and exit.
 void PrintVersion()
 {
     import core.stdc.stdlib : exit;
-    writefln("%s %s (%s)", PROJECT_NAME, PROJECT_VERSION, __TIMESTAMP__);
-    writefln("Compiled %s with %s v%s", __FILE__, __VENDOR__, __VERSION__);
+    printf("%s %s (%s)\n",
+        &PROJECT_NAME[0], &PROJECT_VERSION[0], &__TIMESTAMP__[0]);
+    printf("Compiled %s with %s v%d\n",
+        &__FILE__[0], &__VENDOR__[0], __VERSION__);
     writeln("MIT License: Copyright (c) 2016-2017 dd86k");
-    writefln("Project page: <https://github.com/dd86k/%s>", PROJECT_NAME);
+    printf("Project page: <https://github.com/dd86k/%s>\n", &PROJECT_NAME[0]);
     exit(0); // getopt hack
 }
