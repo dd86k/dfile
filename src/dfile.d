@@ -911,7 +911,7 @@ WAV_C:
         case v5_00_000: printf(" v5.00.000"); break;
         default: writef(" (Version: 0x%08X)", h.version_); break;
         }
-        printf(" at 0x%X\n", h.desc_offset);
+        printf(" at %Xh\n", h.desc_offset);
     }
         return;
 
@@ -1083,7 +1083,7 @@ WAV_C:
 
         switch (h.method) {
         case 0: printf("Non-compressed"); break;
-        case 1: printf("0xFF-XOR'd data"); break;
+        case 1: printf("FFh-XOR'd data"); break;
         case 2: printf("Regular SZDD Compressed"); break;
         case 3: printf(`LZ + Huffman "Jeff Johnson" Compressed`); break;
         case 4: printf("MS-ZIP Compressed"); break;

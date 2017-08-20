@@ -115,8 +115,7 @@ void prescan(string filename, bool cont)
             goto FILE;
         else
             report_link(filename);
-    else if (attrIsFile(a))
-    {
+    else if (attrIsFile(a)) {
         import std.exception : ErrnoException;
 FILE:
         try {
@@ -132,8 +131,7 @@ FILE:
 
         debug dbg("Closing file...");
         CurrentFile.close();
-    }
-    else if (attrIsDir(a))
+    } else if (attrIsDir(a))
         report("Directory", true, filename);
     else
         report_unknown(filename);
