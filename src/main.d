@@ -72,13 +72,18 @@ private int main(string[] args)
             if (glob) {
                 import std.path : globMatch, dirName;
                 int found; // Number of files
-                foreach (DirEntry e; dirEntries(dirName(filename),
-                    recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
-                    immutable char[] s = e.name;
-                    if (globMatch(s, filename)) {
-                        ++found;
-                        prescan(s, cont);
+                try {
+                    foreach (DirEntry e; dirEntries(dirName(filename),
+                        recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
+                        immutable char[] s = e.name;
+                        if (globMatch(s, filename)) {
+                            ++found;
+                            prescan(s, cont);
+                        }
                     }
+                } catch (FileException ex) {
+                    stderr.writeln("Error: ", ex.msg);
+                    return 1;
                 }
                 if (!found) { // "Not found"-case if 0 files.
                     writeln("No files were found.");
