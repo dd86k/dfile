@@ -5,7 +5,7 @@
 module utils;
 
 import std.stdio : File;
-import dfile : Base10;
+import dfile : Base10, CurrentFile;
 
 /*
  * File utilities.
@@ -15,18 +15,20 @@ import dfile : Base10;
  * Read file with a struct or array.
  * Note: MAKE SURE THE STRUCT IS BYTE-ALIGNED.
  * Params:
- *   file = Current file
  *   s = Void pointer to the first element
  *   size = Size of the struct
  *   rewind = Rewind seeker to start of the file
  */
-void scpy(File file, void* s, size_t size, bool rewind = false)
+void scpy(void* s, size_t size, bool rewind = false)
 {
-    import std.c.string : memcpy;
-    if (rewind) file.rewind();
-    ubyte[] buf = new ubyte[size];
-    file.rawRead(buf);
-    memcpy(s, buf.ptr, size);
+    import core.stdc.string : memcpy;
+    import core.stdc.stdio : fread, FILE, fseek, SEEK_SET;//rewind;
+    import core.stdc.stdlib : malloc;
+    FILE* fp = CurrentFile.getFP;
+    if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp);
+    void* bp = malloc(size);
+    fread(bp, size, 1, fp);
+    memcpy(s, bp, size);
 }
 
 /**
@@ -132,7 +134,7 @@ string formatsize(ulong size)
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-ushort bswap(ushort num) pure nothrow @nogc
+pragma(inline, false) ushort bswap(ushort num) pure nothrow @nogc
 {
     version (X86) asm pure nothrow @nogc { naked;
         xchg AH, AL;
@@ -160,7 +162,7 @@ ushort bswap(ushort num) pure nothrow @nogc
  * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-uint bswap(uint num) pure nothrow @nogc
+pragma(inline, false) uint bswap(uint num) pure nothrow @nogc
 {
     version (X86) asm pure nothrow @nogc { naked;
         bswap EAX;
@@ -188,7 +190,7 @@ uint bswap(uint num) pure nothrow @nogc
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-ulong bswap(ulong num) pure nothrow @nogc
+pragma(inline, false) ulong bswap(ulong num) pure nothrow @nogc
 {
     version (X86) asm pure nothrow @nogc { naked;
         xchg EAX, EDX;

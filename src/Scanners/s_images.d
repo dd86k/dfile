@@ -11,8 +11,7 @@ void scan_png() // Big Endian
 { // https://www.w3.org/TR/PNG-Chunks.html
     report("Portable Network Graphics image (PNG)");
 
-    if (More)
-    {
+    if (More) {
         struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
             uint length;
             uint type;
@@ -38,16 +37,14 @@ void scan_png() // Big Endian
         }*/
 
         ihdr_chunk_full h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
 
         with (h) {
             write(bswap(width), " x ", bswap(height), " pixels, ");
 
-            switch (color)
-            {
+            switch (color) {
             case 0:
-                switch (depth)
-                {
+                switch (depth) {
                 case 1, 2, 4, 8, 16:
                     write(depth, "-bit ");
                     break;
@@ -56,8 +53,7 @@ void scan_png() // Big Endian
                 write("Grayscale");
                 break;
             case 2:
-                switch (depth)
-                {
+                switch (depth) {
                 case 8, 16:
                     write(depth, "-bit ");
                     break;
@@ -66,8 +62,7 @@ void scan_png() // Big Endian
                 write("RGB");
                 break;
             case 3:
-                switch (depth)
-                {
+                switch (depth) {
                 case 1, 2, 4, 8:
                     write("8-bit ");
                     break;
@@ -76,22 +71,20 @@ void scan_png() // Big Endian
                 write("PLTE Palette");
                 break;
             case 4:
-                switch (depth)
-                {
+                switch (depth) {
                 case 8, 16:
                     write(depth, "-bit ");
                     break;
-                default: break;
+                default:
                 }
                 write("Grayscale+Alpha");
                 break;
             case 6:
-                switch (depth)
-                {
+                switch (depth) {
                 case 8, 16:
                     write(depth, "-bit ");
                     break;
-                default: break;
+                default:
                 }
                 write("RGBA");
                 break;
@@ -100,27 +93,24 @@ void scan_png() // Big Endian
 
             write(", ");
 
-            switch (compression)
-            {
-                case 0: write("Default compression"); break;
-                default: write("Invalid compression"); break;
+            switch (compression) {
+            case 0: write("Default compression"); break;
+            default: write("Invalid compression"); break;
             }
 
             write(", ");
 
-            switch (filter)
-            {
-                case 0: write("Default filtering"); break;
-                default: write("Invalid filtering"); break;
+            switch (filter) {
+            case 0: write("Default filtering"); break;
+            default: write("Invalid filtering"); break;
             }
 
             write(", ");
 
-            switch (interlace)
-            {
-                case 0: write("No interlacing"); break;
-                case 1: write("Adam7 interlacing"); break;
-                default: write("Invalid interlacing"); break;
+            switch (interlace) {
+            case 0: write("No interlacing"); break;
+            case 1: write("Adam7 interlacing"); break;
+            default: write("Invalid interlacing"); break;
             }
 
             writeln();
@@ -142,15 +132,14 @@ void scan_gif()
     }
 
     gif_header h;
-    scpy(CurrentFile, &h, h.sizeof, true);
+    scpy(&h, h.sizeof, true);
 
-    switch (h.version_[1])
-    { // 87a, 89a
+    switch (h.version_[1]) { // 87a, 89a
         case '7', '9':
             report("GIF", false);
             writeln(h.version_, " image");
             break;
-        default: writeln("GIF with invalid version"); return;
+        default: writeln("GIF image, invalid version"); return;
     }
 
     if (More)

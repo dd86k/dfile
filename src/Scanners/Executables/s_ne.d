@@ -55,7 +55,7 @@ private enum {
 /// Scan a NE executable
 void scan_ne() {
     ne_hdr h;
-    scpy(CurrentFile, &h, h.sizeof);
+    scpy(&h, h.sizeof);
 
     if (More) {
         printf("ne_magic       : %s\n", &h.ne_magic[0]);

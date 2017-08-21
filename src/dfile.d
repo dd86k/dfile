@@ -135,7 +135,7 @@ void scan() {
             }
 
             nesm_hdr h;
-            scpy(CurrentFile, &h, h.sizeof, true);
+            scpy(&h, h.sizeof, true);
 
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
@@ -181,7 +181,7 @@ void scan() {
                 }
 
                 spc2_hdr h;
-                scpy(CurrentFile, &h, h.sizeof);
+                scpy(&h, h.sizeof);
 
                 report("SNES SPC2 v", false);
                 printf("%d.%d, %d of SPC entries\n",
@@ -305,7 +305,7 @@ void scan() {
             int encrypted;
         }
         rpf_hdr h;
-        scpy(CurrentFile, &h , h.sizeof);
+        scpy(&h , h.sizeof);
         report("RPF ", false);
         if (h.encrypted)
             printf("encrypted");
@@ -413,7 +413,7 @@ void scan() {
         }
 
         pkzip_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
 
         debug writeln("FNLENGTH: ", formatsize(h.fnlength));
 
@@ -565,7 +565,7 @@ void scan() {
             ubyte pages;
         }
         ogg_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         report("Ogg audio file v", false);
         printf("%d with %d segments\n", h.version_, h.pages);
 
@@ -595,7 +595,7 @@ void scan() {
             ubyte[16] md5;
         }
         flac_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         report("FLAC audio file", false);
         if ((h.header & 0xFF) == 0) // Big endian
         { // Yeah, I'm not a fan.
@@ -628,7 +628,7 @@ void scan() {
         }
     //http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         report("Photoshop Document v", false);
         printf("%d, %d x %d, %d-bit ",
             bswap(h.version_), bswap(h.width), bswap(h.height), bswap(h.depth));
@@ -689,7 +689,7 @@ void scan() {
 WAV_C:
             fmt_chunk h;
             CurrentFile.seek(-4, SEEK_CUR);
-            scpy(CurrentFile, &h, h.sizeof);
+            scpy(&h, h.sizeof);
             report("WAVE audio file (", false);
             switch (h.format) {
                 case PCM: printf("PCM"); break;
@@ -741,7 +741,7 @@ WAV_C:
         }
 
         midi_hdr h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
 
         report("MIDI, ", false);
 
@@ -879,7 +879,7 @@ WAV_C:
             ushort seq;
         }
         cfh_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         report("Microsoft Cabinet archive v", false);
         printf("%d.%d, ", h.major, h.minor);
         write(formatsize(h.size));
@@ -902,7 +902,7 @@ WAV_C:
             v5_00_000 = 0x00010050
         }
         iscab_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         report("InstallShield CAB archive", false);
         switch (h.version_) {
         case LEGACY:    printf(" (Legacy)");  break;
@@ -981,7 +981,7 @@ WAV_C:
         }
         enum DEBIANBIN = "debian-binary   ";
         deb_hdr h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
         if (h.file_iden != DEBIANBIN) {
             report_text();
             return;
@@ -996,7 +996,7 @@ WAV_C:
                 string dps = isostr(h.ctl_filesize);
                 os = parse!int(dps);
                 CurrentFile.seek(os, SEEK_CUR);
-                scpy(CurrentFile, &dh, dh.sizeof, false);
+                scpy(&dh, dh.sizeof, false);
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
             } catch (Exception) {
@@ -1020,7 +1020,7 @@ WAV_C:
             //char[16] reserved;
         }
         rpm_hdr h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
         report("RPM ", false);
         switch (h.type) {
             case 0: printf("Binary"); break;
@@ -1077,7 +1077,7 @@ WAV_C:
         }
 
         kwaj_hdr h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1135,7 +1135,7 @@ WAV_C:
         }
 
         szdd_hdr h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
 
         report("MS-DOS ", false);
 
@@ -1195,7 +1195,7 @@ WAV_C:
         }
 
         trx_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
 
         if (h.version_ == 1 || h.version_ == 2) {
             report("TRX v", false);
@@ -1230,7 +1230,7 @@ WAV_C:
         //enum COMPRESSED = 1 << 16;
 
         SparseExtentHeader h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
 
         report("VMware Disk image v", false);
         printf("%d, ", h.version_);
@@ -1291,7 +1291,7 @@ WAV_C:
             //char[396] padding;
         }
         COWDisk_Header h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         if (h.flags != 3) {
             report_text();
             return;
@@ -1352,7 +1352,7 @@ WAV_C:
             return;
         }
         vhd_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         h.features = bswap(h.features);
         if ((h.features & F_RES) == 0) {
             report_text();
@@ -1470,7 +1470,7 @@ WAV_C:
                 return;
         }
         vdi_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         if (h.magic != VDIMAGIC) {
             report_text(); // Coincidence
             return;
@@ -1480,11 +1480,11 @@ WAV_C:
         VDIHEADER1 sh;
         switch (h.majorv) { // Use latest major version natively
             case 1:
-                scpy(CurrentFile, &sh, sh.sizeof);
+                scpy(&sh, sh.sizeof);
                 break;
             case 0: {
                 VDIHEADER0 t;
-                scpy(CurrentFile, &t, t.sizeof);
+                scpy(&t, t.sizeof);
                 sh.cbDisk = t.cbDisk;
                 sh.u32Type = t.u32Type;
                 sh.uuidCreate = t.uuidCreate;
@@ -1542,7 +1542,7 @@ WAV_C:
         enum C_AES = 1;
 
         QCowHeader h;
-        scpy(CurrentFile, &h, h.sizeof, true);
+        scpy(&h, h.sizeof, true);
 
         report("QEMU QCOW2 disk image v", false);
         write(bswap(h.version_), ", ", formatsize(bswap(h.size)), " capacity");
@@ -1582,7 +1582,7 @@ WAV_C:
         }
         report("QEMU QED disk image, ", false);
         qed_hdr h;
-        scpy(CurrentFile, &h, h.sizeof);
+        scpy(&h, h.sizeof);
         write(formatsize(h.image_size));
 
         if (h.features & QED_F_BACKING_FILE) {

@@ -71,7 +71,7 @@ void scan_elf()
     debug dbg("Started scanning ELF file");
 
     Elf32_Ehdr h;
-    scpy(CurrentFile, &h, h.sizeof, true);
+    scpy(&h, h.sizeof, true);
 
     debug
     {

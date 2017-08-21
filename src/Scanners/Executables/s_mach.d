@@ -328,11 +328,11 @@ void scan_mach() {
 
     if (fat) { // Java prefers Fat files
         fat_header fh;
-        scpy(CurrentFile, &fh, fh.sizeof);
+        scpy(&fh, fh.sizeof);
 
         if (fh.nfat_arch) {
             fat_arch fa;
-            scpy(CurrentFile, &fa, fa.sizeof);
+            scpy(&fa, fa.sizeof);
 
             if (reversed) {
                 cpu_type = cast(cpu_type_t)bswap(fa.cputype);
@@ -347,7 +347,7 @@ void scan_mach() {
         }
     } else {
         mach_header mh;
-        scpy(CurrentFile, &mh, mh.sizeof);
+        scpy(&mh, mh.sizeof);
 
         if (reversed) {
             filetype = cast(filetype_t)bswap(mh.filetype);

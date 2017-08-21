@@ -149,14 +149,14 @@ void scan_pe() {
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
-    scpy(CurrentFile, &peh, peh.sizeof);
+    scpy(&peh, peh.sizeof);
 
     if (peh.SizeOfOptionalHeader > 0)
     { // PE Optional Header
-        scpy(CurrentFile, &peoh, peoh.sizeof);
+        scpy(&peoh, peoh.sizeof);
         if (peoh.magic == PE_FORMAT.HDR64)
             CurrentFile.seek(16, SEEK_CUR);
-        scpy(CurrentFile, &dirs, dirs.sizeof);
+        scpy(&dirs, dirs.sizeof);
     }
 
     report("PE32", false);

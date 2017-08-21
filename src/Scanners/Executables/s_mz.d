@@ -73,7 +73,7 @@ void scan_mz()
     }
 
     mz_hdr h;
-    scpy(CurrentFile, &h, h.sizeof, true);
+    scpy(&h, h.sizeof, true);
 
     if (More) {
         printf("e_magic   : %Xh\n", h.e_magic);

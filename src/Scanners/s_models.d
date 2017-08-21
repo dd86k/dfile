@@ -25,7 +25,7 @@ void scan_pmx()
     }
 
     pmx_hdr h;
-    scpy(CurrentFile, &h, h.sizeof);
+    scpy(&h, h.sizeof);
 
     report("PMX model v", false);
     write(h.ver, " ", h.char_encoding ? "UTF-8" : "UTF-16");
@@ -35,10 +35,10 @@ void scan_pmx()
         try
         {
             uint l;
-            scpy(CurrentFile, &l, l.sizeof);
+            scpy(&l, l.sizeof);
             printf(" -- l : %X\n", l);
             CurrentFile.seek(l, SEEK_CUR); // Skip Japanese name
-            scpy(CurrentFile, &l, l.sizeof);
+            scpy(&l, l.sizeof);
             printf(" -- l : %X\n", l);
             if (l) {
                 if (h.char_encoding)

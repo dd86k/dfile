@@ -32,7 +32,7 @@ void scan_tar()
     }
 
     tar_hdr h;
-    scpy(CurrentFile, &h, h.sizeof, true);
+    scpy(&h, h.sizeof, true);
 
     switch (h.linkflag)
     {

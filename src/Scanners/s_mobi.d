@@ -70,8 +70,8 @@ void scan_mobi()
     palmdoc_hdr h;
     mobi_hdr mh;
     CurrentFile.seek(STARTPOS);
-    scpy(CurrentFile, &h, h.sizeof);
-    scpy(CurrentFile, &mh, mh.sizeof);
+    scpy(&h, h.sizeof);
+    scpy(&mh, mh.sizeof);
     
     report("Mobipocket ", false);
 
