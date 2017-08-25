@@ -106,10 +106,10 @@ private enum PE_CHARACTERISTIC : ushort
     EXECUTABLE_IMAGE = 0x0002,
     LINE_NUMS_STRIPPED = 0x0004,
     LOCAL_SYMS_STRIPPED = 0x0008,
-    AGGRESSIVE_WS_TRIM = 0x0010,
+    AGGRESSIVE_WS_TRIM = 0x0010, // obsolete
     LARGE_ADDRESS_AWARE = 0x0020,
     _16BIT_MACHINE = 0x0040,
-    BYTES_REVERSED_LO = 0x0080,
+    BYTES_REVERSED_LO = 0x0080, // obsolete
     _32BIT_MACHINE = 0x0100,
     DEBUG_STRIPPED = 0x0200,
     REMOVABLE_RUN_FROM_SWAP = 0x0400,
@@ -117,7 +117,7 @@ private enum PE_CHARACTERISTIC : ushort
     SYSTEM = 0x1000,
     DLL = 0x2000,
     UP_SYSTEM_ONLY = 0x4000,
-    BYTES_REVERSED_HI = 0x8000
+    BYTES_REVERSED_HI = 0x8000 // obsolete
 }
 
 private enum PE_FORMAT : ushort
@@ -151,8 +151,7 @@ void scan_pe() {
     IMAGE_DATA_DIRECTORY dirs;
     scpy(&peh, peh.sizeof);
 
-    if (peh.SizeOfOptionalHeader > 0)
-    { // PE Optional Header
+    if (peh.SizeOfOptionalHeader > 0) { // PE Optional Header
         scpy(&peoh, peoh.sizeof);
         if (peoh.magic == PE_FORMAT.HDR64)
             CurrentFile.seek(16, SEEK_CUR);
@@ -176,59 +175,58 @@ void scan_pe() {
         break;
     }
 
-    if (peh.Characteristics & PE_CHARACTERISTIC.DLL) {
-        if (dirs.CLRHeader)
-            write(".NET ");
-        write("Library");
-    } else if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE) {
-        switch (peoh.Subsystem) {
-        default:
-            write("Unknown");
-            break;
-        case PE_SUBSYSTEM.NATIVE:
-            write("Native Windows");
-            break;
-        case PE_SUBSYSTEM.WINDOWS_GUI:
-            write("Windows GUI");
-            break;
-        case PE_SUBSYSTEM.WINDOWS_CUI:
-            write("Windows Console");
-            break;
-        case PE_SUBSYSTEM.POSIX_CUI:
-            write("Posix Console");
-            break;
-        case PE_SUBSYSTEM.WINDOWS_CE_GUI:
-            write("Windows CE GUI");
-            break;
-        case PE_SUBSYSTEM.EFI_APPLICATION :
-            write("EFI");
-            break;
-        case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
-            write("EFI Boot Service driver");
-            break;
-        case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
-            write("EFI Runtime driver");
-            break;
-        case PE_SUBSYSTEM.EFI_ROM:
-            write("EFI ROM");
-            break;
-        case PE_SUBSYSTEM.XBOX:
-            write("XBOX");
-            break;
-        case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
-            write("Windows Boot Application");
-            break;
-        }
-        if (dirs.CLRHeader)
-            write(" .NET");
+    switch (peoh.Subsystem) {
+    default:
+        write("Unknown");
+        break;
+    case PE_SUBSYSTEM.NATIVE:
+        write("Native Windows");
+        break;
+    case PE_SUBSYSTEM.WINDOWS_GUI:
+        write("Windows GUI");
+        break;
+    case PE_SUBSYSTEM.WINDOWS_CUI:
+        write("Windows Console");
+        break;
+    case PE_SUBSYSTEM.POSIX_CUI:
+        write("Posix Console");
+        break;
+    case PE_SUBSYSTEM.WINDOWS_CE_GUI:
+        write("Windows CE GUI");
+        break;
+    case PE_SUBSYSTEM.EFI_APPLICATION :
+        write("EFI");
+        break;
+    case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
+        write("EFI Boot Service driver");
+        break;
+    case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
+        write("EFI Runtime driver");
+        break;
+    case PE_SUBSYSTEM.EFI_ROM:
+        write("EFI ROM");
+        break;
+    case PE_SUBSYSTEM.XBOX:
+        write("XBOX");
+        break;
+    case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
+        write("Windows Boot Application");
+        break;
+    }
+
+    if (dirs.CLRHeader)
+        write(" .NET");
+
+    if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
+        write(" Library");
+    else if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
         write(" Executable");
-    } else
-        write("Unknown type");
+    else
+        write(" Unknown Type");
 
     write(" for ");
 
-    switch (peh.Machine)
-    {
+    switch (peh.Machine) {
     default: // PE_MACHINE.UNKNOWN
         write("Unknown");
         break;
@@ -302,10 +300,13 @@ void scan_pe() {
 
     write(" machines");
 
-    if (peh.Characteristics)
-    {
+    if (peh.Characteristics) {
         if (peh.Characteristics & PE_CHARACTERISTIC.RELOCS_STRIPPED)
             write(", RELOCS_STRIPPED");
+        if (peh.Characteristics & PE_CHARACTERISTIC.LINE_NUMS_STRIPPED)
+            write(", LINE_NUMS_STRIPPED");
+        if (peh.Characteristics & PE_CHARACTERISTIC.LOCAL_SYMS_STRIPPED)
+            write(", LOCAL_SYMS_STRIPPED");
         if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
             write(", LARGE_ADDRESS_AWARE");
         if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
@@ -320,12 +321,13 @@ void scan_pe() {
             write(", NET_RUN_FROM_SWAP");
         if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
             write(", SYSTEM");
+        if (peh.Characteristics & PE_CHARACTERISTIC.UP_SYSTEM_ONLY)
+            write(", UP_SYSTEM_ONLY");
     }
 
     writeln();
 
-    if (More)
-    {
+    if (More) {
         printf("Machine type : %Xh\n", peh.Machine);
         printf("Number of sections : %Xh\n", peh.NumberOfSymbols);
         printf("Time stamp : %Xh\n", peh.TimeDateStamp);
@@ -334,8 +336,7 @@ void scan_pe() {
         printf("Size of Optional Header : %Xh\n", peh.SizeOfOptionalHeader);
         printf("Characteristics : %Xh\n", peh.Characteristics);
 
-        if (peh.SizeOfOptionalHeader > 0)
-        {
+        if (peh.SizeOfOptionalHeader > 0) {
             printf("Format    : %Xh\n", peoh.magic);
             printf("Subsystem : %Xh\n", peoh.Subsystem);
             printf("CLR Header: %Xh\n", dirs.CLRHeader);
