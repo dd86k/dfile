@@ -283,16 +283,9 @@ enum : uint {
 }
 
 /// Scan a Mach-O executable
-void scan_mach() {
+/// Params: sig = Mach-O signature
+void scan_mach(uint sig) {
     bool reversed, fat;
-    uint sig;
-    {
-        uint[1] b;
-        CurrentFile.rewind();
-        CurrentFile.rawRead(b);
-        CurrentFile.rewind();
-        sig = b[0];
-    }
 
     filetype_t filetype;
     cpu_type_t cpu_type;
@@ -328,7 +321,7 @@ void scan_mach() {
 
     if (fat) { // Java prefers Fat files
         fat_header fh;
-        scpy(&fh, fh.sizeof);
+        scpy(&fh, fh.sizeof, true);
 
         if (fh.nfat_arch) {
             fat_arch fa;
@@ -347,7 +340,7 @@ void scan_mach() {
         }
     } else {
         mach_header mh;
-        scpy(&mh, mh.sizeof);
+        scpy(&mh, mh.sizeof, true);
 
         if (reversed) {
             filetype = cast(filetype_t)bswap(mh.filetype);

@@ -5,7 +5,8 @@
 module s_pe;
 
 import std.stdio;
-import dfile, utils : scpy;
+import dfile : CurrentFile, report, More;
+import utils : scpy;
 
 private struct PE_HEADER { align(1):
     char[4] Signature; // "PE\0\0"

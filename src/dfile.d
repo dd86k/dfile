@@ -517,7 +517,7 @@ void scan() {
         }
 
     case MH_MAGIC, MH_MAGIC_64, MH_CIGAM, MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM:
-        scan_mach();
+        scan_mach(s);
         return;
 
     case 0x53502125: // "%!PS"
