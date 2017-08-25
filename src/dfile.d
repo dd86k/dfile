@@ -17,6 +17,7 @@ import s_mach   : scan_mach,
     MH_MAGIC, MH_MAGIC_64, MH_CIGAM,
     MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM;
 import s_models : scan_pmx;
+import s_pst    : scan_pst, PST_MAGIC;
 import Etc      : scan_etc;
 import s_images, utils;
 
@@ -1632,6 +1633,10 @@ void scan() {
 
     case 0x0000004C:
         report("Microsoft Shortcut link (.LNK, MS-SHLLINK)");
+        return;
+
+    case PST_MAGIC: // "!BDN"
+        scan_pst;
         return;
 
     default:
