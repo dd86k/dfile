@@ -677,7 +677,7 @@ void scan() {
                 EXTENSIBLE = 0xFFFE
             }
             CurrentFile.rawRead(sig);
-            while (sig != FMT_CHUNK) { // Skip useless chunks
+            do { // Skip useless chunks
                 CurrentFile.rawRead(sig);
                 const uint p = fint(sig); // Chunk length
                 if (fseek(fp, p, SEEK_CUR)) {
@@ -685,9 +685,7 @@ void scan() {
                     return;
                 }
                 CurrentFile.rawRead(sig);
-                if (sig == FMT_CHUNK) goto WAV_C;
-            }
-WAV_C:
+            } while (sig != FMT_CHUNK);
             fmt_chunk h;
             CurrentFile.seek(-4, SEEK_CUR);
             scpy(&h, h.sizeof);
