@@ -14,8 +14,7 @@ import s_elf    : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz     : scan_mz;
 import s_mach   : scan_mach,
-    MH_MAGIC, MH_MAGIC_64, MH_CIGAM,
-    MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM;
+    MH_MAGIC, MH_MAGIC_64, MH_CIGAM, MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM;
 import s_models : scan_pmx;
 import s_pst    : scan_pst, PST_MAGIC;
 import Etc      : scan_etc;
