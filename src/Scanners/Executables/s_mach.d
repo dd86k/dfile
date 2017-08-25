@@ -273,13 +273,13 @@ private enum flag_t : uint { // Reserved for future use
     MH_APP_EXTENSION_SAFE      = 0x02000000
 }
 
-private enum : uint {
-    MH_MAGIC =    0xFEEDFACE,
-    MH_MAGIC_64 = 0xFEEDFACF,
-    MH_CIGAM =    0xCEFAEDFE,
-    MH_CIGAM_64 = 0xCFFAEDFE,
-    FAT_MAGIC =   0xCAFEBABE,
-    FAT_CIGAM =   0xBEBAFECA
+enum : uint {
+    MH_MAGIC =    0xFEEDFACE, /// Mach-O BE
+    MH_MAGIC_64 = 0xFEEDFACF, /// Mach-O BE x64
+    MH_CIGAM =    0xCEFAEDFE, /// Mach-O LE
+    MH_CIGAM_64 = 0xCFFAEDFE, /// Mach-O LE x64
+    FAT_MAGIC =   0xCAFEBABE, /// Mach-O FAT BE
+    FAT_CIGAM =   0xBEBAFECA  /// Mach-O FAT LE
 }
 
 /// Scan a Mach-O executable

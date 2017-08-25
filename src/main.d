@@ -26,7 +26,7 @@ private int main(string[] args)
     }
 
     bool cont,      // Continue with symlinks
-         glob,      // Use GLOBBING explicitly
+         glob,      // Use glob file matching
          recursive; // GLOB - Recursive (default: shallow)
 
     GetoptResult r;
@@ -43,7 +43,7 @@ private int main(string[] args)
             config.bundling, config.caseSensitive,
             "g|glob", "Use file match globbing.", &glob,
             config.bundling, config.caseSensitive,
-			"r|recursive", "Recursive (with --glob).", &recursive,
+			"r|recursive", "Recursive (useful with --glob).", &recursive,
             "v|version", "Print version information.", &PrintVersion
         );
 	} catch (GetOptException ex) {

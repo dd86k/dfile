@@ -13,7 +13,9 @@ import std.stdio;
 import s_elf    : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz     : scan_mz;
-import s_mach   : scan_mach;
+import s_mach   : scan_mach,
+    MH_MAGIC, MH_MAGIC_64, MH_CIGAM,
+    MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM;
 import s_models : scan_pmx;
 import Etc      : scan_etc;
 import s_images, utils;
@@ -514,8 +516,7 @@ void scan() {
         default: report_unknown(); return;
         }
 
-    case 0xCEFAEDFE, 0xCFFAEDFE, 0xFEEDFACE,
-         0xFEEDFACF, 0xBEBAFECA, 0xCAFEBABE:
+    case MH_MAGIC, MH_MAGIC_64, MH_CIGAM, MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM:
         scan_mach();
         return;
 
@@ -524,7 +525,7 @@ void scan() {
         return;
 
     case 0x46445025: // "%PDF"
-        CurrentFile.rawRead(sig); // for "-1.0"
+        CurrentFile.rawRead(sig); // for "-1.x"
         report("PDF", false);
         writeln(sig, " document");
         return;
