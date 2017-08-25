@@ -7,22 +7,21 @@ module s_elf;
 import std.stdio;
 import dfile;
 
-private struct Elf32_Ehdr
-{
-    public ubyte[EI_NIDENT] e_ident;
-    public ushort e_type;
-    public ushort e_machine;
-    public uint e_version;
-    public uint e_entry;
-    public uint e_phoff;
-    public uint e_shoff;
-    public uint e_flags;
-    public ushort e_ehsize;
-    public ushort e_phentsize;
-    public ushort e_phnum;
-    public ushort e_shentsize;
-    public ushort e_shnum;
-    public ushort e_shstrndx;
+private struct Elf32_Ehdr {
+    ubyte[EI_NIDENT] e_ident;
+    ushort e_type;
+    ushort e_machine;
+    uint e_version;
+    uint e_entry;
+    uint e_phoff;
+    uint e_shoff;
+    uint e_flags;
+    ushort e_ehsize;
+    ushort e_phentsize;
+    ushort e_phnum;
+    ushort e_shentsize;
+    ushort e_shnum;
+    ushort e_shstrndx;
 }
 
 private enum {
@@ -41,8 +40,7 @@ private enum {
     ET_HIPROC = 0xFFFF  /// Processor-specific
 }
 
-enum : ushort // Public for FatELF
-{
+enum : ushort { // Public for FatELF
     EM_NONE = 0,  /// No machine
     EM_M32 = 1,   /// AT&T WE 32100
     EM_SPARC = 2, /// SPARC
@@ -61,10 +59,7 @@ enum : ushort // Public for FatELF
     EM_AARCH64 = 0xB7  /// 64-bit ARM
 }
 
-/**
- * Scan an ELF image
- * Params: file = Input file
- */
+/// Scan an ELF image
 void scan_elf()
 {
     import utils : scpy;
@@ -80,6 +75,16 @@ void scan_elf()
         print_array(&h.e_ident, h.e_ident.length);
         writeln();
     }
+
+    report("ELF", false);
+    elf_print_class(h.e_ident[EI_CLASS]);
+    elf_print_data(h.e_ident[EI_DATA]);
+    elf_print_osabi(h.e_ident[EI_OSABI]);
+    write(" ");
+    elf_print_type(h.e_type);
+    write(" for ");
+    elf_print_machine(h.e_machine);
+    writeln(" machines");
 
     if (More)
     {
@@ -97,22 +102,9 @@ void scan_elf()
         writeln("e_shnum: ", h.e_shnum);
         writeln("e_shstrndx: ", h.e_shstrndx);
     }
-
-    report("ELF", false);
-    elf_print_class(h.e_ident[EI_CLASS]);
-    elf_print_data(h.e_ident[EI_DATA]);
-    elf_print_osabi(h.e_ident[EI_OSABI]);
-    write(" ");
-    elf_print_type(h.e_type);
-    write(" for ");
-    elf_print_machine(h.e_machine);
-    writeln(" machines");
 }
 
-/*
- * ELF/ELF-FAT Methods
- * Also used by FATELF
- */
+// These functions are also used by FATELF.
 
 /**
  * Print the ELF's class type (32/64-bit)
@@ -120,8 +112,7 @@ void scan_elf()
  */
 void elf_print_class(ubyte c)
 {
-    switch (c)
-    {
+    switch (c) {
     case 1: write("32 "); break;
     case 2: write("64 "); break;
     default: write(" (Invalid class) ");  break;
@@ -134,8 +125,7 @@ void elf_print_class(ubyte c)
  */
 void elf_print_data(ubyte c)
 {
-    switch (c)
-    {
+    switch (c) {
     case 1: write("LE "); break;
     case 2: write("BE "); break;
     default: write("(Invalid encoding) ");  break;
@@ -148,9 +138,9 @@ void elf_print_data(ubyte c)
  */
 void elf_print_osabi(ubyte c)
 {
-    switch (c)
-    {
-    default:   write("System V"); break;
+    switch (c) {
+    default:   write("Unknown DECL"); break;
+    case 0x00: write("System V"); break;
     case 0x01: write("HP-UX"); break;
     case 0x02: write("NetBSD"); break;
     case 0x03: write("Linux"); break;
@@ -174,9 +164,8 @@ void elf_print_osabi(ubyte c)
  */
 void elf_print_type(ushort c)
 {
-    switch (c)
-    {
-    default:
+    switch (c) {
+    default:        write("Unknown Type"); break;
     case ET_NONE:   write("(No file type)"); break;
     case ET_REL:    write("Relocatable"); break;
     case ET_EXEC:   write("Executable"); break;
@@ -193,8 +182,7 @@ void elf_print_type(ushort c)
  */
 void elf_print_machine(ushort c)
 {
-    switch (c)
-    {
+    switch (c) {
     case EM_NONE:    write("no"); break;
     case EM_M32:     write("AT&T WE 32100 (M32)"); break;
     case EM_SPARC:   write("SPARC"); break;
@@ -209,6 +197,6 @@ void elf_print_machine(ushort c)
     case EM_ARM:     write("ARM"); break;
     case EM_SUPERH:  write("SuperH"); break;
     case EM_AARCH64: write("ARM (64-bit)"); break;
-    default:         write("Unknown"); break;
+    default:         write("Unknown Machine"); break;
     }
 }
