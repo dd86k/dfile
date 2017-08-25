@@ -11,7 +11,7 @@ import utils;
 
 private struct fat_header
 {
-    uint magic; // 0x1F0E70FA
+    //uint magic; // 0x1F0E70FA
     ushort version_;
     ubyte num_records;
     ubyte reserved0;
@@ -34,7 +34,7 @@ private struct fat_subheader_v1
 void scan_fatelf()
 {
     fat_header fh;
-    scpy(&fh, fh.sizeof, true);
+    scpy(&fh, fh.sizeof);
 
     report("FatELF", false);
     

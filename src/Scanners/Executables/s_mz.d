@@ -30,13 +30,13 @@ private struct mz_hdr
 	uint   e_lfanew;       /* File address of new exe header, or @0x3c */
 }
 
-/// Scan a MZ executable (or PE, NE, or LE)
+/// Scan a MZ-based executable
 void scan_mz()
 {
     import utils : scpy;
     debug dbg("Started scanning MZ file");
 
-    uint e_lfanew;
+    uint e_lfanew; //TODO: Improve this part
     {
         uint[1] buf;
         CurrentFile.seek(0x3C); //TODO: fseek

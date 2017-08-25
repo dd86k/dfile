@@ -57,40 +57,6 @@ void scan_ne() {
     ne_hdr h;
     scpy(&h, h.sizeof);
 
-    if (More) {
-        printf("ne_magic       : %s\n", &h.ne_magic[0]);
-        printf("ne_ver         : %Xh\n", h.ne_ver);
-        printf("ne_rev         : %Xh\n", h.ne_rev);
-        printf("ne_enttab      : %Xh\n", h.ne_enttab);
-        printf("ne_cbenttab    : %Xh\n", h.ne_cbenttab);
-        printf("ne_crc         : %Xh\n", h.ne_crc);
-        printf("ne_flags       : %Xh\n", h.ne_flags);
-        printf("ne_autodata    : %Xh\n", h.ne_autodata);
-        printf("ne_heap        : %Xh\n", h.ne_heap);
-        printf("ne_stack       : %Xh\n", h.ne_stack);
-        printf("ne_csip        : %Xh\n", h.ne_csip);
-        printf("ne_sssp        : %Xh\n", h.ne_sssp);
-        printf("ne_cseg        : %Xh\n", h.ne_cseg);
-        printf("ne_cmod        : %Xh\n", h.ne_cmod);
-        printf("ne_cbnrestab   : %Xh\n", h.ne_cbnrestab);
-        printf("ne_segtab      : %Xh\n", h.ne_segtab);
-        printf("ne_rsrctab     : %Xh\n", h.ne_rsrctab);
-        printf("ne_restab      : %Xh\n", h.ne_restab);
-        printf("ne_modtab      : %Xh\n", h.ne_modtab);
-        printf("ne_imptab      : %Xh\n", h.ne_imptab);
-        printf("ne_nrestab     : %Xh\n", h.ne_nrestab);
-        printf("ne_cmovent     : %Xh\n", h.ne_cmovent);
-        printf("ne_align       : %Xh\n", h.ne_align);
-        printf("ne_cres        : %Xh\n", h.ne_cres);
-        printf("ne_psegcsum    : %Xh\n", h.ne_psegcsum);
-        printf("ne_pretthunks  : %Xh\n", h.ne_pretthunks);
-        printf("ne_psegrefbytes: %Xh\n", h.ne_psegrefbytes);
-        printf("ne_swaparea    : %Xh\n", h.ne_swaparea);
-        write("ne_expver      : ");
-        printf("%X %X\n", h.ne_expver[0], h.ne_expver[1]);
-        writeln;
-    }
-
     report("NE ", false);
 
     if (h.ne_flags & NENOTP)
@@ -120,4 +86,37 @@ void scan_ne() {
     }
 
     writeln;
+
+    if (More) {
+        printf("ne_magic       : %s\n", &h.ne_magic[0]);
+        printf("ne_ver         : %Xh\n", h.ne_ver);
+        printf("ne_rev         : %Xh\n", h.ne_rev);
+        printf("ne_enttab      : %Xh\n", h.ne_enttab);
+        printf("ne_cbenttab    : %Xh\n", h.ne_cbenttab);
+        printf("ne_crc         : %Xh\n", h.ne_crc);
+        printf("ne_flags       : %Xh\n", h.ne_flags);
+        printf("ne_autodata    : %Xh\n", h.ne_autodata);
+        printf("ne_heap        : %Xh\n", h.ne_heap);
+        printf("ne_stack       : %Xh\n", h.ne_stack);
+        printf("ne_csip        : %Xh\n", h.ne_csip);
+        printf("ne_sssp        : %Xh\n", h.ne_sssp);
+        printf("ne_cseg        : %Xh\n", h.ne_cseg);
+        printf("ne_cmod        : %Xh\n", h.ne_cmod);
+        printf("ne_cbnrestab   : %Xh\n", h.ne_cbnrestab);
+        printf("ne_segtab      : %Xh\n", h.ne_segtab);
+        printf("ne_rsrctab     : %Xh\n", h.ne_rsrctab);
+        printf("ne_restab      : %Xh\n", h.ne_restab);
+        printf("ne_modtab      : %Xh\n", h.ne_modtab);
+        printf("ne_imptab      : %Xh\n", h.ne_imptab);
+        printf("ne_nrestab     : %Xh\n", h.ne_nrestab);
+        printf("ne_cmovent     : %Xh\n", h.ne_cmovent);
+        printf("ne_align       : %Xh\n", h.ne_align);
+        printf("ne_cres        : %Xh\n", h.ne_cres);
+        printf("ne_psegcsum    : %Xh\n", h.ne_psegcsum);
+        printf("ne_pretthunks  : %Xh\n", h.ne_pretthunks);
+        printf("ne_psegrefbytes: %Xh\n", h.ne_psegrefbytes);
+        printf("ne_swaparea    : %Xh\n", h.ne_swaparea);
+        printf("%X %X\n", h.ne_expver[0], h.ne_expver[1]);
+        writeln;
+    }
 }
