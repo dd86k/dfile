@@ -10,8 +10,7 @@ import dfile;
 private enum ERESWDS = 0x10;
 
 // DOS 1, 2, 3 .EXE header from newexe.h, Word 1.1a source.
-private struct mz_hdr
-{
+private struct mz_hdr {
 	ushort e_magic;        /* Magic number */
 	ushort e_cblp;         /* Bytes on last page of file */
 	ushort e_cp;           /* Pages in file */
@@ -36,15 +35,10 @@ void scan_mz()
     import utils : scpy;
     debug dbg("Started scanning MZ file");
 
-    uint e_lfanew; //TODO: Improve this part
-    {
-        uint[1] buf;
-        CurrentFile.seek(0x3C); //TODO: fseek
-        CurrentFile.rawRead(buf);
-        e_lfanew = buf[0];
-    }
+    mz_hdr h;
+    scpy(&h, h.sizeof, true);
 
-    if (e_lfanew) {
+    with (h) if (e_lfanew) {
         import s_pe : scan_pe;
         import s_le : scan_le;
         import s_ne : scan_ne;
@@ -57,26 +51,25 @@ void scan_mz()
             CurrentFile.seek(e_lfanew);
             scan_pe();
             return;
-
         case "NE":
             CurrentFile.seek(e_lfanew);
             scan_ne();
             return;
-
         case "LE", "LX":
             CurrentFile.seek(e_lfanew);
             scan_le();
             return;
-
-        default: break;
+        default:
         }
     }
 
-    mz_hdr h;
-    scpy(&h, h.sizeof, true);
+    report("MZ Executable", false);
+    if (h.e_ovno)
+        printf(" (Overlay: %d)", h.e_ovno);
+    writeln(" for MS-DOS");
 
     if (More) {
-        printf("e_magic   : %Xh\n", h.e_magic);
+        //printf("e_magic   : %Xh\n", h.e_magic);
         printf("e_cblp    : %Xh\n", h.e_cblp);
         printf("e_cp      : %Xh\n", h.e_cp);
         printf("e_crlc    : %Xh\n", h.e_crlc);
@@ -92,11 +85,4 @@ void scan_mz()
         printf("e_ovno    : %Xh\n", h.e_ovno);
         printf("e_lfanew  : %Xh\n", h.e_lfanew);
     }
-
-    report("MZ Executable", false);
-
-    if (h.e_ovno)
-        printf(" (Overlay: %d)", h.e_ovno);
-
-    writeln(" for MS-DOS");
 }
