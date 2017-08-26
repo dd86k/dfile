@@ -221,7 +221,6 @@ pragma(inline, false) ulong bswap(ulong num) pure nothrow @nogc
     }
 }
 
-//TODO: ASM-optimize these two functions
 //TODO: Check what other places could use these functions
 
 /**
@@ -229,18 +228,16 @@ pragma(inline, false) ulong bswap(ulong num) pure nothrow @nogc
  * Params: buf = Buffer
  * Returns: 2-byte number
  */
-ushort make_ushort(char[] buf) pure
-{
-    return buf[0] | buf[1] << 8;
+ushort make_ushort(char[] buf) pure @nogc nothrow {
+    return *cast(ushort*)&buf[0];
 }
 /**
  * Turns a 4-byte buffer and transforms it into a 4-byte number.
  * Params: buf = Buffer
  * Returns: 4-byte number
  */
-uint make_uint(char[] buf) pure
-{
-    return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
+uint make_uint(char[] buf) pure @nogc nothrow {
+    return *cast(uint*)&buf[0];
 }
 
 /**
@@ -249,8 +246,7 @@ uint make_uint(char[] buf) pure
  *   arr = Array pointer
  *   length = Array size
  */
-void print_array(void* arr, size_t length)
-{
+void print_array(void* arr, size_t length) @nogc nothrow {
     import core.stdc.stdio : printf;
     ubyte* p = cast(ubyte*)arr;
     while (--length) printf("%02X ", *++p);

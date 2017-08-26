@@ -8,13 +8,13 @@ import std.stdio, dfile, utils;
 import core.stdc.stdio : fseek, FILE, SEEK_SET;
 
 enum ISO = "CD001"; /// ISO signature
-private enum BLOCK_SIZE = 1024; // Half a block
+private enum BLOCK_SIZE = 1024; // Half an ISO block
 /*
  * ISO strings
  */
+private string
     // PRIMARY_VOL_DESC
-private string label,
-    system, voliden,
+    label, system, voliden,
     copyright, publisher, app, abst, biblio,
     ctime, mtime, etime, eftime,
     // BOOT
@@ -71,7 +71,6 @@ private bool check_seek(long pos, char[1024] buf, FILE* fp)
 {
     // OKAY to cast to int since we only check up to 9000H
     if (fseek(fp, cast(int)pos, SEEK_SET)) return true;
-    CurrentFile.seek(pos);
     CurrentFile.rawRead(buf);
     if (buf[1..6] == ISO) scan_block(&buf[0]);
     return false;

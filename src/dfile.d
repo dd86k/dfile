@@ -401,7 +401,6 @@ void scan() {
     case 0x04034B42, 0x06054B42, 0x08074B42, 0x04034B50: {
         struct pkzip_hdr { align(1): // PKWare ZIP
             //uint magic;
-            //ushort magic;
             ushort version_;
             ushort flag;
             ushort compression;
@@ -445,7 +444,7 @@ void scan() {
             CurrentFile.rawRead(filename);
             printf("%s, ", &filename[0]);
         }
-        
+
         write(formatsize(h.csize), "/", formatsize(h.usize));
 
         enum {
