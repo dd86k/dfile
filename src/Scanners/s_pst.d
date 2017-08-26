@@ -42,7 +42,7 @@ void scan_pst() {
             printf("Unicode");
 
         if (version_ == 37)
-            printf("probably WIP encrypted");
+            printf(", probably WIP encrypted");
 
         writeln;
 

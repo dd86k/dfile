@@ -36,7 +36,7 @@ void scpy(void* s, size_t size, bool rewind = false)
  * Params: sig = 4-byte array
  * Returns: 4-byte number
  */
-pragma(inline, true) uint fint(char[4] sig) {
+pragma(inline, true) uint fint(char[4] sig) pure @nogc nothrow {
     return *cast(int*)&sig;
 }
 
