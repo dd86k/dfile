@@ -127,7 +127,7 @@ void scan() {
         switch (b) {
         case x"1A": {
             struct nesm_hdr { align(1):
-                char[5] magic;
+                //char[5] magic;
                 ubyte version_, total_song, start_song;
                 ushort load_add, init_add, play_add;
                 char[32] song_name, song_artist, song_copyright;
@@ -139,7 +139,7 @@ void scan() {
             }
 
             nesm_hdr h;
-            scpy(&h, h.sizeof, true);
+            scpy(&h, h.sizeof);
 
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
@@ -735,13 +735,13 @@ void scan() {
 
     case 0x6468544D: { // "MThd", MIDI, Big Endian
         struct midi_hdr { align(1):
-            char[4] magic;
+            //char[4] magic;
             uint length;
             ushort format, number, division;
         }
 
         midi_hdr h;
-        scpy(&h, h.sizeof, true);
+        scpy(&h, h.sizeof);
 
         report("MIDI, ", false);
 
@@ -1010,7 +1010,7 @@ void scan() {
 
     case 0xDBEEABED: { // RPM Package
         struct rpm_hdr { align(1):
-            char[4] magic;
+            //char[4] magic;
             ubyte major, minor;
             ushort type;
             ushort archnum;
@@ -1020,7 +1020,7 @@ void scan() {
             //char[16] reserved;
         }
         rpm_hdr h;
-        scpy(&h, h.sizeof, true);
+        scpy(&h, h.sizeof);
         report("RPM ", false);
         switch (h.type) {
             case 0: printf("Binary"); break;
@@ -1208,7 +1208,7 @@ void scan() {
 
     case 0x564D444B: { // "KDMV", VMDK vdisk
         struct SparseExtentHeader { align(1):
-            uint magicNumber;
+            //uint magicNumber;
             uint version_;
             uint flags;
             ulong capacity;
@@ -1230,7 +1230,7 @@ void scan() {
         //enum COMPRESSED = 1 << 16;
 
         SparseExtentHeader h;
-        scpy(&h, h.sizeof, true);
+        scpy(&h, h.sizeof);
 
         report("VMware Disk image v", false);
         printf("%d, ", h.version_);
@@ -1525,7 +1525,7 @@ void scan() {
     //https://people.gnome.org/~markmc/qcow-image-format.html
     //http://git.qemu-project.org/?p=qemu.git;a=blob;f=docs/specs/qcow2.txt
         struct QCowHeader { align(1): //v1/v2, v3 has extra fields
-            uint magic;
+            //uint magic;
             uint version_;
             ulong backing_file_offset;
             uint backing_file_size;
@@ -1542,7 +1542,7 @@ void scan() {
         enum C_AES = 1;
 
         QCowHeader h;
-        scpy(&h, h.sizeof, true);
+        scpy(&h, h.sizeof);
 
         report("QEMU QCOW2 disk image v", false);
         write(bswap(h.version_), ", ", formatsize(bswap(h.size)), " capacity");

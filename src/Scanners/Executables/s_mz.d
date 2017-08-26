@@ -6,12 +6,13 @@ module s_mz;
 
 import std.stdio;
 import dfile;
+import utils : scpy;
 
 private enum ERESWDS = 0x10; /// Reserved words
 
 // DOS 1, 2, 3 .EXE header from newexe.h, Word 1.1a source.
 private struct mz_hdr {
-	ushort e_magic;        /// Magic number
+	//ushort e_magic;        /// Magic number
 	ushort e_cblp;         /// Bytes on last page of file
 	ushort e_cp;           /// Pages in file
 	ushort e_crlc;         /// Relocations
@@ -31,11 +32,10 @@ private struct mz_hdr {
 
 /// Scan a MZ-based executable
 void scan_mz() {
-    import utils : scpy;
     debug dbg("Started scanning MZ file");
 
     mz_hdr h;
-    scpy(&h, h.sizeof, true);
+    scpy(&h, h.sizeof);
 
     with (h) if (e_lfanew) {
         import s_pe : scan_pe;
