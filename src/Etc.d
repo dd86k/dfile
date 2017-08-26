@@ -12,8 +12,6 @@ import core.stdc.stdio : fseek, FILE, SEEK_SET;
 /// Params: file = File structure.
 void scan_etc()
 {
-    FILE* fp = CurrentFile.getFP;
-
     if (fseek(fp, 0x3C, SEEK_SET) == 0)
     { // Palm Database Format
         import s_mobi : palmdb_name, scan_palmdoc, scan_mobi;

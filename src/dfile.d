@@ -18,15 +18,17 @@ import s_mach   : scan_mach,
 import s_models : scan_pmx;
 import s_pst    : scan_pst, PST_MAGIC;
 import Etc      : scan_etc;
-import s_images, utils;
+import s_images : scan_bpg, scan_png, scan_flif, scan_gif;
+import utils;
 
 bool More, /// -m : More flag
      ShowingName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
 File CurrentFile; /// Current file handle.
+FILE* fp; /// Current low-level file handle.
 
 /**
- * Prints debugging message with a FILE<at>LINE: MSG formatting.
+ * Prints debugging message with a FILE@LINE: MSG formatting.
  * Params:
  *   msg = Message
  *   line = Source line (automatic)
@@ -47,13 +49,13 @@ debug void dbg(string msg, int line = __LINE__, string file = __FILE__) {
  */
 debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
     import std.path : baseName;
-    writef("%s@L%d: %s", baseName(file), line, msg);
+    printf("%s@L%d: %s", &baseName(file)[0], line, &msg[0]);
 }
 
 /// Scanner entry point.
 void scan() {
     char[4] sig; // UTF-8, ASCII compatible.
-    if (CurrentFile.rawRead(sig).length == 0) {
+    if (CurrentFile.rawRead(sig).length < 4) {
         report("Empty file");
         return;
     }
@@ -65,9 +67,9 @@ void scan() {
         }
     } else const uint s = fint(sig); // As fallback
 
-    debug writefln("Magic: %08X", s);
+    debug printf("Magic: %08X\n", s);
 
-    FILE* fp = CurrentFile.getFP;
+    fp = CurrentFile.getFP;
 
     switch (s)
     {

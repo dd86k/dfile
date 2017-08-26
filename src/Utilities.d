@@ -5,7 +5,7 @@
 module utils;
 
 import std.stdio : File;
-import dfile : Base10, CurrentFile;
+import dfile : Base10, CurrentFile, fp;
 
 /*
  * File utilities.
@@ -24,10 +24,9 @@ void scpy(void* s, size_t size, bool rewind = false)
     import core.stdc.string : memcpy;
     import core.stdc.stdio : fread, FILE, fseek, SEEK_SET;//rewind;
     import core.stdc.stdlib : malloc;
-    FILE* fp = CurrentFile.getFP;
     if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp);
     void* bp = malloc(size);
-    fread(bp, size, 1, fp);
+    fread(bp, size, 1, fp); // size x1
     memcpy(s, bp, size);
 }
 
