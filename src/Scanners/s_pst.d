@@ -38,7 +38,7 @@ void scan_pst() {
             version_, client_version);
         if (version_ == 14 || version_ == 15)
             printf("ANSI");
-        else if (version_ > 23)
+        else if (version_ >= 23)
             printf("Unicode");
 
         if (version_ == 37)
