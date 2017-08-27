@@ -1631,8 +1631,62 @@ void scan() {
         scan_flif();
         return;
 
-    case 0x0000004C:
-        report("Microsoft Shortcut link (.LNK, MS-SHLLINK)");
+    case 0x0000004C: {
+        struct ShellLinkHeader {
+            //uint magic; // HeaderSize
+            ubyte[16] clsid; /// Class identifier. MUST be 00021401-0000-0000-C000-000000000046.
+            uint flags; /// Link attributes
+            uint attrs; /// File attributes
+            ulong creation_time;
+            ulong access_time;
+            ulong write_time;
+            uint filesize;
+            uint icon_index;
+            uint show_command;
+            ushort hotkey;
+            ushort res1;
+            uint res2, res3;
+        }
+        enum SW_SHOWNORMAL = 1,
+             SW_SHOWMAXIMIZED = 3,
+             SW_SHOWMINNOACTIVE = 7;
+
+        ShellLinkHeader h;
+        scpy(&h, h.sizeof);
+        report("Microsoft Shortcut link (.LNK, MS-SHLLINK)", false);
+
+        //TODO: Finish MS-SHLLINK
+
+        with (h) {
+            if (show_command)
+            switch (show_command) {
+                case SW_SHOWNORMAL: printf(", Normal window"); break;
+                case SW_SHOWMAXIMIZED: printf(", Maximized window"); break;
+                case SW_SHOWMINNOACTIVE: printf(", Minimized window"); break;
+                default:
+            }
+
+            if (hotkey) {
+                printf(", Hotkey");
+            }
+
+            writeln;
+
+            if (More) {
+                printf("LinkCLSID: ");
+                print_array(&h.clsid, h.clsid.sizeof);
+                printf("LinkFlags: %Xh\n", flags);
+                printf("FileAttributes: %Xh\n", attrs);
+                printf("CreationTime: %Xh\n", creation_time);
+                printf("AccessTime: %Xh\n", access_time);
+                printf("WriteTime: %Xh\n", write_time);
+                printf("FileSize: %Xh\n", filesize);
+                printf("IconIndex: %Xh\n", icon_index);
+                printf("ShowCommand: %Xh\n", show_command);
+                printf("HotKey: %Xh\n", hotkey);
+            }
+        }
+    }
         return;
 
     case PST_MAGIC: // "!BDN"
