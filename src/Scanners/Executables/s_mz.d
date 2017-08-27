@@ -27,40 +27,47 @@ private struct mz_hdr {
 	ushort e_lfarlc;       /// File address of relocation table
 	ushort e_ovno;         /// Overlay number
 	ushort[ERESWDS] e_res; /// Reserved words
-	uint   e_lfanew;       /// File address of new exe header, or @0x3c
+	uint   e_lfanew;       /// File address of new exe header (usually at 3Ch)
 }
 
 /// Scan a MZ-based executable
 void scan_mz() {
     debug dbg("Started scanning MZ file");
 
-    mz_hdr h;
-    scpy(&h, h.sizeof);
+    if (fseek(fp, 0x3c, SEEK_SET)) {
+        report_unknown; // Because by then we went past MZ's header
+        return;
+    }
+    uint p;
+    fread(&p, 4, 1, fp);
 
-    with (h) if (e_lfanew) {
+    if (p) {
         import s_pe : scan_pe;
         import s_le : scan_le;
         import s_ne : scan_ne;
         char[2] sig;
-        CurrentFile.seek(e_lfanew); //TODO: if (fseek) -> MZ
+        CurrentFile.seek(p); //TODO: if (fseek) -> MZ
         CurrentFile.rawRead(sig);
 
         switch (sig) {
         case "PE":
-            CurrentFile.seek(e_lfanew);
+            CurrentFile.seek(p);
             scan_pe();
             return;
         case "NE":
-            CurrentFile.seek(e_lfanew);
+            CurrentFile.seek(p);
             scan_ne();
             return;
         case "LE", "LX":
-            CurrentFile.seek(e_lfanew);
+            CurrentFile.seek(p);
             scan_le();
             return;
         default:
         }
     }
+
+    mz_hdr h;
+    scpy(&h, h.sizeof, true);
 
     report("MZ Executable", false);
     if (h.e_ovno)
