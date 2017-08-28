@@ -1632,7 +1632,7 @@ void scan() {
         return;
 
     case 0x0000004C: {
-        struct ShellLinkHeader {
+        struct ShellLinkHeader { align(1):
             //uint magic; // HeaderSize
             ubyte[16] clsid; /// Class identifier. MUST be 00021401-0000-0000-C000-000000000046.
             uint flags; /// Link attributes
@@ -1650,6 +1650,11 @@ void scan() {
         enum SW_SHOWNORMAL = 1,
              SW_SHOWMAXIMIZED = 3,
              SW_SHOWMINNOACTIVE = 7;
+        enum SW_A = 1, /// HasLinkTargetIDList
+             SW_B = 1 << 1, /// HasLinkInfo
+             SW_F = 1 << 5, /// HasArguments
+             SW_H = 1 << 7, /// IsUnicode
+             SW_Z = 1 << 24; /// PreferEnvironmentPath
 
         ShellLinkHeader h;
         scpy(&h, h.sizeof);
@@ -1661,14 +1666,30 @@ void scan() {
             if (show_command)
             switch (show_command) {
                 case SW_SHOWNORMAL: printf(", Normal window"); break;
-                case SW_SHOWMAXIMIZED: printf(", Maximized window"); break;
-                case SW_SHOWMINNOACTIVE: printf(", Minimized window"); break;
+                case SW_SHOWMAXIMIZED: printf(", Maximized"); break;
+                case SW_SHOWMINNOACTIVE: printf(", Minimized"); break;
                 default:
             }
 
             if (hotkey) {
                 printf(", Hotkey");
             }
+
+            /*if (flags & SW_A && flags & SW_B) {
+                writeln;
+                fseek(fp, h.sizeof + 4, SEEK_SET); // Skip over ShellLinkHeader
+                ushort l;
+                do {
+                    import core.stdc.stdlib : malloc;
+                    fread(&l, 2, 1, fp);
+                    //if (!l) break;
+                    char* p = cast(char*)malloc(l);
+                    fread(p, l, 1, fp);
+                    debug writeln("NODE L: ", l);
+                    p[l] = '\0';
+                    printf("%s\\", p);
+                } while (l);
+            }*/
 
             writeln;
 
