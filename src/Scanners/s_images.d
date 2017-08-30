@@ -9,90 +9,87 @@ import dfile, std.stdio, utils;
 /// Scan a PNG image
 void scan_png() // Big Endian
 { // https://www.w3.org/TR/PNG-Chunks.html
-    report("Portable Network Graphics image (PNG)");
+    struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
+        uint length;
+        uint type;
+        uint width;        // START IHDR
+        uint height;
+        ubyte depth;       // bit depth
+        ubyte color;       // color type
+        ubyte compression;
+        ubyte filter;
+        ubyte interlace;   // END IHDR
+        uint crc;
+    }
+    /*struct png_chunk { align(1):
+        uint length;
+        uint type;
+        ubyte[] data;
+        uint crc;
+    }
+    enum { // Types
+        IHDR = 0x52444849,
+        pHYs = 0x73594870
+    }*/
+    
+    ihdr_chunk_full h;
+    scpy(&h, h.sizeof);
+    report("Portable Network Graphics image (PNG), ", false);
 
-    if (More) {
-        struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
-            uint length;
-            uint type;
-            uint width;        // START IHDR
-            uint height;
-            ubyte depth;       // bit depth
-            ubyte color;       // color type
-            ubyte compression;
-            ubyte filter;
-            ubyte interlace;   // END IHDR
-            uint crc;
-        }
-
-        /*struct png_chunk { align(1):
-            uint length;
-            uint type;
-            ubyte[] data;
-            uint crc;
-        }
-        enum { // Types
-            IHDR = 0x52444849,
-            pHYs = 0x73594870
-        }*/
-
-        ihdr_chunk_full h;
-        scpy(&h, h.sizeof);
-
-        with (h) {
-            write(bswap(width), " x ", bswap(height), " pixels, ");
-
-            switch (color) {
-            case 0:
-                switch (depth) {
-                case 1, 2, 4, 8, 16:
-                    write(depth, "-bit ");
-                    break;
-                default: break;
-                }
-                write("Grayscale");
+    with (h) {
+        write(bswap(width), " x ", bswap(height), " pixels, ");
+        switch (color) {
+        case 0:
+            switch (depth) {
+            case 1, 2, 4, 8, 16:
+                write(depth, "-bit ");
                 break;
-            case 2:
-                switch (depth) {
-                case 8, 16:
-                    write(depth, "-bit ");
-                    break;
-                default: break;
-                }
-                write("RGB");
-                break;
-            case 3:
-                switch (depth) {
-                case 1, 2, 4, 8:
-                    write("8-bit ");
-                    break;
-                default: break;
-                }
-                write("PLTE Palette");
-                break;
-            case 4:
-                switch (depth) {
-                case 8, 16:
-                    write(depth, "-bit ");
-                    break;
-                default:
-                }
-                write("Grayscale+Alpha");
-                break;
-            case 6:
-                switch (depth) {
-                case 8, 16:
-                    write(depth, "-bit ");
-                    break;
-                default:
-                }
-                write("RGBA");
-                break;
-            default: write("Invalid color type"); break;
+            default: break;
             }
+            write("Grayscale");
+            break;
+        case 2:
+            switch (depth) {
+            case 8, 16:
+                write(depth*3, "-bit ");
+                break;
+            default: break;
+            }
+            write("RGB");
+            break;
+        case 3:
+            switch (depth) {
+            case 1, 2, 4, 8:
+                write("8-bit ");
+                break;
+            default: break;
+            }
+            write("PLTE Palette");
+            break;
+        case 4:
+            switch (depth) {
+            case 8, 16:
+                write(depth, "-bit ");
+                break;
+            default:
+            }
+            write("Grayscale+Alpha");
+            break;
+        case 6:
+            switch (depth) {
+            case 8, 16:
+                write("32-bit ");
+                break;
+            default:
+            }
+            write("RGBA");
+            break;
+        default: write("Invalid color type"); break;
+        }
 
-            write(", ");
+        writeln;
 
+        if (More) {
             switch (compression) {
             case 0: write("Default compression"); break;
             default: write("Invalid compression"); break;
