@@ -764,8 +764,44 @@ void scan() {
     case 0xE011CFD0:
         CurrentFile.rawRead(sig);
         switch (sig) {
-        case [0xA1, 0xB1, 0x1A, 0xE1]:
-            report("Compound File Binary Format document (doc, xls, ppt, etc.)");
+        case [0xA1, 0xB1, 0x1A, 0xE1]: {
+            struct cfb_header { align(1):
+                //ulong magic;
+                ubyte[16] clsid; // CLSID_NULL
+                ushort minor;
+                ushort major;
+                ushort byte_order;
+                ushort shift; /// Sector Shift
+                ushort mini_shift; /// Mini Sector Shift
+                ubyte[6] res;
+                uint dir_sectors;
+                uint fat_sectors;
+                uint first_dir_sector;
+                uint trans_sig; /// Transaction Signature Number
+                uint mini_stream_cutsize;
+                uint first_mini_fat_loc;
+                uint mini_fat_sectors; /// Number of Mini FAT Sectors
+                uint first_difat_loc; /// First DIFAT Sector Location
+                uint difat_sectors; /// Number of DIFAT Sectors
+                //ubyte[436] difat;
+            }
+            cfb_header h;
+            scpy(&h, h.sizeof);
+            report("Compound File Binary format document ", false);
+            with (h) {
+                printf("v%d.%d, %d FAT sectors\n", major, minor, fat_sectors);
+                if (More) {
+                    printf("%d directory sectors at %Xh\n",
+                        dir_sectors, first_dir_sector);
+                    if (trans_sig)
+                        printf("transaction signature at %Xh", trans_sig);
+                    printf("%d DIFAT sectors at %Xh\n",
+                        difat_sectors, first_difat_loc);
+                    printf("%d mini FAT sectors at %Xh\n",
+                        mini_fat_sectors, first_mini_fat_loc);
+                }
+            }
+        }
             return;
         default:
             report_unknown();
@@ -1727,11 +1763,11 @@ void scan() {
         return;
 
     case 0x00000F01:
-        report("MS-SQL database (MDF)");
+        report("MS-SQL database");
         return;
 
     default:
-        switch (sig[0..2]) {
+        switch (sig[0..2]) { //TODO: s & 0xFFFF
         case [0x1F, 0x9D]:
             report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
             return;
