@@ -1647,9 +1647,7 @@ void scan() {
             ushort res1;
             uint res2, res3;
         }
-        enum SW_SHOWNORMAL = 1,
-             SW_SHOWMAXIMIZED = 3,
-             SW_SHOWMINNOACTIVE = 7;
+        enum SW_SHOWNORMAL = 1, SW_SHOWMAXIMIZED = 3, SW_SHOWMINNOACTIVE = 7;
         enum SW_A = 1, /// HasLinkTargetIDList
              SW_B = 1 << 1, /// HasLinkInfo
              SW_F = 1 << 5, /// HasArguments
@@ -1699,18 +1697,10 @@ void scan() {
 
             /*if (flags & SW_A && flags & SW_B) {
                 writeln;
-                fseek(fp, h.sizeof + 4, SEEK_SET); // Skip over ShellLinkHeader
                 ushort l;
-                do {
-                    import core.stdc.stdlib : malloc;
-                    fread(&l, 2, 1, fp);
-                    //if (!l) break;
-                    char* p = cast(char*)malloc(l);
-                    fread(p, l, 1, fp);
-                    debug writeln("NODE L: ", l);
-                    p[l] = '\0';
-                    printf("%s\\", p);
-                } while (l);
+                fread(&l, 2, 1, fp);
+                fseek(fp, l, SEEK_CUR);
+                struct LinkInfo {}
             }*/
 
             writeln;
@@ -1734,6 +1724,10 @@ void scan() {
 
     case PST_MAGIC: // "!BDN"
         scan_pst;
+        return;
+
+    case 0x00000F01:
+        report("MS-SQL database (MDF)");
         return;
 
     default:
