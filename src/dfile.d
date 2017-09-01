@@ -794,7 +794,7 @@ void scan() {
                     printf("%d directory sectors at %Xh\n",
                         dir_sectors, first_dir_sector);
                     if (trans_sig)
-                        printf("transaction signature at %Xh", trans_sig);
+                        printf("transaction signature, %Xh", trans_sig);
                     printf("%d DIFAT sectors at %Xh\n",
                         difat_sectors, first_difat_loc);
                     printf("%d mini FAT sectors at %Xh\n",
@@ -1638,7 +1638,7 @@ void scan() {
     }
         return;
 
-    case 0x0D730178, 0x6B6F6C79, 0x6d697368: // Apple DMG disk image
+    case 0x0D730178, 0x6B6F6C79, 0x6d697368: //TODO: Apple DMG disk image
 //https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Storage/DMG.cpp
         report("Apple Disk Image file (dmg)");
         return;
@@ -1684,11 +1684,11 @@ void scan() {
             uint res2, res3;
         }
         enum SW_SHOWNORMAL = 1, SW_SHOWMAXIMIZED = 3, SW_SHOWMINNOACTIVE = 7;
-        enum SW_A = 1, /// HasLinkTargetIDList
+        /*enum SW_A = 1, /// HasLinkTargetIDList
              SW_B = 1 << 1, /// HasLinkInfo
              SW_F = 1 << 5, /// HasArguments
              SW_H = 1 << 7, /// IsUnicode
-             SW_Z = 1 << 24; /// PreferEnvironmentPath
+             SW_Z = 1 << 24; /// PreferEnvironmentPath*/
 
         ShellLinkHeader h;
         scpy(&h, h.sizeof);
