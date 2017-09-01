@@ -1672,7 +1672,29 @@ void scan() {
             }
 
             if (hotkey) {
-                printf(", Hotkey");
+                printf(", Hotkey (");
+                const int high = hotkey & 0xFF00;
+                if (high) {
+                    if (high & 0x0100)
+                        printf("shift+");
+                    if (high & 0x0200)
+                        printf("ctrl+");
+                    if (high & 0x0400)
+                        printf("alt+");
+                }
+                const int low = hotkey & 0xFF;
+                if (low) {
+                    if (low >= 0x30 && low <= 0x5A)
+                        printf("%c", low);
+                    else if (low >= 0x70 && low <= 0x87)
+                        printf("F%d", low - 0x6F);
+                    else switch (low) {
+                        case 0x90: printf("num lock"); break;
+                        case 0x91: printf("scroll lock"); break;
+                        default:
+                    }
+                }
+                printf(")");
             }
 
             /*if (flags & SW_A && flags & SW_B) {
