@@ -146,15 +146,15 @@ void scan() {
 
             if (h.chip & 1)
                 printf("VRCVI, ");
-            else if (h.chip & 0b10)
+            if (h.chip & 0b10)
                 printf("VRCVII, ");
-            else if (h.chip & 0b100)
+            if (h.chip & 0b100)
                 printf("FDS, ");
-            else if (h.chip & 0b1000)
+            if (h.chip & 0b1000)
                 printf("MMC5, ");
-            else if (h.chip & 0b1_0000)
+            if (h.chip & 0b1_0000)
                 printf("Namco 106, ");
-            else if (h.chip & 0b10_0000)
+            if (h.chip & 0b10_0000)
                 printf("Sunsoft FME-07, ");
 
             printf("\"%s - %s\", (c) %s\n",
@@ -174,7 +174,7 @@ void scan() {
             case x"1A": {
                 struct spc2_hdr { align(1):
                     //char[5] magic;
-                    ubyte majorver, minorver;
+                    ubyte major, minor;
                     ushort number;
                 }
 
@@ -183,7 +183,7 @@ void scan() {
 
                 report("SNES SPC2 v", false);
                 printf("%d.%d, %d of SPC entries\n",
-                    h.majorver, h.minorver, h.number);
+                    h.major, h.minor, h.number);
             }
                 return;
             default:
