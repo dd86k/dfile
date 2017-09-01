@@ -35,7 +35,7 @@ void scan_mz() {
     debug dbg("Started scanning MZ file");
 
     if (fseek(fp, 0x3c, SEEK_SET)) {
-        report_unknown; // Because by then we went past MZ's header
+        report_unknown; // Because by then we went past the header
         return;
     }
     uint p;
@@ -69,10 +69,10 @@ void scan_mz() {
     mz_hdr h;
     scpy(&h, h.sizeof, true);
 
-    report("MZ Executable", false);
+    report("MZ Executable for MS-DOS", false);
     if (h.e_ovno)
         printf(" (Overlay: %d)", h.e_ovno);
-    writeln(" for MS-DOS");
+    writeln;
 
     if (More) {
         //printf("e_magic   : %Xh\n", h.e_magic);

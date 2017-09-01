@@ -54,22 +54,16 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
 
 /// Scanner entry point.
 void scan() {
-    char[4] sig; // UTF-8, ASCII compatible.
-    if (CurrentFile.rawRead(sig).length < 4) {
+    fp = CurrentFile.getFP;
+    uint s;
+    if (fread(&s, 4, 1, fp) != 1) {
         report("Empty file");
         return;
     }
-    version (X86_ANY) {
-        uint s;
-        asm pure @nogc nothrow {
-            mov ECX, dword ptr sig;
-            mov s, ECX;
-        }
-    } else const uint s = fint(sig); // As fallback
 
     debug printf("Magic: %08X\n", s);
 
-    fp = CurrentFile.getFP;
+    char[4] sig; // UTF-8, ASCII compatible, remains for compatibility
 
     switch (s)
     {
