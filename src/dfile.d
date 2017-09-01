@@ -1767,67 +1767,67 @@ void scan() {
         return;
 
     default:
-        switch (sig[0..2]) { //TODO: s & 0xFFFF
-        case [0x1F, 0x9D]:
-            report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
-            return;
-
-        case [0x1F, 0xA0]:
-            report("LZH compressed archive (RAR/ZIP)");
-            return;
-
-        case "MZ":
-            scan_mz();
-            return;
-
-        case [0xFF, 0xFE]:
-            report("UTF-16 text file (Byte-Order mark)");
-            return;
-
-        case [0xFF, 0xFB]:
-            report("MPEG-2 Audio Layer III audio file (MP3)");
-            return;
-
-        case "BM":
-            report("Bitmap image file (BMP)");
-            return;
-
-        case [0x1F, 0x8B]:
-            report("GZIP compressed file (gz)");
-            return;
-
-        case [0x30, 0x82]:
-            report("DER encoded X.509 certificate (der)");
-            return;
-
-        default:
-            switch (sig[0..3]) {
-            case "GIF":
+        switch (s & 0xFF_FFFF) {
+            case 0x464947: // "GIF"
                 scan_gif();
                 break;
 
-            case "BZh":
+            case 0x685A42: // "BZh"
                 report("Bzip2 compressed file (bzip2)");
                 return;
 
-            case [0xEF, 0xBB, 0xBF]:
+            case 0xBFBBEF:
                 report("UTF-8 text file with BOM");
                 return;
 
-            case "ID3":
+            case 0x324449: // "ID3"
                 report("MPEG-2 Audio Layer III audio file with ID3v2 (MP3)");
                 return;
 
-            case "NES":
+            case 0x53454E: // "NES"
                 report("Nintendo Entertainment System ROM file (nes)");
                 return;
 
-            case [0xCF, 0x84, 0x01]:
+            case 0x0184CF:
                 report("Lepton compressed JPEG image (lep)");
                 return;
 
-            case [0, 1, 1]:
+            case 0x010100:
                 report("OpenFlight 3D file");
+                return;
+
+        default:
+            switch (s & 0xFFFF) {
+            case 0x9D1F:
+                report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
+                return;
+
+            case 0xA01F:
+                report("LZH compressed archive (RAR/ZIP)");
+                return;
+
+            case 0x5A4D: // "MZ"
+                scan_mz();
+                return;
+
+            case 0xFEFF:
+                report("UTF-16 text file (Byte-Order mark)");
+                return;
+
+            case 0xFBFF:
+                report("MPEG-2 Audio Layer III audio file (MP3)");
+                return;
+
+            case 0x4D42:
+                report("Bitmap image file (BMP)");
+                return;
+
+            case 0x8B1F:
+                report("GZIP compressed file (gz)");
+                return;
+
+            case 0x8230:
+                report("DER encoded X.509 certificate (der)");
                 return;
 
             default:
