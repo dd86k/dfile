@@ -11,6 +11,7 @@ import utils : scpy;
 private enum ERESWDS = 0x10; /// Reserved words
 
 // DOS 1, 2, 3 .EXE header from newexe.h, Word 1.1a source.
+/// MZ Header
 private struct mz_hdr {
 	//ushort e_magic;        /// Magic number
 	ushort e_cblp;         /// Bytes on last page of file
@@ -45,20 +46,23 @@ void scan_mz() {
         import s_pe : scan_pe;
         import s_le : scan_le;
         import s_ne : scan_ne;
-        char[2] sig;
-        CurrentFile.seek(p); //TODO: if (fseek) -> MZ
-        CurrentFile.rawRead(sig);
+        ushort sig;
+        if (fseek(fp, p, SEEK_SET)) { // Should it report as MZ?
+            report_unknown;
+            return;
+        }
+        fread(&sig, 2, 1, fp);
 
         switch (sig) {
-        case "PE":
+        case 0x4550: // "PE"
             CurrentFile.seek(p);
             scan_pe();
             return;
-        case "NE":
+        case 0x454E: // "NE"
             CurrentFile.seek(p);
             scan_ne();
             return;
-        case "LE", "LX":
+        case 0x454C, 0x584C: // "LE", "LX"
             CurrentFile.seek(p);
             scan_le();
             return;
