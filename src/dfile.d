@@ -92,15 +92,15 @@ void scan() {
                 return;
             case "Stan":
                 switch (b[8..12]) {
-                    case " ACE":
-                        report("Microsoft Access 2007 Database");
-                        return;
-                    case " Jet":
-                        report("Microsoft Access Database");
-                        return;
-                    default:
-                        report_unknown();
-                        return;
+                case " ACE":
+                    report("Microsoft Access 2007 Database");
+                    return;
+                case " Jet":
+                    report("Microsoft Access Database");
+                    return;
+                default:
+                    report_unknown();
+                    return;
                 }
             default:
                 if (b[0] == 0)
@@ -1846,40 +1846,40 @@ void report_text()
 }
 
 version (Windows) {
-version (Symlink) {
-/**
- * Some Microsoft thing used for DeviceIoCtl.
- * Params:
- *   t = Device type
- *   f = Function
- *   m = Method
- *   a = Access
- * Returns: BOOL
- */
-BOOL CTL_CODE(uint d, uint f, uint m, uint a) {
-    return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
-}
-import core.sys.windows.windows;
-enum FILE_ANY_ACCESS = 0; /// Any access to files.
-enum METHOD_BUFFERED = 0; /// Buffered access.
-enum FILE_DEVICE_FILE_SYSTEM = 0x00000009; /// File system access.
-enum FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000; /// Reparse point (symlink).
-enum FILE_FLAG_BACKUP_SEMANTICS   = 0x02000000; /// Backup semantics.
-/// FSCTL request, get reparse point
-enum FSCTL_GET_REPARSE_POINT = CTL_CODE(
-        FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS
-    );
-/// Symlink struct.
-struct WIN32_SYMLINK_REPARSE_DATA_BUFFER {
-    DWORD             ReparseTag; /// Tag
-    DWORD             ReparseDataLength; /// Data length
-    WORD              Dummy; /// Unused
-    WORD              ReparseTargetLength; ///  Target length
-    WORD              ReparseTargetMaximumLength; /// Target maximum length
-    WORD              Dummy1; /// Unused
-    WCHAR[MAX_PATH]   ReparseTarget; /// Target path.
-}
-} // version (Symlink)
+    version (Symlink) {
+    /**
+    * Some Microsoft thing used for DeviceIoCtl.
+    * Params:
+    *   t = Device type
+    *   f = Function
+    *   m = Method
+    *   a = Access
+    * Returns: BOOL
+    */
+    BOOL CTL_CODE(uint d, uint f, uint m, uint a) {
+        return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
+    }
+    import core.sys.windows.windows;
+    enum FILE_ANY_ACCESS = 0; /// Any access to files.
+    enum METHOD_BUFFERED = 0; /// Buffered access.
+    enum FILE_DEVICE_FILE_SYSTEM = 0x00000009; /// File system access.
+    enum FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000; /// Reparse point (symlink).
+    enum FILE_FLAG_BACKUP_SEMANTICS   = 0x02000000; /// Backup semantics.
+    /// FSCTL request, get reparse point
+    enum FSCTL_GET_REPARSE_POINT = CTL_CODE(
+            FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS
+        );
+    /// Symlink struct.
+    struct WIN32_SYMLINK_REPARSE_DATA_BUFFER {
+        DWORD             ReparseTag; /// Tag
+        DWORD             ReparseDataLength; /// Data length
+        WORD              Dummy; /// Unused
+        WORD              ReparseTargetLength; ///  Target length
+        WORD              ReparseTargetMaximumLength; /// Target maximum length
+        WORD              Dummy1; /// Unused
+        WCHAR[MAX_PATH]   ReparseTarget; /// Target path.
+    }
+    } // version (Symlink)
 } // version (Windows)
 
 /// Report a symbolic link.
@@ -1961,7 +1961,7 @@ void report_link(string linkname)
 void report(string type, bool nl = true)
 {
     if (ShowingName)
-        printf("%s: ", &CurrentFile.name[0]);
+        writef("%s: ", CurrentFile.name);
     printf("%s", &type[0]);
     if (nl) writeln;
 }
@@ -1974,8 +1974,8 @@ void report(string type, bool nl = true)
  */
 void reportfile(string type, string filename, bool nl = true)
 {
-    if (ShowingName) // tfw no ?? operator
-        printf("%s: ", &filename[0]);
+    if (ShowingName)
+        writef("%s: ", filename);
     printf("%s", &type[0]);
     if (nl) writeln;
 }

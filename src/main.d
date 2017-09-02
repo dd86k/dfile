@@ -110,8 +110,8 @@ void prescan(string filename, bool cont)
     const uint a = getAttributes(filename);
     version (Posix) {
         import core.sys.posix.sys.stat :
-            S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK;
-        if (a & S_IFLNK)
+            S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK, S_IFMT;
+        if ((a & S_IFMT) == S_IFLNK)
             if (cont)
                 goto FILE;
             else
