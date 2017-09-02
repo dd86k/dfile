@@ -357,6 +357,7 @@ void scan() {
     }
 
     case 0x4D524F46: { // "FORM"
+    //TODO: fseek and stuff
         char[4] b;
         CurrentFile.seek(8);
         CurrentFile.rawRead(b);
@@ -478,7 +479,7 @@ void scan() {
 
     case 0x21726152: { // "Rar!"
         CurrentFile.rawRead(sig);
-        switch (sig) {
+        switch (sig[0..3]) {
         case x"1A 07 01":
             //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
