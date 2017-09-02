@@ -1824,8 +1824,8 @@ void scan() {
             default:
                 scan_etc;
                 return;
-            } // 3 Byte signatures
-        } // 2 Byte signatures
+            } // 2 Byte signatures
+        } // 3 Byte signatures
     } // 4 Byte signatures
 } // main
 
@@ -1886,7 +1886,7 @@ struct WIN32_SYMLINK_REPARSE_DATA_BUFFER {
 /// Params: linkname = Path to the link
 void report_link(string linkname)
 {
-    report("Soft symbolic link", false, linkname);
+    reportfile("Soft symbolic link", linkname);
 
     version (Windows)
     { // Works half the time, see the Wiki post.
@@ -1950,22 +1950,32 @@ void report_link(string linkname)
         char* p = realpath(&linkname[0], cast(char*)0);
         if (p) printf(" to %s", p);
     }
-    writeln;
 }
 
 /**
- * Report to the user information.
- * If the newline is false, the developper must end the information with a new
- * line manually.
+ * Report to stdout.
  * Params:
  *   type = File type
- *   nl = Print newline
- *   filename = override filename
+ *   nl = Print newline (default=true)
  */
-void report(string type, bool nl = true, string filename = null)
+void report(string type, bool nl = true)
+{
+    if (ShowingName)
+        printf("%s: ", &CurrentFile.name[0]);
+    printf("%s", &type[0]);
+    if (nl) writeln;
+}
+/**
+ * Report to stdout when file handle can't be opened.
+ * Params:
+ *   type = File type
+ *   filename = File name
+ *   nl = Print newline (default=true)
+ */
+void reportfile(string type, string filename, bool nl = true)
 {
     if (ShowingName) // tfw no ?? operator
-        writef("%s: ", filename ? filename : CurrentFile.name);
+        printf("%s: ", &filename[0]);
     printf("%s", &type[0]);
     if (nl) writeln;
 }

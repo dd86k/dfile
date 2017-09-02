@@ -90,7 +90,7 @@ private int main(string[] args)
                     return 1;
                 }
             } else { // non-glob
-                report("File not found.", true, filename);
+                reportfile("File not found.", filename);
                 return 1;
             }
         }
@@ -107,42 +107,77 @@ private int main(string[] args)
  */
 void prescan(string filename, bool cont)
 {
-    //TODO: #6 (Posix) -- Use stat(2)
-    // Or rather, figure a few linux things
     const uint a = getAttributes(filename);
-    if (attrIsSymlink(a))
-        if (cont)
-            goto FILE;
-        else
-            report_link(filename);
-    else if (attrIsFile(a)) {
-        import std.exception : ErrnoException;
+    version (Posix) {
+        import core.sys.posix.sys.stat :
+            S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK;
+        if (a & S_IFLNK)
+            if (cont)
+                goto FILE;
+            else
+                report_link(filename);
+        else if (a & S_IFREG) {
+            import std.exception : ErrnoException;
 FILE:
-        try {
-            debug dbg("Opening file...");
-            CurrentFile = File(filename, "rb");
-        } catch (ErrnoException ex) {
-            stderr.writeln("Error: ", ex.msg, ".");
-            return;
+            try {
+                debug dbg("Opening file...");
+                CurrentFile = File(filename, "rb");
+            } catch (ErrnoException ex) {
+                stderr.writeln("Error: ", ex.msg, ".");
+                return;
+            }
+
+            debug dbg("Scanning...");
+            scan();
+
+            debug dbg("Closing file...");
+            CurrentFile.close();
         }
+        else if (a & S_IFBLK)
+            reportfile("Block", filename);
+        else if (a & S_IFCHR)
+            reportfile("Character special", filename);
+        else if (a & S_IFSOCK)
+            reportfile("Socket", filename);
+        else if (a & S_IFDIR)
+            reportfile("Directory", filename);
+        else
+            report_unknown(filename);
+    } else { // Windows and other non-POSIX platforms
+        if (attrIsSymlink(a))
+            if (cont)
+                goto FILE;
+            else
+                report_link(filename);
+        else if (attrIsFile(a)) {
+            import std.exception : ErrnoException;
+FILE:
+            try {
+                debug dbg("Opening file...");
+                CurrentFile = File(filename, "rb");
+            } catch (ErrnoException ex) {
+                stderr.writeln("Error: ", ex.msg, ".");
+                return;
+            }
 
-        debug dbg("Scanning...");
-        scan();
+            debug dbg("Scanning...");
+            scan();
 
-        debug dbg("Closing file...");
-        CurrentFile.close();
-    } else if (attrIsDir(a))
-        report("Directory", true, filename);
-    else
-        report_unknown(filename);
+            debug dbg("Closing file...");
+            CurrentFile.close();
+        } else if (attrIsDir(a))
+            reportfile("Directory", filename);
+        else
+            report_unknown(filename);
+    }
 }
 
 /// Print description and synopsis.
 void PrintHelp()
 {
-    writeln("Determine the file type via pre-determined magic.");
-    printf("  Usage: %s [options] file\n", &PROJECT_NAME[0]);
-    printf("         %s {-h|--help|-v|--version}\n", &PROJECT_NAME[0]);
+    printf("Determine the file type via pre-determined magic.\n");
+    printf("  Usage: dfile [options] file\n");
+    printf("         dfile {-h|--help|-v|--version}\n");
 }
 
 /// Print program version and exit.
@@ -153,7 +188,7 @@ void PrintVersion()
         &PROJECT_NAME[0], &PROJECT_VERSION[0], &__TIMESTAMP__[0]);
     printf("Compiled %s with %s v%d\n",
         &__FILE__[0], &__VENDOR__[0], __VERSION__);
-    writeln("MIT License: Copyright (c) 2016-2017 dd86k");
+    printf("MIT License: Copyright (c) 2016-2017 dd86k\n");
     printf("Project page: <https://github.com/dd86k/%s>\n", &PROJECT_NAME[0]);
     exit(0); // getopt hack
 }
