@@ -55,6 +55,7 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
 /// Scanner entry point.
 void scan() {
     fp = CurrentFile.getFP;
+
     uint s;
     if (fread(&s, 4, 1, fp) != 1) {
         report("Empty file");
@@ -65,8 +66,7 @@ void scan() {
 
     char[4] sig; // UTF-8, ASCII compatible, remains for compatibility
 
-    switch (s)
-    {
+    switch (s) {
     /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
         printf("LD2000 Frame file (LDS)");
         break;*/
@@ -86,14 +86,12 @@ void scan() {
     case 0x00000100: {
         char[12] b;
         CurrentFile.rawRead(b);
-        switch (b[0..4])
-        {
+        switch (b[0..4]) {
             case "MSIS":
                 report("Microsoft Money file");
                 return;
             case "Stan":
-                switch (b[8..12])
-                {
+                switch (b[8..12]) {
                     case " ACE":
                         report("Microsoft Access 2007 Database");
                         return;
@@ -105,12 +103,10 @@ void scan() {
                         return;
                 }
             default:
-                {
-                    if (b[0] == 0)
-                        report("TrueType font file");
-                    else
-                        report("Palm Desktop Data File (Access format)");
-                }
+                if (b[0] == 0)
+                    report("TrueType font file");
+                else
+                    report("Palm Desktop Data File (Access format)");
                 return;
         }
     }
