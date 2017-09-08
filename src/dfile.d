@@ -22,7 +22,7 @@ import s_images : scan_bpg, scan_png, scan_flif, scan_gif;
 import utils;
 
 bool More, /// -m : More flag
-     ShowingName, /// -s : Show name flag
+     ShowName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
 File CurrentFile; /// Current file handle.
 FILE* fp; /// Current low-level file handle.
@@ -1629,17 +1629,32 @@ void scan() {
     }
         return;
 
-    case 0x0D730178, 0x6B6F6C79, 0x6d697368: //TODO: Apple DMG disk image
-//https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Storage/DMG.cpp
+    case 0x0D730178, 0x6d697368: // Apple DMG disk image
         report("Apple Disk Image file (dmg)");
         return;
 
-//TODO: Check Apple DMG extra
-    /*case 0x6B6F6C79: // "koly", Apple DMG disk image
+    case 0x6B6F6C79: { // "koly", Apple DMG disk image
+//TODO: Continue Apple DMG
+//https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Storage/DMG.cpp
+        struct dmg_header { align(1):
+            //uint magic;
+            uint version_;
+            uint footer; /// sizeof(dmg_header)
+            uint flags;
+            ulong data_offset;
+            ulong data_size;
+            ulong res_offset;
+            ulong res_size;
+            uint segmentnum;
+            uint nbsegment;
+            uint segmentid;
 
+        }
+        report("Apple Disk Image file (dmg)", false);
+    }
         return;
 
-    case 0x6d697368: // "mish", Apple DMG disk image
+    /*case 0x6d697368: // "mish", Apple DMG disk image
 
         return;*/
 
@@ -1833,7 +1848,7 @@ void scan() {
 /// Params: filename = Filename in CLI phase
 void report_unknown(string filename = null)
 {
-    if (ShowingName)
+    if (ShowName)
         write(filename ? filename : CurrentFile.name, ": ");
     writeln("Unknown type");
 }
@@ -1960,7 +1975,7 @@ void report_link(string linkname)
  */
 void report(string type, bool nl = true)
 {
-    if (ShowingName)
+    if (ShowName)
         writef("%s: ", CurrentFile.name);
     printf("%s", &type[0]);
     if (nl) writeln;
@@ -1974,7 +1989,7 @@ void report(string type, bool nl = true)
  */
 void reportfile(string type, string filename, bool nl = true)
 {
-    if (ShowingName)
+    if (ShowName)
         writef("%s: ", filename);
     printf("%s", &type[0]);
     if (nl) writeln;

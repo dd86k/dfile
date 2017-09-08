@@ -39,7 +39,7 @@ private int main(string[] args)
             config.bundling, config.caseSensitive,
 			"m|more", "Print more information if available.", &More,
             config.bundling, config.caseSensitive,
-			"s|showname", "Prepend filename to result.", &ShowingName,
+			"s|showname", "Prepend filename to result.", &ShowName,
             config.bundling, config.caseSensitive,
             "g|glob", "Use file match globbing.", &glob,
             config.bundling, config.caseSensitive,
@@ -53,7 +53,7 @@ private int main(string[] args)
 
     if (r.helpWanted) {
         PrintHelp;
-        writeln("\nOption             Description");
+        printf("\nOption             Description\n");
         foreach (it; r.options) { // "custom" defaultGetoptPrinter
             writefln("%*s, %-*s%s%s",
                 4,  it.optShort,
@@ -86,7 +86,7 @@ private int main(string[] args)
                     return 1;
                 }
                 if (!found) { // "Not found"-case if 0 files.
-                    writeln("No files were found.");
+                    printf("No files were found.\n");
                     return 1;
                 }
             } else { // non-glob
