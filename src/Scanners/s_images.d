@@ -38,7 +38,7 @@ void scan_png() // Big Endian
     report("Portable Network Graphics image (PNG), ", false);
 
     with (h) {
-        write(bswap(width), " x ", bswap(height), " pixels, ");
+        write(bswap32(width), " x ", bswap32(height), " pixels, ");
         switch (color) {
         case 0:
             switch (depth) {

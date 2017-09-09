@@ -328,8 +328,8 @@ void scan_mach(uint sig) {
             scpy(&fa, fa.sizeof);
 
             if (reversed) {
-                cpu_type = cast(cpu_type_t)bswap(fa.cputype);
-                cpu_subtype = bswap(fa.cpusubtype);
+                cpu_type = cast(cpu_type_t)bswap32(fa.cputype);
+                cpu_subtype = bswap32(fa.cpusubtype);
             } else {
                 cpu_type = fa.cputype;
                 cpu_subtype = fa.cpusubtype;
@@ -343,9 +343,9 @@ void scan_mach(uint sig) {
         scpy(&mh, mh.sizeof, true);
 
         if (reversed) {
-            filetype = cast(filetype_t)bswap(mh.filetype);
-            cpu_type = cast(cpu_type_t)bswap(mh.cputype);
-            cpu_subtype = bswap(mh.cpusubtype);
+            filetype = cast(filetype_t)bswap32(mh.filetype);
+            cpu_type = cast(cpu_type_t)bswap32(mh.cputype);
+            cpu_subtype = bswap32(mh.cpusubtype);
         } else {
             filetype = mh.filetype;
             cpu_type = mh.cputype;

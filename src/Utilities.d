@@ -132,17 +132,17 @@ string formatsize(ulong size)
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) ushort bswap(ushort num) pure nothrow @nogc
+pragma(inline, false) ushort bswap16(ushort num) pure nothrow @nogc @safe
 {
-    version (X86) asm pure nothrow @nogc { naked;
+    version (X86) asm pure nothrow @nogc @safe { naked;
         xchg AH, AL;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc { naked;
+        version (Windows) asm pure nothrow @nogc @safe { naked;
             mov AX, CX;
             xchg AL, AH;
             ret;
-        } else asm pure nothrow @nogc { naked; // System V AMD64 ABI
+        } else asm pure nothrow @nogc @safe { naked; // System V AMD64 ABI
             mov EAX, EDI;
             xchg AL, AH;
             ret;
@@ -160,17 +160,17 @@ pragma(inline, false) ushort bswap(ushort num) pure nothrow @nogc
  * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) uint bswap(uint num) pure nothrow @nogc
+pragma(inline, false) uint bswap32(uint num) pure nothrow @nogc @safe
 {
-    version (X86) asm pure nothrow @nogc { naked;
+    version (X86) asm pure nothrow @nogc @safe { naked;
         bswap EAX;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc { naked;
+        version (Windows) asm pure nothrow @nogc @safe { naked;
             mov EAX, ECX;
             bswap EAX;
             ret;
-        } else asm pure nothrow @nogc { naked; // System V AMD64 ABI
+        } else asm pure nothrow @nogc @safe { naked; // System V AMD64 ABI
             mov RAX, RDI;
             bswap EAX;
             ret;
@@ -188,7 +188,7 @@ pragma(inline, false) uint bswap(uint num) pure nothrow @nogc
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) ulong bswap(ulong num) pure nothrow @nogc
+pragma(inline, false) ulong bswap64(ulong num) pure nothrow @nogc
 {
     version (X86) asm pure nothrow @nogc { naked;
         xchg EAX, EDX;

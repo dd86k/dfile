@@ -283,7 +283,7 @@ void scan() {
         uint b;
         fread(&b, 4, 1, fp);
         report("GTA Text 2 file with ", false);
-        printf("%d entries\n", bswap(b)); // Byte swapped
+        printf("%d entries\n", bswap32(b)); // Byte swapped
     }
         return;
 
@@ -626,8 +626,8 @@ void scan() {
         scpy(&h, h.sizeof);
         report("Photoshop Document v", false);
         printf("%d, %d x %d, %d-bit ",
-            bswap(h.version_), bswap(h.width), bswap(h.height), bswap(h.depth));
-        switch (bswap(h.colormode)) {
+            bswap16(h.version_), bswap32(h.width), bswap32(h.height), bswap16(h.depth));
+        switch (bswap16(h.colormode)) {
         case 0: printf("Bitmap"); break;
         case 1: printf("Grayscale"); break;
         case 2: printf("Indexed"); break;
@@ -638,7 +638,7 @@ void scan() {
         case 9: printf("Lab"); break;
         default: printf("Unknown type"); break;
         }
-        printf(" image, %d channel(s)\n", bswap(h.channels));
+        printf(" image, %d channel(s)\n", bswap16(h.channels));
     }
         return;
 
@@ -737,15 +737,15 @@ void scan() {
 
         report("MIDI, ", false);
 
-        switch (bswap(h.format)) {
+        switch (bswap16(h.format)) {
         case 0: printf("Single track"); break;
         case 1: printf("Multiple tracks"); break;
         case 2: printf("Multiple songs"); break;
         default: printf("Unknown format"); return;
         }
 
-        const ushort div = bswap(h.division);
-        printf(": %d tracks at ", bswap(h.number));
+        const ushort div = bswap16(h.division);
+        printf(": %d tracks at ", bswap16(h.number));
         if (div & 0x8000) // Negative, SMPTE units
             printf("%d ticks/frame (SMPTE: %d)\n", div & 0xFF, div >>> 8 & 0xFF);
         else // Ticks per beat
@@ -1357,15 +1357,15 @@ void scan() {
         }
         vhd_hdr h;
         scpy(&h, h.sizeof);
-        h.features = bswap(h.features);
+        h.features = bswap32(h.features);
         if ((h.features & F_RES) == 0) {
             report_text();
             return;
         }
         report("Microsoft VHD disk image v", false);
-        printf("%d.%d, ", bswap(h.major), bswap(h.minor));
+        printf("%d.%d, ", bswap16(h.major), bswap16(h.minor));
 
-        h.disk_type = bswap(h.disk_type);
+        h.disk_type = bswap32(h.disk_type);
         switch(h.disk_type) {
             case D_FIXED: printf("Fixed"); break;
             case D_DYNAMIC: printf("Dynamic"); break;
@@ -1379,7 +1379,7 @@ void scan() {
         }
 
         printf(", %s v%d.%d on ",
-            &h.creator_app[0], bswap(h.creator_major), bswap(h.creator_minor));
+            &h.creator_app[0], bswap16(h.creator_major), bswap16(h.creator_minor));
 
         switch (h.creator_os) {
             case OS_WINDOWS: printf("Windows"); break;
@@ -1541,9 +1541,9 @@ void scan() {
         scpy(&h, h.sizeof);
 
         report("QEMU QCOW2 disk image v", false);
-        write(bswap(h.version_), ", ", formatsize(bswap(h.size)), " capacity");
+        write(bswap32(h.version_), ", ", formatsize(bswap64(h.size)), " capacity");
 
-        switch (bswap(h.crypt_method)) {
+        switch (bswap32(h.crypt_method)) {
             case C_AES: printf(", AES encrypted"); break;
             default: break;
         }
@@ -1551,7 +1551,7 @@ void scan() {
         writeln();
 
         if (More) {
-            printf("Snapshots: %d\n", bswap(h.nb_snapshots));
+            printf("Snapshots: %d\n", bswap32(h.nb_snapshots));
         }
     }
         return;
