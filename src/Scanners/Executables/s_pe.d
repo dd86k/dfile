@@ -5,7 +5,7 @@
 module s_pe;
 
 import std.stdio;
-import dfile : CurrentFile, report, More;
+import dfile : report, More, fp;
 import utils : scpy;
 
 private struct PE_HEADER { align(1):
@@ -155,7 +155,7 @@ void scan_pe() {
     if (peh.SizeOfOptionalHeader > 0) { // PE Optional Header
         scpy(&peoh, peoh.sizeof);
         if (peoh.magic == PE_FORMAT.HDR64)
-            CurrentFile.seek(16, SEEK_CUR);
+            fseek(fp, 16, SEEK_CUR);
         scpy(&dirs, dirs.sizeof);
     }
 

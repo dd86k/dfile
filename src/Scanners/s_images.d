@@ -10,6 +10,7 @@ import dfile, std.stdio, utils;
 void scan_png() // Big Endian
 { // https://www.w3.org/TR/PNG-Chunks.html
     struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
+        uint restmagic;
         uint length;
         uint type;
         uint width;        // START IHDR

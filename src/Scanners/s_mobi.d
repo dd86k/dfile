@@ -8,8 +8,9 @@ import std.stdio;
 import dfile;
 import utils;
 
-private struct palmdoc_hdr
-{
+private enum STARTPOS = 944;
+
+private struct palmdoc_hdr {
     ushort Compression;
     ushort Reserved;
     uint TextLength;
@@ -29,30 +30,19 @@ private struct mobi_hdr
     // ...
 }
 
-private enum STARTPOS = 944;
-
 /// Get PalmDB name
 void palmdb_name() {
     char[32] name;
-    CurrentFile.rewind();
-    CurrentFile.rawRead(name);
-    char* p = name.ptr; // &name[0]
-    size_t n;
-    while (*p++ != '\0') ++n;
-    // %s takes .length instead of a null terminator
-    writeln(` "`, name[0..n], `"`);
+    char* p = &name[0];
+    fseek(fp, 0, SEEK_SET);
+    fread(p, 32, 1, fp);
+    printf(" \"%s\"\n", p);
 }
 
 /// Scan PalmDB file
 void scan_palmdoc() {
     palmdoc_hdr h;
-    {
-        import core.stdc.string : memcpy;
-        ubyte[palmdoc_hdr.sizeof] b;
-        CurrentFile.seek(STARTPOS);
-        CurrentFile.rawRead(b);
-        memcpy(&h, &b, palmdoc_hdr.sizeof);
-    }
+    scpy(&h, h.sizeof);
 
     report("Palm Document", false);
 
@@ -65,19 +55,16 @@ void scan_palmdoc() {
 }
 
 /// Scan a MOBI file
-void scan_mobi()
-{
+void scan_mobi() { // Big endian
     palmdoc_hdr h;
     mobi_hdr mh;
-    CurrentFile.seek(STARTPOS);
+    fseek(fp, STARTPOS, SEEK_SET);
     scpy(&h, h.sizeof);
     scpy(&mh, mh.sizeof);
-    
+
     report("Mobipocket ", false);
 
-    switch (mh.Type) // Big Endian
-    { // So we have to invert the values! (Per byte)
-      // Original value is commented.
+    switch (mh.Type) {
         case 0xE800_0000, 0x0200_0000: // 232, 2
             write("ebook");
             break;
@@ -111,7 +98,7 @@ void scan_mobi()
         case 0x0402_0000: // 516
             write("PPT");
             break;
-        case 0x0502_0000: // 517:
+        case 0x0502_0000: // 517
             write("TEXT");
             break;
         case 0x0602_0000: // 518
@@ -124,12 +111,12 @@ void scan_mobi()
 
     write(" file");
 
-    if (h.Compression == 0x0100) // Big Endian
+    if (h.Compression == 0x0100)
         write(", PalmDOC compressed");
     else if (h.Compression == 0x4844)
         write(", HUFF/CDIC compressed");
 
-    if (h.Encryption == 0x0100) // Big Endian
+    if (h.Encryption == 0x0100)
         write(", Legacy Mobipocket encryption");
     else if (h.Encryption == 0x0200)
         write(", Mobipocket encryption");

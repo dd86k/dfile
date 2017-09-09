@@ -4,8 +4,10 @@
 
 module s_iso;
 
-import std.stdio, dfile, utils;
-import core.stdc.stdio : fseek, FILE, SEEK_SET;
+import core.stdc.stdio;
+import std.stdio : write, writeln;
+import dfile : More, report, fp;
+import utils;
 
 enum ISO = "CD001"; /// ISO signature
 private enum BLOCK_SIZE = 1024; // Half an ISO block
@@ -64,10 +66,10 @@ void scan_iso()
         }
     }
     /// Returns: Returns true to stop.
-    bool check_seek(long pos, char[1024] buf, FILE* fp) {
-        // OKAY to cast to int since we only check up to 9000H
+    bool check_seek(long pos, char[BLOCK_SIZE] buf) {
+        // OKAY to cast to int since we only check up to ~9000H
         if (fseek(fp, cast(int)pos, SEEK_SET)) return true;
-        CurrentFile.rawRead(buf);
+        fread(&buf, BLOCK_SIZE, 1, fp);
         if (buf[1..6] == ISO) scan_block(&buf[0]);
         return false;
     }
@@ -79,9 +81,9 @@ void scan_iso()
     }
     char[BLOCK_SIZE] buf;
 
-    if (check_seek(0x8000, buf, fp)) goto ISO_DONE;
-    if (check_seek(0x8800, buf, fp)) goto ISO_DONE;
-    if (check_seek(0x9000, buf, fp)) goto ISO_DONE;
+    if (check_seek(0x8000, buf)) goto ISO_DONE;
+    if (check_seek(0x8800, buf)) goto ISO_DONE;
+    if (check_seek(0x9000, buf)) goto ISO_DONE;
 
 ISO_DONE:
     report("ISO-9660 CD/DVD image", false);

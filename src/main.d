@@ -4,7 +4,9 @@
 
 module main;
 
-import std.stdio, std.file, std.getopt;
+import core.stdc.stdio;
+import std.stdio : writeln, writefln;
+import std.file, std.getopt;
 import dfile;
 
 enum PROJECT_VERSION = "0.8.3", /// Project version.
@@ -90,7 +92,7 @@ private int main(string[] args)
                     return 1;
                 }
             } else { // non-glob
-                reportfile("File not found.", filename);
+                report("File not found.");
                 return 1;
             }
         }
@@ -102,12 +104,13 @@ private int main(string[] args)
 /**
  * Determines the type of thing from its filename.
  * Params:
- *   filename = Path
+ *   path = Path
  *   cont = Continue on softlink
  */
-void prescan(string filename, bool cont)
+void prescan(string path, bool cont)
 {
-    const uint a = getAttributes(filename);
+    const uint a = getAttributes(path);
+    filename = path ~ '\0';
     version (Posix) {
         import core.sys.posix.sys.stat :
             S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK, S_IFMT;
@@ -115,15 +118,13 @@ void prescan(string filename, bool cont)
             if (cont)
                 goto FILE;
             else
-                report_link(filename);
+                report_link();
         else if (a & S_IFREG) {
             import std.exception : ErrnoException;
 FILE:
-            try {
-                debug dbg("Opening file...");
-                CurrentFile = File(filename, "rb");
-            } catch (ErrnoException ex) {
-                stderr.writeln("Error: ", ex.msg, ".");
+            fp = fopen(&filename[0], "r");
+            if (!fp) {
+                printf("There was an error opening the file.\n");
                 return;
             }
 
@@ -131,7 +132,7 @@ FILE:
             scan();
 
             debug dbg("Closing file...");
-            CurrentFile.close();
+            fclose(fp);
         }
         else if (a & S_IFBLK)
             reportfile("Block", filename);
@@ -148,27 +149,25 @@ FILE:
             if (cont)
                 goto FILE;
             else
-                report_link(filename);
+                report_link();
         else if (attrIsFile(a)) {
             import std.exception : ErrnoException;
 FILE:
-            try {
-                debug dbg("Opening file...");
-                CurrentFile = File(filename, "rb");
-            } catch (ErrnoException ex) {
-                stderr.writeln("Error: ", ex.msg, ".");
+            debug dbg("Opening file...");
+            fp = fopen(&filename[0], "r");
+            if (!fp) {
+                printf("There was an error opening the file.\n");
                 return;
             }
-
             debug dbg("Scanning...");
             scan();
 
             debug dbg("Closing file...");
-            CurrentFile.close();
+            fclose(fp);
         } else if (attrIsDir(a))
-            reportfile("Directory", filename);
+            report("Directory");
         else
-            report_unknown(filename);
+            report_unknown();
     }
 }
 

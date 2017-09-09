@@ -4,8 +4,7 @@
 
 module utils;
 
-import std.stdio : File;
-import dfile : Base10, CurrentFile, fp;
+import dfile : Base10, fp;
 
 /*
  * File utilities.
@@ -73,7 +72,7 @@ string isostr(char[] str) pure
  * Number utilities.
  */ 
 
-//TODO: EXP-GOLOMB UTIL
+//TODO: EXP-GOLOMB UTIL for BPG and FLIF
 // https://en.wikipedia.org/wiki/Exponential-Golomb_coding
 /// Get a Exp-Golomb-Encoded number
 /*ulong expgol(uint n)
@@ -219,8 +218,6 @@ pragma(inline, false) ulong bswap(ulong num) pure nothrow @nogc
         }
     }
 }
-
-//TODO: Check what other places could use these functions
 
 /**
  * Turns a 2-byte buffer and transforms it into a 2-byte number.

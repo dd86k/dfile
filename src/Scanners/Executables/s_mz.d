@@ -4,7 +4,7 @@
 
 module s_mz;
 
-import std.stdio;
+import core.stdc.stdio;
 import dfile;
 import utils : scpy;
 
@@ -55,15 +55,15 @@ void scan_mz() {
 
         switch (sig) {
         case 0x4550: // "PE"
-            CurrentFile.seek(p);
+            fseek(fp, p, SEEK_SET);
             scan_pe();
             return;
         case 0x454E: // "NE"
-            CurrentFile.seek(p);
+            fseek(fp, p, SEEK_SET);
             scan_ne();
             return;
         case 0x454C, 0x584C: // "LE", "LX"
-            CurrentFile.seek(p);
+            fseek(fp, p, SEEK_SET);
             scan_le();
             return;
         default:
@@ -76,7 +76,7 @@ void scan_mz() {
     report("MZ Executable for MS-DOS", false);
     if (h.e_ovno)
         printf(" (Overlay: %d)", h.e_ovno);
-    writeln;
+    printf("\n");
 
     if (More) {
         //printf("e_magic   : %Xh\n", h.e_magic);

@@ -24,8 +24,8 @@ import utils;
 bool More, /// -m : More flag
      ShowName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
-File CurrentFile; /// Current file handle.
-FILE* fp; /// Current low-level file handle.
+FILE* fp; /// Current file handle.
+string filename; /// Current filename.
 
 /**
  * Prints debugging message with a FILE@LINE: MSG formatting.
@@ -54,13 +54,12 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
 
 /// Scanner entry point.
 void scan() {
-    fp = CurrentFile.getFP;
-
     uint s;
     if (fread(&s, 4, 1, fp) != 1) {
         report("Empty file");
         return;
     }
+    version (BigEndian) s = bswap(s);
 
     debug printf("Magic: %08X\n", s);
 
@@ -85,35 +84,35 @@ void scan() {
 
     case 0x00000100: {
         char[12] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 12, 1, fp);
         switch (b[0..4]) {
-            case "MSIS":
-                report("Microsoft Money file");
+        case "MSIS":
+            report("Microsoft Money file");
+            return;
+        case "Stan":
+            switch (b[8..12]) {
+            case " ACE":
+                report("Microsoft Access 2007 Database");
                 return;
-            case "Stan":
-                switch (b[8..12]) {
-                case " ACE":
-                    report("Microsoft Access 2007 Database");
-                    return;
-                case " Jet":
-                    report("Microsoft Access Database");
-                    return;
-                default:
-                    report_unknown();
-                    return;
-                }
+            case " Jet":
+                report("Microsoft Access Database");
+                return;
             default:
-                if (b[0] == 0)
-                    report("TrueType font file");
-                else
-                    report("Palm Desktop Data File (Access format)");
+                report_unknown();
                 return;
+            }
+        default:
+            if (b[0] == 0)
+                report("TrueType font file");
+            else
+                report("Palm Desktop Data File (Access format)");
+            return;
         }
     }
 
     case 0x4D53454E: { // "NESM"
         char[1] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 1, 1, fp);
         switch (b) {
         case x"1A": {
             struct nesm_hdr { align(1):
@@ -165,7 +164,7 @@ void scan() {
 
     case 0x4350534B: { // "KSPC"
         char[1] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 1, 1, fp);
         switch (b) {
             case x"1A": {
                 struct spc2_hdr { align(1):
@@ -197,12 +196,12 @@ void scan() {
         return;
 
     case 0x4B434142: // "BACK"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "MIKE":
-            CurrentFile.rawRead(sig);
-            switch (sig) {
-            case "DISK":
+        fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x454B494D: // "MIKE"
+            fread(&s, 4, 1, fp);
+            switch (s) {
+            case 0x4B534944: // "DISK"
                 report("AmiBack backup");
                 return;
             default:
@@ -224,12 +223,11 @@ void scan() {
 
     case 0x002A4949: { // "II*\0"
         char[6] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 6, 1, fp);
         switch (b) {
         case [0x10, 0, 0, 0, 'C', 'R']:
             report("Canon RAW Format Version 2 image (TIFF)");
             return;
-
         default:
             report("Tagged Image File Format image (TIFF)");
             return;
@@ -282,10 +280,10 @@ void scan() {
         return;
 
     case 0x47585432: { // "2TXG"
-        uint[1] b;
-        CurrentFile.rawRead(b);
-        report("GTA Text 2 file, ", false);
-        printf("%d entries\n", bswap(b[0]));  // Byte swapped
+        uint b;
+        fread(&b, 4, 1, fp);
+        report("GTA Text 2 file with ", false);
+        printf("%d entries\n", bswap(b)); // Byte swapped
     }
         return;
 
@@ -318,7 +316,7 @@ void scan() {
 
     case 0x14000000, 0x18000000, 0x1C000000, 0x20000000: {
         char[8] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 8, 1, fp);
         switch (b[0..4]) {
         case "ftyp":
             switch (b[4..8]) {
@@ -357,10 +355,9 @@ void scan() {
     }
 
     case 0x4D524F46: { // "FORM"
-    //TODO: fseek and stuff
         char[4] b;
-        CurrentFile.seek(8);
-        CurrentFile.rawRead(b);
+        fseek(fp, 8, SEEK_SET);
+        fread(&b, 4, 1, fp);
         switch (b) {
         case "ILBM": report("IFF Interleaved Bitmap Image"); return;
         case "8SVX": report("IFF 8-Bit Sampled Voice"); return;
@@ -433,9 +430,9 @@ void scan() {
         printf(" Archive (v%d.%d), ", h.version_ / 10, h.version_ % 10);
 
         if (h.fnlength > 0) {
-            char[] filename = new char[h.fnlength];
-            CurrentFile.rawRead(filename);
-            printf("%s, ", &filename[0]);
+            char[] file = new char[h.fnlength];
+            fread(&file[0], h.fnlength, 1, fp);
+            printf("%s, ", &file[0]);
         }
 
         write(formatsize(h.csize), "/", formatsize(h.usize));
@@ -478,14 +475,15 @@ void scan() {
         return;
 
     case 0x21726152: { // "Rar!"
-        CurrentFile.rawRead(sig);
-        switch (sig[0..3]) {
+        char[3] b;
+        fread(&b, 3, 1, fp);
+        switch (sig) {
         case x"1A 07 01":
             //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
-        default: // 0,1,2
-            if (sig[0..3] == x"1A 07 00")
+        default:
+            if (sig == x"1A 07 00")
                 report("RAR archive v1.5+");
             else
                 report_unknown();
@@ -502,11 +500,14 @@ void scan() {
         return;
 
     case 0x474E5089: // "\x89PNG"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case x"0D 0A 1A 0A": scan_png(); return;
+    // Note: Uncommenting this code will require to remove restmagic from struct
+        /*fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x0A1A0A0D: scan_png(); return;
         default: report_unknown(); return;
-        }
+        }*/
+        scan_png;
+        return;
 
     case MH_MAGIC, MH_MAGIC_64, MH_CIGAM, MH_CIGAM_64, FAT_MAGIC, FAT_CIGAM:
         scan_mach(s);
@@ -516,15 +517,17 @@ void scan() {
         report("PostScript document");
         return;
 
-    case 0x46445025: // "%PDF"
-        CurrentFile.rawRead(sig); // for "-1.x"
+    case 0x46445025: { // "%PDF"
+        ubyte[5] b; // b[4] inits to 0
+        fread(&b, 4, 1, fp);
         report("PDF", false);
-        writeln(sig, " document");
+        printf("%s document", &b);
+    }
         return;
 
     case 0x75B22630: {
         char[12] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 12, 1, fp);
         switch (b) {
         case x"8E 66 CF 11 A6 D9 0 AA 0 62 CE 6C":
             report("Advanced Systems Format file (ASF, WMA, WMV)");
@@ -536,9 +539,9 @@ void scan() {
     }
 
     case 0x49445324: // "$SDI"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case [0x30, 0x30, 0x30, 0x31]:
+        fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x31303030:
             report("System Deployment Image (Microsoft disk image)");
             return;
         default:
@@ -590,10 +593,9 @@ void scan() {
         flac_hdr h;
         scpy(&h, h.sizeof);
         report("FLAC audio file", false);
-        if ((h.header & 0xFF) == 0) // Big endian
-        { // Yeah, I'm not a fan.
+        if ((h.header & 0xFF) == 0) { // Big endian. Not a fan.
             const int bits = ((h.stupid[8] & 1) << 4 | (h.stupid[9] >>> 4)) + 1;
-            const int chan = ((h.stupid[8] >> 1) & 7) + 1;
+            const int chan = ((h.stupid[8] >>> 1) & 7) + 1;
             const int rate =
                 ((h.stupid[6] << 12) | h.stupid[7] << 4 | h.stupid[8] >>> 4);
             printf(", %d Hz, %d-bit, %d channels\n", rate, bits, chan);
@@ -641,13 +643,13 @@ void scan() {
         return;
 
     case 0x46464952: // "RIFF"
-        CurrentFile.seek(8);
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "WAVE": {
+        fseek(fp, 8, SEEK_SET);
+        fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x45564157: { // "WAVE"
             //http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
             struct fmt_chunk { align(1):
-                char[4] id;
+                //char[4] id;
                 uint cksize;
                 ushort format;
                 ushort channels;
@@ -660,7 +662,7 @@ void scan() {
                 uint speakmask; // Speaker position mask
                 char[16] guid;
             }
-            enum FMT_CHUNK = "fmt ";
+            enum FMT_CHUNK = 0x20746D66; // "fmt ";
             enum {
                 PCM = 1,
                 IEEE_FLOAT = 3,
@@ -668,18 +670,17 @@ void scan() {
                 MULAW = 7,
                 EXTENSIBLE = 0xFFFE
             }
-            CurrentFile.rawRead(sig);
-            do { // Skip useless chunks
-                CurrentFile.rawRead(sig);
-                const uint p = fint(sig); // Chunk length
-                if (fseek(fp, p, SEEK_CUR)) {
-                    report_unknown;
-                    return;
-                }
-                CurrentFile.rawRead(sig);
-            } while (sig != FMT_CHUNK);
+            fread(&s, 4, 1, fp);
+            if (s != FMT_CHUNK)
+                do { // Skip useless chunks
+                    fread(&s, 4, 1, fp); // Chunk length
+                    if (fseek(fp, s, SEEK_CUR)) {
+                        report_unknown;
+                        return;
+                    }
+                    fread(&s, 4, 1, fp);
+                } while (s != FMT_CHUNK);
             fmt_chunk h;
-            CurrentFile.seek(-4, SEEK_CUR);
             scpy(&h, h.sizeof);
             report("WAVE audio file (", false);
             switch (h.format) {
@@ -705,7 +706,7 @@ void scan() {
             }
         }
             return;
-        case "AVI ":
+        case 0x20495641: // "AVI "
             report("Audio Video Interface video (avi)");
             return;
         default:
@@ -714,9 +715,9 @@ void scan() {
         }
 
     case 0x504D4953: // "SIMP"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "LE  ":
+        fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x2020454C: // "LE  "
             report("Flexible Image Transport System (FITS)");
             return;
         default:
@@ -752,63 +753,49 @@ void scan() {
     }
         return;
 
-    case 0xE011CFD0:
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case [0xA1, 0xB1, 0x1A, 0xE1]: {
-            struct cfb_header { align(1):
-                //ulong magic;
-                ubyte[16] clsid; // CLSID_NULL
-                ushort minor;
-                ushort major;
-                ushort byte_order;
-                ushort shift; /// Sector Shift
-                ushort mini_shift; /// Mini Sector Shift
-                ubyte[6] res;
-                uint dir_sectors;
-                uint fat_sectors;
-                uint first_dir_sector;
-                uint trans_sig; /// Transaction Signature Number
-                uint mini_stream_cutsize;
-                uint first_mini_fat_loc;
-                uint mini_fat_sectors; /// Number of Mini FAT Sectors
-                uint first_difat_loc; /// First DIFAT Sector Location
-                uint difat_sectors; /// Number of DIFAT Sectors
-                //ubyte[436] difat;
-            }
-            cfb_header h;
-            scpy(&h, h.sizeof);
-            report("Compound File Binary format document ", false);
-            with (h) {
-                printf("v%d.%d, %d FAT sectors\n", major, minor, fat_sectors);
-                if (More) {
-                    printf("%d directory sectors at %Xh\n",
-                        dir_sectors, first_dir_sector);
-                    if (trans_sig)
-                        printf("transaction signature, %Xh", trans_sig);
-                    printf("%d DIFAT sectors at %Xh\n",
-                        difat_sectors, first_difat_loc);
-                    printf("%d mini FAT sectors at %Xh\n",
-                        mini_fat_sectors, first_mini_fat_loc);
-                }
+    case 0xE011CFD0: // Then follows 0xE11AB1A1
+        struct cfb_header { align(1):
+            //ulong magic;
+            uint magic;
+            ubyte[16] clsid; // CLSID_NULL
+            ushort minor;
+            ushort major;
+            ushort byte_order;
+            ushort shift; /// Sector Shift
+            ushort mini_shift; /// Mini Sector Shift
+            ubyte[6] res;
+            uint dir_sectors;
+            uint fat_sectors;
+            uint first_dir_sector;
+            uint trans_sig; /// Transaction Signature Number
+            uint mini_stream_cutsize;
+            uint first_mini_fat_loc;
+            uint mini_fat_sectors; /// Number of Mini FAT Sectors
+            uint first_difat_loc; /// First DIFAT Sector Location
+            uint difat_sectors; /// Number of DIFAT Sectors
+            //ubyte[436] difat;
+        }
+        cfb_header h;
+        scpy(&h, h.sizeof);
+        report("Compound File Binary format document ", false);
+        with (h) {
+            printf("v%d.%d, %d FAT sectors\n", major, minor, fat_sectors);
+            if (More) {
+                printf("%d directory sectors at %Xh\n",
+                    dir_sectors, first_dir_sector);
+                if (trans_sig)
+                    printf("transaction signature, %Xh", trans_sig);
+                printf("%d DIFAT sectors at %Xh\n",
+                    difat_sectors, first_difat_loc);
+                printf("%d mini FAT sectors at %Xh\n",
+                    mini_fat_sectors, first_mini_fat_loc);
             }
         }
-            return;
-        default:
-            report_unknown();
-            return;
-        }
+        return;
 
-    case 0x0A786564: // "dex\x0A"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "035\0":
-            report("Dalvik Executable");
-            return;
-        default:
-            report_unknown();
-            return;
-        }
+    case 0x0A786564: // "dex\x0A", then follows "035\0"
+        report("Dalvik Executable");
+        return;
 
     case 0x34327243: // "Cr24"
         report("Google Chrome extension or packaged app (crx)");
@@ -820,7 +807,7 @@ void scan() {
 
     case 0x00000705: {
         char[6] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 6, 1, fp);
         switch (b) {
         case [0x4F, 0x42, 0x4F, 0x05, 0x07, 0x00]:
             report("AppleWorks 5 document (cwk)");
@@ -843,9 +830,9 @@ void scan() {
         return;
 
     case 0x434F4D50: // "PMOC"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "CMOC":
+        fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x434F4D43: // "CMOC"
             report("USMT, Windows Files And Settings Transfer Repository (dat)");
             return;
         default:
@@ -861,29 +848,13 @@ void scan() {
         report("Magic Lantern Video file");
         return;
 
-    case 0x004D4344: // "DCM\0"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "PA30":
-            report("Windows Update Binary Delta Compression file");
-            return;
-        default:
-            report_unknown();
-            return;
-        }
+    case 0x004D4344: // "DCM\0", followed by "PA30"
+        report("Windows Update Binary Delta Compression file");
+        return;
 
-    case 0xAFBC7A37: {
-        char[2] b;
-        CurrentFile.rawRead(b);
-        switch (b) {
-        case [0x27, 0x1C]:
-            report("7-Zip compressed file (7z)");
-            return;
-        default:
-            report_unknown();
-            return;
-        }
-    }
+    case 0xAFBC7A37: // Followed by [0x27, 0x1C]
+        report("7-Zip compressed file (7z)");
+        return;
 
     case 0x184D2204:
         report("LZ4 Streaming Format (lz4)");
@@ -951,16 +922,16 @@ void scan() {
         return;
 
     case 0x54265441: // "AT&T"
-        CurrentFile.rawRead(sig);
-        switch (sig) {
-        case "FORM":
-            CurrentFile.seek(4, SEEK_CUR);
-            CurrentFile.rawRead(sig);
-            switch (sig) {
-            case "DJVU":
+        fread(&s, 4, 1, fp);
+        switch (s) {
+        case 0x4D524F46: // "FORM"
+            fseek(fp, 4, SEEK_CUR);
+            fread(&s, 4, 1, fp);
+            switch (s) {
+            case 0x55564A44: // "DJVU"
                 report("DjVu document, single page");
                 return;
-            case "DJVM":
+            case 0x4D564A44: // "DJVM"
                 report("DjVu document, multiple pages");
                 return;
             default:
@@ -1022,7 +993,7 @@ void scan() {
                 import std.conv : parse;
                 string dps = isostr(h.ctl_filesize);
                 os = parse!int(dps);
-                CurrentFile.seek(os, SEEK_CUR);
+                fseek(fp, os, SEEK_CUR);
                 scpy(&dh, dh.sizeof, false);
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
@@ -1066,8 +1037,11 @@ void scan() {
 
     case 0x44415749, 0x44415750: {// "IWAD", "PWAD"
         int[2] b; // Reads as ints.
-        CurrentFile.rawRead(b);
-        report(cast(immutable)sig~'\0', false);
+        fread(&b, 8, 1, fp);
+        if (0x44415750) // PWAD
+            report("PWAD", false);
+        else
+            report("IWAD", false);
         printf(" holding %d entries at %Xh\n", b[0], b[1]);
         return;
     }
@@ -1075,15 +1049,15 @@ void scan() {
     case 0x6D736100: { // "\0asm", WebAssembly binary
         // http://webassembly.org/docs/binary-encoding/
         report("WebAssembly file (wasm) v", false);
-        ubyte[1] ver;
-        CurrentFile.rawRead(ver);
-        printf("%d binary file\n", ver[0]);
+        ubyte ver;
+        fread(&ver, 1, 1, fp);
+        printf("%d binary file\n", ver);
         return;
     }
 
     case 0x45555254: { // "TRUE"
         char[12] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 12, 1, fp);
         switch (b) {
         case "VISION-XFILE":
             report("Truevision Targa Graphic image file");
@@ -1138,15 +1112,19 @@ void scan() {
             if (h.header & UNKNOWN) offset += 2;
             if (h.header & DLENGHT) offset += 2;
 
-            if (offset) CurrentFile.seek(offset, SEEK_CUR);
+            if (offset) fseek(fp, offset, SEEK_CUR);
 
             printf(" Out:");
 
+            int c;
+
             if (name)
-                write(CurrentFile.readln('\0'));
+                while ((c = getc(fp)) != 0)
+                    putchar(c);
             printf(".");
             if (ext)
-                write(CurrentFile.readln('\0'));
+                while ((c = getc(fp)) != 0)
+                    putchar(c);
         }
 
         writeln();
@@ -1181,7 +1159,7 @@ void scan() {
 
     case 0x001A0000: {
         char[3] b;
-        CurrentFile.rawRead(b);
+        fread(&b, 3, 1, fp);
         switch (b) {
         case [0, 0x10, 4]:
             report("Lotus 1-2-3 spreadsheet (v3) file");
@@ -1359,7 +1337,6 @@ void scan() {
             ubyte[16] uuid;
             ubyte savedState;
             //ubyte[427] reserved;
-
         }
         enum {
             VHDMAGIC = "conectix",
@@ -1373,8 +1350,8 @@ void scan() {
             D_DYNAMIC = 3,
             D_DIFF = 4,
         }
-        CurrentFile.rawRead(sig);
-        if (sig != VHDMAGIC[4..$]) {
+        fread(&s, 4, 1, fp);
+        if (s != 0x78697463) { // "ctix"
             report_text();
             return;
         }
@@ -1487,15 +1464,7 @@ void scan() {
             ubyte[16] uuidLinkage;
             ubyte[16] uuidParentModify;
         }
-        const char[] magic = CurrentFile.readln();
-        switch (magic) {
-            case VDI, VDI_SUN:
-                CurrentFile.seek(64); // Description size
-                break;
-            default:
-                report_text(); // Coincidence
-                return;
-        }
+        fseek(fp, 64, SEEK_SET); // Skip description
         vdi_hdr h;
         scpy(&h, h.sizeof);
         if (h.magic != VDIMAGIC) {
@@ -1613,13 +1582,14 @@ void scan() {
         write(formatsize(h.image_size));
 
         if (h.features & QED_F_BACKING_FILE) {
-            char[] bfn = new char[h.backing_filename_size];
-            CurrentFile.seek(h.backing_filename_offset);
-            CurrentFile.rawRead(bfn);
+            //char[] bfn = new char[h.backing_filename_size];
+            fseek(fp, h.backing_filename_offset, SEEK_SET);
+            char* c;
+            fgets(c, h.backing_filename_offset, fp);
             printf(", ");
             if (h.features & QED_F_BACKING_FORMAT_NO_PROBE)
                 printf("raw ");
-            write("backing file: ", bfn);
+            printf("backing file: ", c);
         }
 
         if (h.features & QED_F_NEED_CHECK)
@@ -1636,7 +1606,8 @@ void scan() {
     case 0x6B6F6C79: { // "koly", Apple DMG disk image
 //TODO: Continue Apple DMG
 //https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Storage/DMG.cpp
-        struct dmg_header { align(1):
+// At the end of the file?!
+        /*struct dmg_header { align(1):
             //uint magic;
             uint version_;
             uint footer; /// sizeof(dmg_header)
@@ -1650,7 +1621,9 @@ void scan() {
             uint segmentid;
 
         }
-        report("Apple Disk Image file (dmg)", false);
+        dmg_header h;
+        scpy(&h, h.sizeof);*/
+        report("Apple Disk Image file (dmg)");
     }
         return;
 
@@ -1845,11 +1818,10 @@ void scan() {
 } // main
 
 /// Report an unknown file type.
-/// Params: filename = Filename in CLI phase
-void report_unknown(string filename = null)
+void report_unknown()
 {
     if (ShowName)
-        write(filename ? filename : CurrentFile.name, ": ");
+        write(filename, ": ");
     writeln("Unknown type");
 }
 
@@ -1898,10 +1870,9 @@ version (Windows) {
 } // version (Windows)
 
 /// Report a symbolic link.
-/// Params: linkname = Path to the link
-void report_link(string linkname)
+void report_link()
 {
-    reportfile("Soft symbolic link", linkname);
+    report("Soft symbolic link");
 
     version (Windows)
     { // Works half the time, see the Wiki post.
@@ -1974,20 +1945,6 @@ void report_link(string linkname)
  *   nl = Print newline (default=true)
  */
 void report(string type, bool nl = true)
-{
-    if (ShowName)
-        writef("%s: ", CurrentFile.name);
-    printf("%s", &type[0]);
-    if (nl) writeln;
-}
-/**
- * Report to stdout when file handle can't be opened.
- * Params:
- *   type = File type
- *   filename = File name
- *   nl = Print newline (default=true)
- */
-void reportfile(string type, string filename, bool nl = true)
 {
     if (ShowName)
         writef("%s: ", filename);
