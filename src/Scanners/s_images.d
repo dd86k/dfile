@@ -6,13 +6,14 @@ module s_images;
 
 import dfile, std.stdio, utils;
 
+//TODO: Fix PNG
+
 /// Scan a PNG image
-void scan_png() // Big Endian
-{ // https://www.w3.org/TR/PNG-Chunks.html
-    struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
-        uint restmagic;
-        uint length;
-        uint type;
+void scan_png() { // Big Endian, https://www.w3.org/TR/PNG-Chunks.html
+    struct ihdr_chunk_full { align(1) // Yeah.. Blame PNG
+        //uint magic;  // rest of it
+        uint length; // Should be IHDR length
+        uint type;   // IHDR
         uint width;        // START IHDR
         uint height;
         ubyte depth;       // bit depth
@@ -32,20 +33,22 @@ void scan_png() // Big Endian
         IHDR = 0x52444849,
         pHYs = 0x73594870
     }*/
-    
+
     ihdr_chunk_full h;
-    scpy(&h, h.sizeof);
-    report("Portable Network Graphics image (PNG), ", false);
+    debug printf("[PNG] FILE: %X\n", fp);
+    scpy(&h, h.sizeof, true);
+    //fread(&h, h.sizeof, 1, fp);
+    report("Portable Network Graphics image, ", false);
 
     with (h) {
-        write(bswap32(width), " x ", bswap32(height), " pixels, ");
+        printf("%d x %d pixels, ", bswap32(width), bswap32(height));
         switch (color) {
         case 0:
             switch (depth) {
             case 1, 2, 4, 8, 16:
                 write(depth, "-bit ");
                 break;
-            default: break;
+            default:
             }
             write("Grayscale");
             break;
@@ -54,7 +57,7 @@ void scan_png() // Big Endian
             case 8, 16:
                 write(depth*3, "-bit ");
                 break;
-            default: break;
+            default:
             }
             write("RGB");
             break;
@@ -63,7 +66,7 @@ void scan_png() // Big Endian
             case 1, 2, 4, 8:
                 write("8-bit ");
                 break;
-            default: break;
+            default:
             }
             write("PLTE Palette");
             break;

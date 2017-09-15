@@ -500,7 +500,8 @@ void scan() {
         return;
 
     case 0x474E5089: // "\x89PNG"
-    // Note: Uncommenting this code will require to remove restmagic from struct
+    // Note: Uncommenting this code will require to remove the rest of the
+    //       magic from the struct
         /*fread(&s, 4, 1, fp);
         switch (s) {
         case 0x0A1A0A0D: scan_png(); return;

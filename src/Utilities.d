@@ -18,19 +18,15 @@ import dfile : Base10, fp;
  *   size = Size of the struct
  *   rewind = Rewind seeker to start of the file
  */
-void scpy(void* s, size_t size, bool rewind = false)
-{
-    import core.stdc.string : memcpy;
-    import core.stdc.stdio : fread, FILE, fseek, SEEK_SET;//rewind;
-    import core.stdc.stdlib : malloc;
+void scpy(void* s, size_t size, bool rewind = false) {
+    import core.stdc.stdio : fread, fseek, SEEK_SET;//rewind;
     if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp);
-    void* bp = malloc(size);
-    fread(bp, size, 1, fp); // size x1
-    memcpy(s, bp, size);
+    fread(s, size, 1, fp); // size x1
 }
 
 /**
  * Fast int.
+ * Note: The compiler is pretty good optimizing this.
  * Params: sig = 4-byte array
  * Returns: 4-byte number
  */
