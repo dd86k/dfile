@@ -36,7 +36,7 @@ string filename; /// Current filename.
  */
 debug void dbg(string msg, int line = __LINE__, string file = __FILE__) {
     dbgl(msg, line, file);
-    writeln;
+    printf("\n");
 }
 
 /**
@@ -175,8 +175,7 @@ void scan() {
                 scpy(&h, h.sizeof);
 
                 report("SNES SPC2 v", false);
-                printf("%d.%d, %d of SPC entries\n",
-                    h.major, h.minor, h.number);
+                printf("%d.%d, %d of SPC entries\n", h.major, h.minor, h.number);
             }
                 return;
             default:
@@ -381,7 +380,7 @@ void scan() {
         report("MPEG video file");
         return;
 
-    case 0x58444E49: // INDX
+    case 0x58444E49: // "INDX"
         report("AmiBack backup index file");
         return;
 
@@ -416,7 +415,7 @@ void scan() {
         case 0: printf("Uncompressed"); break;
         case 1: printf("Shrunk"); break;
         case 2: .. // 2 to 5
-        case 5: printf("Reduced by ", h.compression - 1); break;
+        case 5: printf("Reduced by %d", h.compression - 1); break;
         case 6: printf("Imploded"); break;
         case 8: printf("Deflated"); break;
         case 9: printf("Enhanced Deflated"); break;
@@ -426,13 +425,13 @@ void scan() {
         case 18: printf("IBM TERSE"); break;
         case 19: printf("IBM LZ77 z"); break;
         case 98: printf("PPMd Version I, Rev 1"); break;
-        default: printf("Unknown"); break;
+        default: printf("(Unknown type)"); return;
         }
 
-        printf(" Archive (v%d.%d), ", h.version_ / 10, h.version_ % 10);
+        printf(" archive (v%d.%d), ", h.version_ / 10, h.version_ % 10);
 
         if (h.fnlength > 0) {
-            char[] file = new char[h.fnlength];
+            ubyte[] file = new ubyte[h.fnlength];
             fread(&file[0], h.fnlength, 1, fp);
             printf("%s, ", &file[0]);
         }
@@ -480,8 +479,7 @@ void scan() {
         char[3] b;
         fread(&b, 3, 1, fp);
         switch (b) {
-        case x"1A 07 01":
-            //TODO: http://www.rarlab.com/technote.htm
+        case x"1A 07 01": //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
         default:

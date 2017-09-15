@@ -4,15 +4,12 @@
 
 module s_images;
 
-import core.stdc.stdio : fread, printf, ftell;
+import core.stdc.stdio;
 import dfile, utils;
 
 /// Scan a PNG image
 void scan_png() { // Big Endian, https://www.w3.org/TR/PNG-Chunks.html
-    struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
-        uint magic;  // rest of it
-        uint length; // Should be IHDR length
-        uint type;   // IHDR
+    struct ihdr_chunk_full { align(1): // Includes CRC
         uint width;        // START IHDR
         uint height;
         ubyte depth;       // bit depth
@@ -22,23 +19,13 @@ void scan_png() { // Big Endian, https://www.w3.org/TR/PNG-Chunks.html
         ubyte interlace;   // END IHDR
         uint crc;
     }
-    /*struct png_chunk { align(1):
-        uint length;
-        uint type;
-        ubyte[] data;
-        uint crc;
-    }
-    enum { // Types -- future use?
+    /*enum { // Types -- future use?
         IHDR = 0x52444849,
         pHYs = 0x73594870
     }*/
 
-//TODO: Fix PNG
-
     ihdr_chunk_full h;
-    debug printf("[PNG] FILE: %X\n", fp);
-    debug printf("[PNG] SIZE: %d\n", h.sizeof);
-    debug printf("[PNG] POS : %d\n", ftell(fp));
+    fseek(fp, 16, SEEK_SET); // Magic!
     fread(&h, h.sizeof, 1, fp);
     report("Portable Network Graphics image, ", false);
 
