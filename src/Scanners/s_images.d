@@ -4,14 +4,13 @@
 
 module s_images;
 
-import dfile, std.stdio, utils;
-
-//TODO: Fix PNG
+import core.stdc.stdio : fread, printf, ftell;
+import dfile, utils;
 
 /// Scan a PNG image
 void scan_png() { // Big Endian, https://www.w3.org/TR/PNG-Chunks.html
-    struct ihdr_chunk_full { align(1) // Yeah.. Blame PNG
-        //uint magic;  // rest of it
+    struct ihdr_chunk_full { align(1): // Yeah.. Blame PNG
+        uint magic;  // rest of it
         uint length; // Should be IHDR length
         uint type;   // IHDR
         uint width;        // START IHDR
@@ -29,99 +28,101 @@ void scan_png() { // Big Endian, https://www.w3.org/TR/PNG-Chunks.html
         ubyte[] data;
         uint crc;
     }
-    enum { // Types
+    enum { // Types -- future use?
         IHDR = 0x52444849,
         pHYs = 0x73594870
     }*/
 
+//TODO: Fix PNG
+
     ihdr_chunk_full h;
     debug printf("[PNG] FILE: %X\n", fp);
-    scpy(&h, h.sizeof, true);
-    //fread(&h, h.sizeof, 1, fp);
+    debug printf("[PNG] SIZE: %d\n", h.sizeof);
+    debug printf("[PNG] POS : %d\n", ftell(fp));
+    fread(&h, h.sizeof, 1, fp);
     report("Portable Network Graphics image, ", false);
 
     with (h) {
-        printf("%d x %d pixels, ", bswap32(width), bswap32(height));
+        printf("%d x %d pixels, ", cast(int)bswap32(width), cast(int)bswap32(height));
         switch (color) {
         case 0:
             switch (depth) {
             case 1, 2, 4, 8, 16:
-                write(depth, "-bit ");
+                printf("%d-bit ", depth);
                 break;
             default:
             }
-            write("Grayscale");
+            printf("Grayscale");
             break;
         case 2:
             switch (depth) {
             case 8, 16:
-                write(depth*3, "-bit ");
+                printf("%d-bit ", depth*3);
                 break;
             default:
             }
-            write("RGB");
+            printf("RGB");
             break;
         case 3:
             switch (depth) {
             case 1, 2, 4, 8:
-                write("8-bit ");
+                printf("8-bit ");
                 break;
             default:
             }
-            write("PLTE Palette");
+            printf("PLTE Palette");
             break;
         case 4:
             switch (depth) {
             case 8, 16:
-                write(depth, "-bit ");
+                printf("%d-bit ", depth);
                 break;
             default:
             }
-            write("Grayscale+Alpha");
+            printf("Grayscale+Alpha");
             break;
         case 6:
             switch (depth) {
             case 8, 16:
-                write("32-bit ");
+                printf("32-bit ");
                 break;
             default:
             }
-            write("RGBA");
+            printf("RGBA");
             break;
-        default: write("Invalid color type"); break;
+        default: printf("Invalid color type"); break;
         }
 
-        writeln;
+        printf("\n");
 
         if (More) {
             switch (compression) {
-            case 0: write("Default compression"); break;
-            default: write("Invalid compression"); break;
+            case 0: printf("Default compression"); break;
+            default: printf("Invalid compression"); break;
             }
 
-            write(", ");
+            printf(", ");
 
             switch (filter) {
-            case 0: write("Default filtering"); break;
-            default: write("Invalid filtering"); break;
+            case 0: printf("Default filtering"); break;
+            default: printf("Invalid filtering"); break;
             }
 
-            write(", ");
+            printf(", ");
 
             switch (interlace) {
-            case 0: write("No interlacing"); break;
-            case 1: write("Adam7 interlacing"); break;
-            default: write("Invalid interlacing"); break;
+            case 0: printf("No interlacing"); break;
+            case 1: printf("Adam7 interlacing"); break;
+            default: printf("Invalid interlacing"); break;
             }
 
-            writeln();
+            printf("\n");
         }
     }
 }
 
 /// Scan a GIF image
-void scan_gif()
-{ // http://www.fileformat.info/format/gif/egff.htm
+void scan_gif() { // http://www.fileformat.info/format/gif/egff.htm
     struct gif_header { align(1):
         char[3] magic;
         char[3] version_;
@@ -134,41 +135,37 @@ void scan_gif()
 
     gif_header h;
     scpy(&h, h.sizeof, true);
+    report("GIF", false);
 
-    switch (h.version_[1]) { // 87a, 89a
-        case '7', '9':
-            report("GIF", false);
-            writeln(h.version_, " image");
-            break;
-        default: writeln("GIF image, invalid version"); return;
+    switch (h.version_[1]) { // 87a, 89a, lazy
+        case '7': printf("87a image"); break;
+        case '9': printf("89a image"); break;
+        default: printf(" image, non-supported version\n"); return;
     }
 
-    if (More)
-    {
+    with (h) printf(", %d x %d pixels, %d-bit\n", width, height, ((packed >>> 4) & 3) + 1);
+
+    if (More) with (h) {
         enum {
             GLOBAL_COLOR_TABLE = 0x80,
             SORT_FLAG = 8,
         }
 
-        with (h) {
-            write(width, " x ", height, " pixels");
-            if (packed & GLOBAL_COLOR_TABLE) {
-                write(", Global Color Table");
-                if (packed & 3)
-                    write(" of ", 2 ^^ ((packed & 3) + 1), " bytes");
-                if (packed & SORT_FLAG)
-                    write(", Sorted");
-                if (bgcolor)
-                    write(", BG Index of ", bgcolor);
-            }
-            write(", ", ((packed >> 4) & 3) + 1, "-bit");
-            if (aspect) {
-                write(", ", (cast(float)aspect + 15) / 64, " pixel ratio (reported)");
-            }
+        if (packed & GLOBAL_COLOR_TABLE) {
+            printf(", Global Color Table");
+            if (packed & 3)
+                printf(" of %d bytes", 2 ^^ ((packed & 3) + 1));
+            if (packed & SORT_FLAG)
+                printf(", Sorted");
+            if (bgcolor)
+                printf(", BG Index of %X", bgcolor);
         }
-    }
+        if (aspect) {
+            printf(", %d pixel ratio (reported)", (cast(float)aspect + 15) / 64);
+        }
 
-    writeln();
+        printf("\n");
+    }
 }
 
 /// Scan a BPG image

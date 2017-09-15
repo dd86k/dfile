@@ -59,11 +59,9 @@ void scan() {
         report("Empty file");
         return;
     }
-    version (BigEndian) s = bswap(s);
+    version (BigEndian) s = bswap32(s);
 
     debug printf("Magic: %08X\n", s);
-
-    char[4] sig; // UTF-8, ASCII compatible, remains for compatibility
 
     switch (s) {
     /*case "PANG": // PANGOLIN SECURE -- Pangolin LD2000
@@ -243,7 +241,11 @@ void scan() {
         return;
 
     case 0x01434E52, 0x02434E52: // RNC\x01 or \x02
-        report("Rob Northen Compressed archive v" ~ (sig[3] == 1 ? '1' : '2') ~ ")");
+        report("Rob Northen Compressed archive v", false);
+        final switch (s & 0xFF000000) { // Very lazy
+        case 1: printf("2\n"); break;
+        case 2: printf("1\n"); break;
+        }
         return;
 
     case 0x58504453, 0x53445058: // "SDPX", "XPDS"
@@ -259,7 +261,7 @@ void scan() {
         return;
 
     case 0xDBFFD8FF, 0xE0FFD8FF, 0xE1FFD8FF:
-        report("Joint Photographic Experts Group image (JPEG)");
+        report("Joint Photographic Experts Group image");
         return;
 
     case 0xCEA1A367:
@@ -269,13 +271,13 @@ void scan() {
     //case "GBLE", "GBLF", "GBLG", "GBLI", "GBLS", "GBLJ":
     case 0x454C4247, 0x464C4247, 0x474C4247, 0x494C4247, 0x534C4247, 0x4A4C4247:
         report("GTA Text (GTA2+) file, ", false);
-        final switch (sig[3]) {
-        case 'E': writeln("English");  break;
-        case 'F': writeln("French");   break;
-        case 'G': writeln("German");   break;
-        case 'I': writeln("Italian");  break;
-        case 'S': writeln("Spanish");  break;
-        case 'J': writeln("Japanese"); break;
+        final switch (s) {
+        case 0x454C4247: writeln("English");  break; // 'E'
+        case 0x464C4247: writeln("French");   break; // 'F'
+        case 0x474C4247: writeln("German");   break; // 'G'
+        case 0x494C4247: writeln("Italian");  break; // 'I'
+        case 0x534C4247: writeln("Spanish");  break; // 'S'
+        case 0x4A4C4247: writeln("Japanese"); break; // 'J'
         }
         return;
 
@@ -301,14 +303,14 @@ void scan() {
         report("RPF ", false);
         if (h.encrypted)
             printf("encrypted");
-        printf("archive v%c (", sig[3]);
-        final switch (sig[3]) {
-        case '0': printf("Table Tennis"); break;
-        case '2': printf("GTA IV"); break;
-        case '3': printf("GTA IV:A&MC:LA"); break;
-        case '4': printf("Max Payne 3"); break;
-        case '6': printf("Red Dead Redemption"); break;
-        case '7': printf("GTA V"); break;
+        printf("archive v%c (", (s >>> 24) + 0x30);
+        final switch (s) {
+        case 0x30465052: printf("Table Tennis"); break;
+        case 0x32465052: printf("GTA IV"); break;
+        case 0x33465052: printf("GTA IV:A&MC:LA"); break;
+        case 0x34465052: printf("Max Payne 3"); break;
+        case 0x36465052: printf("Red Dead Redemption"); break;
+        case 0x37465052: printf("GTA V"); break;
         }
         printf("), %d entries\n", h.numentries);
     }
@@ -477,13 +479,13 @@ void scan() {
     case 0x21726152: { // "Rar!"
         char[3] b;
         fread(&b, 3, 1, fp);
-        switch (sig) {
+        switch (b) {
         case x"1A 07 01":
             //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
         default:
-            if (sig == x"1A 07 00")
+            if (b == x"1A 07 00")
                 report("RAR archive v1.5+");
             else
                 report_unknown();

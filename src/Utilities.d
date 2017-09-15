@@ -21,12 +21,12 @@ import dfile : Base10, fp;
 void scpy(void* s, size_t size, bool rewind = false) {
     import core.stdc.stdio : fread, fseek, SEEK_SET;//rewind;
     if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp);
-    fread(s, size, 1, fp); // size x1
+    fread(s, size, 1, fp); // size * 1
 }
 
 /**
  * Fast int.
- * Note: The compiler is pretty good optimizing this.
+ * Note: The compiler is pretty good optimizing this (via CTFE I'm assuming).
  * Params: sig = 4-byte array
  * Returns: 4-byte number
  */
@@ -58,8 +58,8 @@ string tarstr(char[] str) pure
 string isostr(char[] str) pure
 {
     if (str[0] == ' ') return null;
-    size_t p = str.length - 1;
-    if (str[p] != ' ') return str.idup;
+    size_t p = str.length;
+    if (str[--p] != ' ') return str.idup;
     while (str[p] == ' ') --p;
     return str[0 .. p + 1].idup;
 }
@@ -187,6 +187,7 @@ pragma(inline, false) uint bswap32(uint num) pure nothrow @nogc @safe
 pragma(inline, false) ulong bswap64(ulong num) pure nothrow @nogc
 {
     version (X86) asm pure nothrow @nogc { naked;
+//TODO: Fix bswap64 on x86
         xchg EAX, EDX;
         bswap EDX;
         bswap EAX;
