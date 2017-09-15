@@ -128,17 +128,17 @@ string formatsize(ulong size)
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) ushort bswap16(ushort num) pure nothrow @nogc @safe
+pragma(inline, false) ushort bswap16(ushort num)
 {
-    version (X86) asm pure nothrow @nogc @safe { naked;
+    version (X86) asm { naked;
         xchg AH, AL;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc @safe { naked;
+        version (Windows) asm { naked;
             mov AX, CX;
             xchg AL, AH;
             ret;
-        } else asm pure nothrow @nogc @safe { naked; // System V AMD64 ABI
+        } else asm { naked; // System V AMD64 ABI
             mov EAX, EDI;
             xchg AL, AH;
             ret;
@@ -156,17 +156,17 @@ pragma(inline, false) ushort bswap16(ushort num) pure nothrow @nogc @safe
  * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) uint bswap32(uint num) pure nothrow @nogc @safe
+pragma(inline, false) uint bswap32(uint num)
 {
-    version (X86) asm pure nothrow @nogc @safe { naked;
+    version (X86) asm { naked;
         bswap EAX;
         ret;
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc @safe { naked;
+        version (Windows) asm { naked;
             mov EAX, ECX;
             bswap EAX;
             ret;
-        } else asm pure nothrow @nogc @safe { naked; // System V AMD64 ABI
+        } else asm { naked; // System V AMD64 ABI
             mov RAX, RDI;
             bswap EAX;
             ret;
@@ -184,20 +184,27 @@ pragma(inline, false) uint bswap32(uint num) pure nothrow @nogc @safe
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) ulong bswap64(ulong num) pure nothrow @nogc
+pragma(inline, false) ulong bswap64(ulong num)
 {
-    version (X86) asm pure nothrow @nogc { naked;
-//TODO: Fix bswap64 on x86
-        xchg EAX, EDX;
-        bswap EDX;
-        bswap EAX;
-        ret;
+    version (X86) {
+        version (Windows) asm { naked;
+//TODO: Fix bswap64 on Windows x86
+            xchg EAX, EDX;
+            bswap ECX;
+            bswap EAX;
+            ret;
+        } else asm { naked; // System V
+            xchg EAX, EDX;
+            bswap EDX;
+            bswap EAX;
+            ret;
+        }
     } else version (X86_64) {
-        version (Windows) asm pure nothrow @nogc { naked;
+        version (Windows) asm { naked;
             mov RAX, RCX;
             bswap RAX;
             ret;
-        } else asm pure nothrow @nogc { naked; // System V AMD64 ABI
+        } else asm { naked; // System V AMD64 ABI
             mov RAX, RDI;
             bswap RAX;
             ret;

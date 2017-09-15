@@ -61,6 +61,8 @@ void scan() {
     }
     version (BigEndian) s = bswap32(s);
 
+    debug writefln("BSWAP64: %X", bswap64(0xFF));
+
     debug printf("Magic: %08X\n", s);
 
     switch (s) {
