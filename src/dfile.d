@@ -653,10 +653,9 @@ void scan() {
                 uint datarate; // Bytes/s
                 ushort blockalign;
                 ushort samplebits; // Bits per sample
-                ushort extensionsize;
+                /*ushort extensionsize;
                 ushort nbvalidbits;
-                uint speakmask; // Speaker position mask
-                char[16] guid;
+                uint speakmask;*/ // Speaker position mask
             }
             enum FMT_CHUNK = 0x20746D66; // "fmt ";
             enum { // Types
@@ -687,20 +686,23 @@ void scan() {
                 case MULAW: printf("8-bit ITU G.711 u-law"); break;
                 case EXTENSIBLE:
                     printf("EXTENDED");
-                    if (More) {
-                        printf(":");
-                        print_array(&h.guid[0], h.guid.length);
-                    }
                     break;
                 case _MP2:  printf("MPEG-1 Audio Layer II"); break;
                 default: printf("Unknown type)\n"); return;
             }
-            printf(") %d Hz, %d kbps, %d-bit, ",
+            printf(") %d Hz, %d kbps, %d-bit, ", // MP2 will show 0-bit
                 h.samplerate, h.datarate / 1024 * 8, h.samplebits);
             switch (h.channels) {
                 case 1: writeln("Mono"); break;
                 case 2: writeln("Stereo"); break;
                 default: writeln(h.channels, " channels"); break;
+            }
+            if (More) {
+                char[16] guid;
+                fseek(fp, 8, SEEK_CUR);
+                fread(&guid, 16, 1, fp);
+                printf("EXTENDED:");
+                print_array(&guid[0], guid.length);
             }
         }
             return;
@@ -1371,8 +1373,10 @@ void scan() {
             default:
                 if (h.disk_type < 7)
                     printf("Reserved (deprecated)");
-                else
+                else {
                     printf("Invalid type");
+                    return;
+                }
                 break;
         }
 
@@ -1384,14 +1388,10 @@ void scan() {
             case OS_MAC:     printf("macOS"); break;
             default: printf("Unknown"); break;
         }
-/* TODO: Fix VHD Size
-        h.size_current = bswap(h.size_current);
-        h.size_original = bswap(h.size_original);
-        if (h.size_current && h.size_original) {
-            writef(", %s/%s used",
-                formatsize(h.size_current), formatsize(h.size_original));
-        }
-*/
+
+        write(", ", formatsize(bswap64(h.size_current)), "/",
+            formatsize(bswap64(h.size_original)), " used",);
+
         if (h.features & F_TEMPORARY)
             printf(", Temporary");
 
@@ -1418,8 +1418,7 @@ void scan() {
             VDI =     "Oracle VM VirtualBox Disk Image >>>\n"
         }
         enum VDIMAGIC = 0xBEDA107F, VDI_IMAGE_COMMENT_SIZE = 256;
-        struct vdi_hdr { align(1):
-        // Should also include char[64] but it's faster to just "read line"
+        struct vdi_hdr { align(1): // Excludes char[64]
             uint magic;
             ushort majorv;
             ushort minorv;
@@ -1462,7 +1461,7 @@ void scan() {
             ubyte[16] uuidLinkage;
             ubyte[16] uuidParentModify;
         }
-        fseek(fp, 64, SEEK_SET); // Skip description
+        fseek(fp, 64, SEEK_SET); // Skip description, char[64]
         vdi_hdr h;
         scpy(&h, h.sizeof);
         if (h.magic != VDIMAGIC) {
@@ -1476,15 +1475,17 @@ void scan() {
             case 1:
                 scpy(&sh, sh.sizeof);
                 break;
-            case 0: {
-                VDIHEADER0 t;
-                scpy(&t, t.sizeof);
-                sh.cbDisk = t.cbDisk;
-                sh.u32Type = t.u32Type;
-                sh.uuidCreate = t.uuidCreate;
-                sh.uuidModify = t.uuidModify;
-                sh.uuidLinkage = t.uuidLinkage;
-                sh.LegacyGeometry = t.LegacyGeometry;
+            case 0: { // Or else, translate
+                VDIHEADER0 vd0;
+                scpy(&vd0, vd0.sizeof);
+                with (vd0) {
+                    sh.cbDisk = cbDisk;
+                    sh.u32Type = u32Type;
+                    sh.uuidCreate = uuidCreate;
+                    sh.uuidModify = uuidModify;
+                    sh.uuidLinkage = uuidLinkage;
+                    sh.LegacyGeometry = LegacyGeometry;
+                }
             }
                 break;
             default: return;
@@ -1549,7 +1550,7 @@ void scan() {
         writeln();
 
         if (More) {
-            printf("Snapshots: %d\n", bswap32(h.nb_snapshots));
+            printf("Number of snapshots: %d\n", bswap32(h.nb_snapshots));
         }
     }
         return;
