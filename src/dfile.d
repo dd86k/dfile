@@ -1038,10 +1038,7 @@ void scan() {
     case 0x44415749, 0x44415750: {// "IWAD", "PWAD"
         int[2] b; // Reads as ints.
         fread(&b, 8, 1, fp);
-        if (0x44415750) // PWAD
-            report("PWAD", false);
-        else
-            report("IWAD", false);
+        report(s == 0x44415750 ? "PWAD" : "IWAD", false);
         printf(" holding %d entries at %Xh\n", b[0], b[1]);
         return;
     }
@@ -1658,8 +1655,8 @@ void scan() {
             uint icon_index;
             uint show_command;
             ushort hotkey;
-            ushort res1;
-            uint res2, res3;
+            /*ushort res1;
+            uint res2, res3;*/
         }
         enum SW_SHOWNORMAL = 1, SW_SHOWMAXIMIZED = 3, SW_SHOWMINNOACTIVE = 7;
         /*enum SW_A = 1, /// HasLinkTargetIDList
@@ -1670,7 +1667,7 @@ void scan() {
 
         ShellLinkHeader h;
         scpy(&h, h.sizeof);
-        report("Microsoft Shortcut link (.LNK, MS-SHLLINK)", false);
+        report("Microsoft Shortcut link (MS-SHLLINK)", false);
 
         //TODO: Finish MS-SHLLINK
 
@@ -1694,12 +1691,12 @@ void scan() {
                     if (high & 0x0400)
                         printf("alt+");
                 }
-                const int low = hotkey & 0xFF;
+                const ubyte low = cast(ubyte)hotkey;
                 if (low) {
                     if (low >= 0x30 && low <= 0x5A)
                         printf("%c", low);
                     else if (low >= 0x70 && low <= 0x87)
-                        printf("F%d", low - 0x6F);
+                        printf("F%d", low - 0x6F); // Function keys
                     else switch (low) {
                         case 0x90: printf("num lock"); break;
                         case 0x91: printf("scroll lock"); break;
@@ -1775,7 +1772,8 @@ void scan() {
                 return;
 
         default:
-            switch (s & 0xFFFF) {
+            // Uses MOVZX and avoids an AND instruction
+            switch (cast(ushort)s) {
             case 0x9D1F:
                 report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
                 return;
@@ -1940,13 +1938,13 @@ void report_link()
 /**
  * Report to stdout.
  * Params:
- *   type = File type
+ *   type = File type (must be constant)
  *   nl = Print newline (default=true)
  */
 void report(string type, bool nl = true)
 {
     if (ShowName)
-        writef("%s: ", filename);
+        printf("%s: ", &filename[0]);
     printf("%s", &type[0]);
-    if (nl) writeln;
+    if (nl) printf("\n");
 }

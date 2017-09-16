@@ -9,7 +9,7 @@ import std.stdio : writeln, writefln;
 import std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.8.3", /// Project version.
+enum PROJECT_VERSION = "0.9.0", /// Project version.
      PROJECT_NAME = "dfile";    /// Project name, usually executable name.
 
 debug { } else
@@ -109,7 +109,8 @@ private int main(string[] args)
  */
 void prescan(string path, bool cont)
 {
-    const uint a = getAttributes(path);
+    version (Windows) uint a = getAttributes(path);
+    else const uint a = getAttributes(path);
     filename = path ~ '\0';
     version (Posix) {
         import core.sys.posix.sys.stat :
@@ -120,7 +121,6 @@ void prescan(string path, bool cont)
             else
                 report_link();
         else if (a & S_IFREG) {
-            import std.exception : ErrnoException;
 FILE:
             fp = fopen(&filename[0], "r");
             if (!fp) {
@@ -144,14 +144,15 @@ FILE:
             reportfile("Directory", filename);
         else
             report_unknown(filename);
-    } else { // Windows and other non-POSIX platforms
-        if (attrIsSymlink(a))
+    } else version (Windows) { // Windows
+        import core.sys.windows.winnt :
+            FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_REPARSE_POINT;
+        if (a & FILE_ATTRIBUTE_REPARSE_POINT)
             if (cont)
                 goto FILE;
             else
                 report_link();
-        else if (attrIsFile(a)) {
-            import std.exception : ErrnoException;
+        else if ((a = a & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 FILE:
             debug dbg("Opening file...");
             fp = fopen(&filename[0], "r");
@@ -164,10 +165,12 @@ FILE:
 
             debug dbg("Closing file...");
             fclose(fp);
-        } else if (attrIsDir(a))
+        } else if (a) // "a" already set with FILE_ATTRIBUTE_DIRECTORY earlier
             report("Directory");
         else
             report_unknown();
+    } else {
+        static assert(0, "Implement prescan");
     }
 }
 
@@ -183,11 +186,11 @@ void PrintHelp()
 void PrintVersion()
 {
     import core.stdc.stdlib : exit;
-    printf("%s %s (%s)\n",
-        &PROJECT_NAME[0], &PROJECT_VERSION[0], &__TIMESTAMP__[0]);
-    printf("Compiled %s with %s v%d\n",
+    printf("dfile %s (%s)\n",
+        &PROJECT_VERSION[0], &__TIMESTAMP__[0]);
+    printf("Compiled %s with %s v%d\n\n",
         &__FILE__[0], &__VENDOR__[0], __VERSION__);
     printf("MIT License: Copyright (c) 2016-2017 dd86k\n");
-    printf("Project page: <https://github.com/dd86k/%s>\n", &PROJECT_NAME[0]);
+    printf("Project page: <https://github.com/dd86k/dfile>\n");
     exit(0); // getopt hack
 }

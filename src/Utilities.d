@@ -66,7 +66,7 @@ string isostr(char[] str) pure
 
 /*
  * Number utilities.
- */ 
+ */
 
 //TODO: EXP-GOLOMB UTIL for BPG and FLIF
 // https://en.wikipedia.org/wiki/Exponential-Golomb_coding
@@ -207,7 +207,7 @@ pragma(inline, false) ulong bswap64(ulong num)
                 *(p + 4) = c;
             }
             return num;
-//TODO: Fix bswap64 on Windows x86
+//TODO: Fix bswap64 asm on Windows x86
             /*xchg EAX, EDX;
             bswap EAX;
             bswap EDX;
