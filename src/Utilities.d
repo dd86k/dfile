@@ -147,7 +147,7 @@ pragma(inline, false) ushort bswap16(ushort num)
         if (num) {
             ubyte* p = cast(ubyte*)&num;
             return p[1] | p[0] << 8;
-        }
+        } else return num;
     }
 }
 
@@ -175,7 +175,7 @@ pragma(inline, false) uint bswap32(uint num)
         if (num) {
             ubyte* p = cast(ubyte*)&num;
             return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
-        }
+        } else return num;
     }
 }
 
@@ -187,12 +187,31 @@ pragma(inline, false) uint bswap32(uint num)
 pragma(inline, false) ulong bswap64(ulong num)
 {
     version (X86) {
-        version (Windows) asm { naked;
+        version (Windows) {
+            if (num) { // Temporary
+                ubyte* p = cast(ubyte*)&num;
+                ubyte c = *p;
+                *p = *(p + 7);
+                *(p + 7) = c;
+
+                c = *(p + 1);
+                *(p + 1) = *(p + 6);
+                *(p + 6) = c;
+
+                c = *(p + 2);
+                *(p + 2) = *(p + 5);
+                *(p + 5) = c;
+
+                c = *(p + 3);
+                *(p + 3) = *(p + 4);
+                *(p + 4) = c;
+            }
+            return num;
 //TODO: Fix bswap64 on Windows x86
-            xchg EAX, EDX;
-            bswap ECX;
+            /*xchg EAX, EDX;
             bswap EAX;
-            ret;
+            bswap EDX;
+            ret;*/
         } else asm { naked; // System V
             xchg EAX, EDX;
             bswap EDX;
@@ -212,14 +231,23 @@ pragma(inline, false) ulong bswap64(ulong num)
     } else {
         if (num) {
             ubyte* p = cast(ubyte*)&num;
-            ubyte c;
-            for (int a, b = 7; a < 4; ++a, --b) {
-                c = *(p + b);
-                *(p + b) = *(p + a);
-                *(p + a) = c;
-            }
-            return num;
+            ubyte c = *p;
+            *p = *(p + 7);
+            *(p + 7) = c;
+
+            c = *(p + 1);
+            *(p + 1) = *(p + 6);
+            *(p + 6) = c;
+
+            c = *(p + 2);
+            *(p + 2) = *(p + 5);
+            *(p + 5) = c;
+
+            c = *(p + 3);
+            *(p + 3) = *(p + 4);
+            *(p + 4) = c;
         }
+        return num;
     }
 }
 

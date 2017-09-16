@@ -4,11 +4,6 @@
 
 module dfile;
 
-version (X86)
-    version = X86_ANY;
-version (X86_64)
-    version = X86_ANY;
-
 import std.stdio;
 import s_elf    : scan_elf;
 import s_fatelf : scan_fatelf;
@@ -60,8 +55,6 @@ void scan() {
         return;
     }
     version (BigEndian) s = bswap32(s);
-
-    debug writefln("BSWAP64: %X", bswap64(0xFF));
 
     debug printf("Magic: %08X\n", s);
 
@@ -645,7 +638,7 @@ void scan() {
     }
         return;
 
-    case 0x46464952: // "RIFF"
+    case 0x46464952: // "RIFF", most MP2 files
         fseek(fp, 8, SEEK_SET);
         fread(&s, 4, 1, fp);
         switch (s) {
@@ -666,15 +659,16 @@ void scan() {
                 char[16] guid;
             }
             enum FMT_CHUNK = 0x20746D66; // "fmt ";
-            enum {
+            enum { // Types
                 PCM = 1,
                 IEEE_FLOAT = 3,
                 ALAW = 6,
                 MULAW = 7,
+                _MP2 = 0x55, // Undocumented
                 EXTENSIBLE = 0xFFFE
             }
             fread(&s, 4, 1, fp);
-            if (s != FMT_CHUNK)
+            if (s != FMT_CHUNK) // Time to find the right chunk type
                 do { // Skip useless chunks
                     fread(&s, 4, 1, fp); // Chunk length
                     if (fseek(fp, s, SEEK_CUR)) {
@@ -698,6 +692,7 @@ void scan() {
                         print_array(&h.guid[0], h.guid.length);
                     }
                     break;
+                case _MP2:  printf("MPEG-1 Audio Layer II"); break;
                 default: printf("Unknown type)\n"); return;
             }
             printf(") %d Hz, %d kbps, %d-bit, ",
