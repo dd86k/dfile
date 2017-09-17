@@ -1869,69 +1869,71 @@ version (Windows) {
 /// Report a symbolic link.
 void report_link()
 {
-    report("Soft symbolic link");
-
+    enum LINK = "Soft symbolic link";
     version (Windows)
-    { // Works half the time, see the Wiki post.
-    version (Symlink)
-    {
-        HANDLE hFile;
-        DWORD returnedLength;
-        WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
+    { 
+        report(LINK);
+        // Works half the time, see the Wiki post.
+        version (Symlink)
+        {
+            HANDLE hFile;
+            DWORD returnedLength;
+            WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
 
-        const char* p = &linkname[0];
-        SECURITY_ATTRIBUTES* sa; // Default
+            const char* p = &linkname[0];
+            SECURITY_ATTRIBUTES* sa; // Default
 
-        hFile = CreateFileA(p, GENERIC_READ, 0u,
-            sa, OPEN_EXISTING,
-            FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, cast(void*)0);
-        if (hFile == INVALID_HANDLE_VALUE) { //TODO: Check why LDC2 fails here.
-            /* Error creating directory */
-            /* TclWinConvertError(GetLastError()); */
-            return;
-        }
-        /* Get the link */
-        if (!DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, &buffer,
-                WIN32_SYMLINK_REPARSE_DATA_BUFFER.sizeof, &returnedLength, NULL)) {
-                /* Error setting junction */
+            hFile = CreateFileA(p, GENERIC_READ, 0u,
+                sa, OPEN_EXISTING,
+                FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, cast(void*)0);
+            if (hFile == INVALID_HANDLE_VALUE) { //TODO: Check why LDC2 fails here.
+                /* Error creating directory */
                 /* TclWinConvertError(GetLastError()); */
-                CloseHandle(hFile);
+                return;
+            }
+            /* Get the link */
+            if (!DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, &buffer,
+                    WIN32_SYMLINK_REPARSE_DATA_BUFFER.sizeof, &returnedLength, NULL)) {
+                    /* Error setting junction */
+                    /* TclWinConvertError(GetLastError()); */
+                    CloseHandle(hFile);
+                    return;
+                }
+
+            CloseHandle(hFile);
+
+            if (!IsReparseTagValid(buffer.ReparseTag)) {
+                /* Tcl_SetErrno(EINVAL); */
                 return;
             }
 
-        CloseHandle(hFile);
+            DWORD wstrlen(const(void)* p) {
+                DWORD s;
+                wchar* wp = cast(wchar*)p;
+                while (*wp++ != wchar.init) ++s;
+                return s;
+            }
 
-        if (!IsReparseTagValid(buffer.ReparseTag)) {
-            /* Tcl_SetErrno(EINVAL); */
-            return;
-        }
-
-        DWORD wstrlen(const(void)* p) {
-            DWORD s;
-            wchar* wp = cast(wchar*)p;
-            while (*wp++ != wchar.init) ++s;
-            return s;
-        }
-
-        printf(" to ");
-        stdout.flush; // on x86-dmd builds, used to move cursor
-        const(void)* wp = &buffer.ReparseTarget[2];
-        DWORD c;
-        WriteConsoleW(
-            GetStdHandle(STD_OUTPUT_HANDLE),
-            wp,
-            wstrlen(wp) / 2,
-            &c,
-            cast(void*)0
-        );
-    } // version (Symlink)
+            printf(" to ");
+            stdout.flush; // on x86-dmd builds, used to move cursor
+            const(void)* wp = &buffer.ReparseTarget[2];
+            DWORD c;
+            WriteConsoleW(
+                GetStdHandle(STD_OUTPUT_HANDLE),
+                wp,
+                wstrlen(wp) / 2,
+                &c,
+                cast(void*)0
+            );
+        } // version (Symlink)
     } // version (Windows)
     version (Posix)
     {
         import core.stdc.stdio : printf;
         import core.sys.posix.stdlib : realpath;
-        char* p = realpath(&linkname[0], cast(char*)0);
-        if (p) printf(" to %s", p);
+        report(LINK, false);
+        char* p = realpath(&filename[0], cast(char*)0);
+        if (p) printf(" to %s\n", p);
     }
 }
 
