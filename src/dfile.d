@@ -1772,8 +1772,7 @@ void scan() {
                 return;
 
         default:
-            // Uses MOVZX and avoids an AND instruction
-            switch (cast(ushort)s) {
+            switch (cast(ushort)s) { // Uses MOVZX and avoids an AND instruction
             case 0x9D1F:
                 report("Lempel-Ziv-Welch compressed archive (RAR/ZIP)");
                 return;
@@ -1783,7 +1782,7 @@ void scan() {
                 return;
 
             case 0x5A4D: // "MZ"
-                scan_mz();
+                scan_mz;
                 return;
 
             case 0xFEFF:
@@ -1804,6 +1803,19 @@ void scan() {
 
             case 0x8230:
                 report("DER encoded X.509 certificate (der)");
+                return;
+
+            case 0x0908:
+                report("Microsoft Excel BIFF8 file");
+                return;
+            case 0x0904:
+                report("Microsoft Excel BIFF4 file");
+                return;
+            case 0x0902:
+                report("Microsoft Excel BIFF3 file");
+                return;
+            case 0x0900:
+                report("Microsoft Excel BIFF2 file");
                 return;
 
             default:
