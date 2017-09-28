@@ -20,18 +20,8 @@ import dfile : Base10, fp;
  */
 void scpy(void* s, size_t size, bool rewind = false) {
     import core.stdc.stdio : fread, fseek, SEEK_SET;//rewind;
-    if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp);
+    if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp); doesn't work and idk why
     fread(s, size, 1, fp); // size * 1
-}
-
-/**
- * Fast int.
- * Note: The compiler is pretty good optimizing this (via CTFE I'm assuming).
- * Params: sig = 4-byte array
- * Returns: 4-byte number
- */
-pragma(inline, true) uint fint(char[4] sig) pure @nogc nothrow {
-    return *cast(int*)&sig;
 }
 
 /*
@@ -175,7 +165,7 @@ pragma(inline, false) uint bswap32(uint num)
         if (num) {
             ubyte* p = cast(ubyte*)&num;
             return p[3] | p[2] << 8 | p[1] << 16 | p[0] << 24;
-        } else return num;
+        } else return 0;
     }
 }
 
@@ -249,23 +239,6 @@ pragma(inline, false) ulong bswap64(ulong num)
         }
         return num;
     }
-}
-
-/**
- * Turns a 2-byte buffer and transforms it into a 2-byte number.
- * Params: buf = Buffer
- * Returns: 2-byte number
- */
-ushort make_ushort(char[] buf) pure @nogc nothrow {
-    return *cast(ushort*)&buf[0];
-}
-/**
- * Turns a 4-byte buffer and transforms it into a 4-byte number.
- * Params: buf = Buffer
- * Returns: 4-byte number
- */
-uint make_uint(char[] buf) pure @nogc nothrow {
-    return *cast(uint*)&buf[0];
 }
 
 /**

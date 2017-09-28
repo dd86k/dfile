@@ -10,7 +10,7 @@ import dfile : More, report, fp;
 import utils;
 
 enum ISO = "CD001"; /// ISO signature
-private enum BLOCK_SIZE = 1024; // Half an ISO block
+private enum BLOCK_SIZE = 1024; // Half an ISO block, buffer
 
 /// Scan an ISO file
 void scan_iso()
@@ -33,7 +33,7 @@ void scan_iso()
     }
 
     void scan_block(char* buf) {
-        switch (buf[0]) {
+        switch (*buf) {
         case BOOT:
             bootable = true;
             if (More)
@@ -44,9 +44,8 @@ void scan_iso()
             break;
         case PRIMARY_VOL_DESC:
             label = isostr(buf[40 .. 71]);
-            const uint size = make_uint(buf[80..84]);
-            const ushort blocksize = make_ushort(buf[128..130]);
-            volume_size = size * blocksize;
+            // size * blocksize
+            volume_size = *cast(uint*)(&buf[80]) * *cast(ushort*)(&buf[128]);
             if (More)
             {
                 system = isostr(buf[8 .. 40]);
@@ -66,11 +65,11 @@ void scan_iso()
         }
     }
     /// Returns: Returns true to stop.
-    bool check_seek(long pos, char[BLOCK_SIZE] buf) {
+    bool check_seek(long pos, char* buf) {
         // OKAY to cast to int since we only check up to ~9000H
         if (fseek(fp, cast(int)pos, SEEK_SET)) return true;
-        fread(&buf, BLOCK_SIZE, 1, fp);
-        if (buf[1..6] == ISO) scan_block(&buf[0]);
+        fread(buf, BLOCK_SIZE, 1, fp);
+        if (buf[1..6] == ISO) scan_block(buf);
         return false;
     }
     string isodate(string stamp) {
@@ -80,10 +79,11 @@ void scan_iso()
             stamp[10..12], stamp[12..14], stamp[14..16], stamp[16] * 15);
     }
     char[BLOCK_SIZE] buf;
+    char* bufp = &buf[0];
 
-    if (check_seek(0x8000, buf)) goto ISO_DONE;
-    if (check_seek(0x8800, buf)) goto ISO_DONE;
-    if (check_seek(0x9000, buf)) goto ISO_DONE;
+    if (check_seek(0x8000, bufp)) goto ISO_DONE;
+    if (check_seek(0x8800, bufp)) goto ISO_DONE;
+    if (check_seek(0x9000, bufp)) goto ISO_DONE;
 
 ISO_DONE:
     report("ISO-9660 CD/DVD image", false);
