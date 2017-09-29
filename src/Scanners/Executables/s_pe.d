@@ -6,7 +6,6 @@ module s_pe;
 
 import std.stdio;
 import dfile : report, More, fp;
-import utils : scpy;
 
 private struct PE_HEADER { align(1):
     char[4] Signature; // "PE\0\0"
@@ -150,13 +149,13 @@ void scan_pe() {
     PE_HEADER peh; // PE32
     PE_OPTIONAL_HEADER peoh;
     IMAGE_DATA_DIRECTORY dirs;
-    scpy(&peh, peh.sizeof);
+    fread(&peh, peh.sizeof, 1, fp);
 
     if (peh.SizeOfOptionalHeader > 0) { // PE Optional Header
-        scpy(&peoh, peoh.sizeof);
+        fread(&peoh, peoh.sizeof, 1, fp);
         if (peoh.magic == PE_FORMAT.HDR64)
             fseek(fp, 16, SEEK_CUR);
-        scpy(&dirs, dirs.sizeof);
+        fread(&dirs, dirs.sizeof, 1, fp);
     }
 
     report("PE32", false);

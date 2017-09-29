@@ -47,7 +47,7 @@ private const enum : uint {
 /// Scan a LE executable
 void scan_le() {
     e32_hdr h;
-    scpy(&h, h.sizeof);
+    fread(&h, h.sizeof, 1, fp);
 
     if (More) {
         printf("e32_magic : %s\n", &h.e32_magic[0]);

@@ -16,11 +16,11 @@ import Etc      : scan_etc;
 import s_images : scan_bpg, scan_png, scan_flif, scan_gif;
 import utils;
 
-bool More, /// -m : More flag
+__gshared bool More, /// -m : More flag
      ShowName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
-FILE* fp; /// Current file handle.
-string filename; /// Current filename.
+__gshared FILE* fp; /// Current file handle.
+__gshared string filename; /// Current filename.
 
 /**
  * Prints debugging message with a FILE@LINE: MSG formatting.
@@ -121,7 +121,7 @@ void scan() {
             }
 
             nesm_hdr h;
-            scpy(&h, h.sizeof);
+            fread(&h, h.sizeof, 1, fp);
 
             if (h.flag & 0b10)
                 report("Dual NTSC/PAL", false);
@@ -167,7 +167,7 @@ void scan() {
                 }
 
                 spc2_hdr h;
-                scpy(&h, h.sizeof);
+                fread(&h, h.sizeof, 1, fp);
 
                 report("SNES SPC2 v", false);
                 printf("%d.%d, %d of SPC entries\n", h.major, h.minor, h.number);
@@ -293,7 +293,7 @@ void scan() {
             int encrypted;
         }
         rpf_hdr h;
-        scpy(&h , h.sizeof);
+        fread(&h , h.sizeof, 1, fp);
         report("RPF ", false);
         if (h.encrypted)
             printf("encrypted");
@@ -400,7 +400,7 @@ void scan() {
         }
 
         pkzip_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
 
         debug writeln("FNLENGTH: ", formatsize(h.fnlength));
 
@@ -557,7 +557,7 @@ void scan() {
             ubyte pages;
         }
         ogg_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("Ogg audio file v", false);
         printf("%d with %d segments\n", h.version_, h.pages);
 
@@ -587,7 +587,7 @@ void scan() {
             ubyte[16] md5;
         }
         flac_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("FLAC audio file", false);
         if ((h.header & 0xFF) == 0) { // Big endian. Not a fan.
             const int bits = ((h.stupid[8] & 1) << 4 | (h.stupid[9] >>> 4)) + 1;
@@ -619,7 +619,7 @@ void scan() {
         }
     //http://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_19840
         psd_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("Photoshop Document v", false);
         printf("%d, %d x %d, %d-bit ",
             bswap16(h.version_), bswap32(h.width), bswap32(h.height), bswap16(h.depth));
@@ -677,7 +677,7 @@ void scan() {
                     fread(&s, 4, 1, fp);
                 } while (s != FMT_CHUNK);
             fmt_chunk h;
-            scpy(&h, h.sizeof);
+            fread(&h, h.sizeof, 1, fp);
             report("WAVE audio file (", false);
             switch (h.format) {
                 case PCM: printf("PCM"); break;
@@ -733,7 +733,7 @@ void scan() {
         }
 
         midi_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
 
         report("MIDI, ", false);
 
@@ -776,7 +776,7 @@ void scan() {
             //ubyte[436] difat;
         }
         cfb_header h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("Compound File Binary format document ", false);
         with (h) {
             printf("v%d.%d, %d FAT sectors\n", major, minor, fat_sectors);
@@ -877,7 +877,7 @@ void scan() {
             ushort seq;
         }
         cfh_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("Microsoft Cabinet archive v", false);
         printf("%d.%d, ", h.major, h.minor);
         write(formatsize(h.size));
@@ -900,7 +900,7 @@ void scan() {
             v5_00_000 = 0x00010050
         }
         iscab_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("InstallShield CAB archive", false);
         switch (h.version_) {
         case LEGACY:    printf(" (Legacy)");  break;
@@ -979,7 +979,8 @@ void scan() {
         }
         enum DEBIANBIN = "debian-binary   ";
         deb_hdr h;
-        scpy(&h, h.sizeof, true);
+        rewind(fp);
+        fread(&h, h.sizeof, 1, fp);
         if (h.file_iden != DEBIANBIN) {
             report_text();
             return;
@@ -994,7 +995,7 @@ void scan() {
                 string dps = isostr(h.ctl_filesize);
                 os = parse!int(dps);
                 fseek(fp, os, SEEK_CUR);
-                scpy(&dh, dh.sizeof, false);
+                fread(&dh, dh.sizeof, 1, fp);
                 string doss = isostr(dh.filesize);
                 dos = parse!int(doss);
             } catch (Exception) {
@@ -1018,7 +1019,7 @@ void scan() {
             //char[16] reserved;
         }
         rpm_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("RPM ", false);
         switch (h.type) {
             case 0: printf("Binary"); break;
@@ -1075,7 +1076,8 @@ void scan() {
         }
 
         kwaj_hdr h;
-        scpy(&h, h.sizeof, true);
+        rewind(fp);
+        fread(&h, h.sizeof, 1, fp);
 
         report("MS-DOS ", false);
 
@@ -1137,7 +1139,8 @@ void scan() {
         }
 
         szdd_hdr h;
-        scpy(&h, h.sizeof, true);
+        rewind(fp);
+        fread(&h, h.sizeof, 1, fp);
 
         report("MS-DOS ", false);
 
@@ -1197,7 +1200,7 @@ void scan() {
         }
 
         trx_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
 
         if (h.version_ == 1 || h.version_ == 2) {
             report("TRX v", false);
@@ -1232,7 +1235,7 @@ void scan() {
         //enum COMPRESSED = 1 << 16;
 
         SparseExtentHeader h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
 
         report("VMware Disk image v", false);
         printf("%d, ", h.version_);
@@ -1293,7 +1296,7 @@ void scan() {
             //char[396] padding;
         }
         COWDisk_Header h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         if (h.flags != 3) {
             report_text();
             return;
@@ -1353,7 +1356,7 @@ void scan() {
             return;
         }
         vhd_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         h.features = bswap32(h.features);
         if ((h.features & F_RES) == 0) {
             report_text();
@@ -1460,7 +1463,7 @@ void scan() {
         }
         fseek(fp, 64, SEEK_SET); // Skip description, char[64]
         vdi_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         if (h.magic != VDIMAGIC) {
             report_text(); // Coincidence
             return;
@@ -1470,11 +1473,11 @@ void scan() {
         VDIHEADER1 sh;
         switch (h.majorv) { // Use latest major version natively
             case 1:
-                scpy(&sh, sh.sizeof);
+                fread(&sh, sh.sizeof, 1, fp);
                 break;
             case 0: { // Or else, translate
                 VDIHEADER0 vd0;
-                scpy(&vd0, vd0.sizeof);
+                fread(&vd0, vd0.sizeof, 1, fp);
                 with (vd0) {
                     sh.cbDisk = cbDisk;
                     sh.u32Type = u32Type;
@@ -1534,7 +1537,7 @@ void scan() {
         enum C_AES = 1;
 
         QCowHeader h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
 
         report("QEMU QCOW2 disk image v", false);
         write(bswap32(h.version_), ", ", formatsize(bswap64(h.size)), " capacity");
@@ -1574,7 +1577,7 @@ void scan() {
         }
         report("QEMU QED disk image, ", false);
         qed_hdr h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         write(formatsize(h.image_size));
 
         if (h.features & QED_F_BACKING_FILE) {
@@ -1618,7 +1621,7 @@ void scan() {
 
         }
         dmg_header h;
-        scpy(&h, h.sizeof);*/
+        fread(&h, h.sizeof, 1, fp);*/
         report("Apple Disk Image file (dmg)");
     }
         return;
@@ -1666,7 +1669,7 @@ void scan() {
              SW_Z = 1 << 24; /// PreferEnvironmentPath*/
 
         ShellLinkHeader h;
-        scpy(&h, h.sizeof);
+        fread(&h, h.sizeof, 1, fp);
         report("Microsoft Shortcut link (MS-SHLLINK)", false);
 
         //TODO: Finish MS-SHLLINK

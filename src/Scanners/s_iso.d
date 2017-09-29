@@ -15,15 +15,15 @@ private enum BLOCK_SIZE = 1024; // Half an ISO block, buffer
 /// Scan an ISO file
 void scan_iso()
 {
-    string
+    __gshared string
         // PRIMARY_VOL_DESC
         label, system, voliden,
         copyright, publisher, app, abst, biblio,
         ctime, mtime, etime, eftime,
         // BOOT
         bootsysiden, bootiden;
-    bool bootable;
-    long volume_size;
+    __gshared bool bootable;
+    __gshared long volume_size;
     enum { // volume type
         BOOT = 0,
         PRIMARY_VOL_DESC,
@@ -65,9 +65,8 @@ void scan_iso()
         }
     }
     /// Returns: Returns true to stop.
-    bool check_seek(long pos, char* buf) {
-        // OKAY to cast to int since we only check up to ~9000H
-        if (fseek(fp, cast(int)pos, SEEK_SET)) return true;
+    bool check_seek(uint pos, char* buf) {
+        if (fseek(fp, pos, SEEK_SET)) return true;
         fread(buf, BLOCK_SIZE, 1, fp);
         if (buf[1..6] == ISO) scan_block(buf);
         return false;
@@ -90,7 +89,7 @@ ISO_DONE:
     if (label) write(` "`, label, `"`);
     if (volume_size) write(", ", formatsize(volume_size));
     if (bootable) write(", Bootable");
-    writeln;
+    printf("\n");
 
     if (More)
     {

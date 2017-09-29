@@ -1,5 +1,5 @@
 name "dfile"
-version "0.9.0"
+version "0.9.1"
 description "Binary file scanner"
 authors "dd86k"
 copyright "Copyright © 2017, dd86k"
@@ -16,7 +16,3 @@ buildType "unittest" {
   sourcePaths "tests/"
   importPaths "tests/"
 }
-
-#buildType "linkTarget" {
-#  version ""
-#}

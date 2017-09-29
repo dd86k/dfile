@@ -55,7 +55,7 @@ private enum {
 /// Scan a NE executable
 void scan_ne() {
     ne_hdr h;
-    scpy(&h, h.sizeof);
+    fread(&h, h.sizeof, 1, fp);
 
     report("NE ", false);
 

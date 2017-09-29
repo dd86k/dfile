@@ -6,7 +6,6 @@ module s_mz;
 
 import core.stdc.stdio;
 import dfile;
-import utils : scpy;
 
 private enum ERESWDS = 0x10; /// Reserved words
 
@@ -71,7 +70,8 @@ void scan_mz() {
     }
 
     mz_hdr h;
-    scpy(&h, h.sizeof, true);
+    rewind(fp);
+    fread(&h, h.sizeof, 1, fp);
 
     report("MZ Executable for MS-DOS", false);
     if (h.e_ovno)

@@ -5,6 +5,7 @@
 module s_models;
 
 import std.stdio : write, writeln;
+import core.stdc.stdio;
 import dfile, utils;
 
 // https://gist.github.com/ulrikdamm/8274171
@@ -26,7 +27,7 @@ void scan_pmx()
     }
 
     pmx_hdr h;
-    scpy(&h, h.sizeof);
+    fread(&h, h.sizeof, 1, fp);
 
     report("PMX model v", false);
     write(h.ver, " ", h.char_encoding ? "UTF-8" : "UTF-16");

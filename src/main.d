@@ -9,7 +9,7 @@ import std.stdio : writeln, writefln;
 import std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.9.0", /// Project version.
+enum PROJECT_VERSION = "0.9.1", /// Project version.
      PROJECT_NAME = "dfile";    /// Project name, usually executable name.
 
 debug { } else
@@ -27,7 +27,7 @@ private int main(string[] args)
         return 0;
     }
 
-    bool cont,      // Continue with symlinks
+    __gshared bool cont,      // Continue with symlinks
          glob,      // Use glob file matching
          recursive; // GLOB - Recursive (default: shallow)
 
@@ -66,34 +66,34 @@ private int main(string[] args)
         return 0;
 	}
 
-    foreach (string filename; args[1..$]) {
-        // Overrides glob in-case the filename contains specical characters
-        if (exists(filename)) {
-            prescan(filename, cont);
-        } else {
-            if (glob) {
-                import std.path : globMatch, dirName;
-                int found; // Number of files
-                try {
-                    foreach (DirEntry e; dirEntries(dirName(filename),
-                        recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
-                        immutable char[] s = e.name;
-                        if (globMatch(s, filename)) {
-                            ++found;
-                            prescan(s, cont);
-                        }
+    if (glob) {
+        import std.path : globMatch, dirName;
+        int found; // Number of files
+        foreach (string filename; args[1..$]) {
+            try {
+                foreach (DirEntry e; dirEntries(dirName(filename),
+                    recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
+                    immutable char[] s = e.name;
+                    if (globMatch(s, filename)) {
+                        ++found;
+                        prescan(s, cont);
                     }
-                } catch (FileException ex) { // dirEntries may throw
-                    stderr.writeln(ex.msg);
-                    return 1;
                 }
-                if (!found) { // "Not found"-case if 0 files.
-                    printf("No files were found.\n");
-                    return 1;
-                }
-            } else { // non-glob
-                report("File not found.");
+            } catch (FileException ex) { // dirEntries may throw
+                stderr.writeln(ex.msg);
                 return 1;
+            }
+        }
+        if (!found) { // "Not found"-case if 0 files.
+            printf("No files were found.\n");
+            return 1;
+        }
+    } else {
+        foreach (string filename; args[1..$]) {
+            if (exists(filename)) {
+                prescan(filename, cont);
+            } else {
+                report("Entry not found.");
             }
         }
     }
@@ -112,7 +112,7 @@ void prescan(string path, bool cont)
     version (Windows) uint a = getAttributes(path);
     else const uint a = getAttributes(path);
     filename = path ~ '\0';
-    version (Posix) {
+    version (Posix) { // Linux, BSD, UNIX, etc.
         import core.sys.posix.sys.stat :
             S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK, S_IFMT;
         if (a & S_IFLNK)

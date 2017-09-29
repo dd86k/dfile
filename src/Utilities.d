@@ -10,20 +10,6 @@ import dfile : Base10, fp;
  * File utilities.
  */
 
-/**
- * Read file with a struct or array.
- * Note: MAKE SURE THE STRUCT IS BYTE-ALIGNED.
- * Params:
- *   s = Void pointer to the first element
- *   size = Size of the struct
- *   rewind = Rewind seeker to start of the file
- */
-void scpy(void* s, size_t size, bool rewind = false) {
-    import core.stdc.stdio : fread, fseek, SEEK_SET;//rewind;
-    if (rewind) fseek(fp, 0, SEEK_SET); //rewind(fp); doesn't work and idk why
-    fread(s, size, 1, fp); // size * 1
-}
-
 /*
  * String utilities.
  */

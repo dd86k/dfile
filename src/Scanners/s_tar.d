@@ -5,6 +5,7 @@
 module s_tar;
 
 import std.stdio, dfile, utils;
+import core.stdc.stdio;
 
 enum Tar = "ustar\000"; /// Tar signature
 enum GNUTar = "GNUtar\00"; /// GNU's Tar signature
@@ -32,7 +33,8 @@ void scan_tar()
     }
 
     tar_hdr h;
-    scpy(&h, h.sizeof, true);
+    rewind(fp);
+    fread(&h, h.sizeof, 1, fp);
 
     switch (h.linkflag)
     {
@@ -46,12 +48,12 @@ void scan_tar()
         case '7': report("Contiguous", false); break;
         default:  report("Unknown type Tar archive"); return;
     }
-    write(" Tar archive");
+    printf(" Tar archive");
 
     if (More)
     {
         write(", Reports ", tarstr(h.size), " Bytes");
     }
 
-    writeln();
+    printf("\n");
 }

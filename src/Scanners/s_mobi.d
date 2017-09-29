@@ -4,9 +4,8 @@
 
 module s_mobi;
 
-import std.stdio;
-import dfile;
-import utils;
+import std.stdio, dfile, utils;
+import core.stdc.stdio;
 
 private enum STARTPOS = 944;
 
@@ -34,7 +33,7 @@ private struct mobi_hdr
 void palmdb_name() {
     char[32] name;
     char* p = &name[0];
-    fseek(fp, 0, SEEK_SET);
+    rewind(fp);
     fread(p, 32, 1, fp);
     printf(" \"%s\"\n", p);
 }
@@ -42,7 +41,7 @@ void palmdb_name() {
 /// Scan PalmDB file
 void scan_palmdoc() {
     palmdoc_hdr h;
-    scpy(&h, h.sizeof);
+    fread(&h, h.sizeof, 1, fp);
 
     report("Palm Document", false);
 
@@ -59,8 +58,8 @@ void scan_mobi() { // Big endian
     palmdoc_hdr h;
     mobi_hdr mh;
     fseek(fp, STARTPOS, SEEK_SET);
-    scpy(&h, h.sizeof);
-    scpy(&mh, mh.sizeof);
+    fread(&h, h.sizeof, 1, fp);
+    fread(&mh, mh.sizeof, 1, fp);
 
     report("Mobipocket ", false);
 

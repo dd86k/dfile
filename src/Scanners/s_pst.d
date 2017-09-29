@@ -6,6 +6,7 @@
 module s_pst;
 
 import std.stdio, dfile, utils;
+import core.stdc.stdio;
 
 enum PST_MAGIC = 0x4E444221; /// PST magic, "!BDN"
 private enum ushort CLIENT_MAGIC = 0x4D53;
@@ -60,7 +61,7 @@ private struct pst_unicode { align(1):
 void scan_pst() {
     pst_header h;
     pst_unicode uh;
-    scpy(&h, h.sizeof);
+    fread(&h, h.sizeof, 1, fp);
     bool ansi, unicode;
 
     with (uh)
@@ -68,11 +69,11 @@ void scan_pst() {
         if (version_ == 14 || version_ == 15) {
             ansi = true;
             pst_ansi ah;
-            scpy(&ah, ah.sizeof);
+            fread(&ah, ah.sizeof, 1, fp);
             uh.crypt = ah.crypt;
         } else if (version_ >= 23) {
             unicode = true;
-            scpy(&uh, uh.sizeof);
+            fread(&uh, uh.sizeof, 1, fp);
         }
 
         report("PST", false);

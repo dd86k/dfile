@@ -121,38 +121,41 @@ void scan_gif() { // http://www.fileformat.info/format/gif/egff.htm
     }
 
     gif_header h;
-    scpy(&h, h.sizeof, true);
+    rewind(fp);
+    fread(&h, h.sizeof, 1, fp);
     report("GIF", false);
 
-    switch (h.version_[1]) { // 87a, 89a, lazy
+    switch (h.version_[1]) { // 87a, 89a, lazy switch
         case '7': printf("87a image"); break;
         case '9': printf("89a image"); break;
         default: printf(" image, non-supported version\n"); return;
     }
 
-    with (h) printf(", %d x %d pixels, %d-bit\n", width, height, ((packed >>> 4) & 3) + 1);
+    with (h) {
+        printf(", %d x %d pixels, %d-bit\n", width, height, ((packed >>> 4) & 3) + 1);
 
-    if (More) with (h) {
-        enum {
-            GLOBAL_COLOR_TABLE = 0x80,
-            SORT_FLAG = 8,
-        }
+        if (More) {
+            enum {
+                GLOBAL_COLOR_TABLE = 0x80,
+                SORT_FLAG = 8,
+            }
 
-        if (packed & GLOBAL_COLOR_TABLE) {
-            printf(", Global Color Table");
-            if (packed & 3)
-                printf(" of %d bytes", 2 ^^ ((packed & 3) + 1));
-            if (packed & SORT_FLAG)
-                printf(", Sorted");
-            if (bgcolor)
-                printf(", BG Index of %X", bgcolor);
-        }
-        if (aspect) {
-            printf(", %d pixel ratio (reported)", (cast(float)aspect + 15) / 64);
-        }
+            if (packed & GLOBAL_COLOR_TABLE) {
+                printf(", Global Color Table");
+                if (packed & 3)
+                    printf(" of %d bytes", 2 ^^ ((packed & 3) + 1));
+                if (packed & SORT_FLAG)
+                    printf(", Sorted");
+                if (bgcolor)
+                    printf(", BG Index of %X", bgcolor);
+            }
 
-        printf("\n");
-    }
+            if (aspect)
+                printf(", %d pixel ratio (reported)", (cast(float)aspect + 15) / 64);
+
+            printf("\n");
+        }
+    } // with
 }
 
 /// Scan a BPG image
@@ -180,7 +183,7 @@ void scan_bpg()
             EXTENSION = 0b1000;
 
         heic_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        fread(&h, h.sizeof, 1, fp);
         write(expgol(h.width), " x ", h.height, ", ");
 
         switch (h.color & 0b1111_0000)
@@ -235,7 +238,7 @@ void scan_flif()
         }
 
         flif_hdr h;
-        scpy(file, &h, h.sizeof, true);
+        fread(&h, h.sizeof, 1, fp);
 
         //1 byte determines the variable's length in bytes, first bit is set
     }*/
