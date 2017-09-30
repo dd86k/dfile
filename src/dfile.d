@@ -266,12 +266,12 @@ void scan() {
     case 0x454C4247, 0x464C4247, 0x474C4247, 0x494C4247, 0x534C4247, 0x4A4C4247:
         report("GTA Text (GTA2+) file, ", false);
         final switch (s) {
-        case 0x454C4247: writeln("English");  break; // 'E'
-        case 0x464C4247: writeln("French");   break; // 'F'
-        case 0x474C4247: writeln("German");   break; // 'G'
-        case 0x494C4247: writeln("Italian");  break; // 'I'
-        case 0x534C4247: writeln("Spanish");  break; // 'S'
-        case 0x4A4C4247: writeln("Japanese"); break; // 'J'
+        case 0x454C4247: printf("English\n");  break; // 'E'
+        case 0x464C4247: printf("French\n");   break; // 'F'
+        case 0x474C4247: printf("German\n");   break; // 'G'
+        case 0x494C4247: printf("Italian\n");  break; // 'I'
+        case 0x534C4247: printf("Spanish\n");  break; // 'S'
+        case 0x4A4C4247: printf("Japanese\n"); break; // 'J'
         }
         return;
 
@@ -355,18 +355,18 @@ void scan() {
         fseek(fp, 8, SEEK_SET);
         fread(&b, 4, 1, fp);
         switch (b) {
-        case "ILBM": report("IFF Interleaved Bitmap Image"); return;
-        case "8SVX": report("IFF 8-Bit Sampled Voice"); return;
-        case "ACBM": report("Amiga Contiguous Bitmap"); return;
-        case "ANBM": report("IFF Animated Bitmap"); return;
-        case "ANIM": report("IFF CEL Animation"); return;
-        case "FAXX": report("IFF Facsimile Image"); return;
-        case "FTXT": report("IFF Formatted Text"); return;
-        case "SMUS": report("IFF Simple Musical Score"); return;
-        case "CMUS": report("IFF Musical Score"); return;
-        case "YUVN": report("IFF YUV Image"); return;
-        case "FANT": report("Amiga Fantavision Movie"); return;
-        case "AIFF": report("Audio Interchange File Format"); return;
+        case "ILBM": /*ILBM*/ report("IFF Interleaved Bitmap Image"); return;
+        case "8SVX": /*8SVX*/ report("IFF 8-Bit Sampled Voice"); return;
+        case "ACBM": /*ACBM*/ report("Amiga Contiguous Bitmap"); return;
+        case "ANBM": /*ANBM*/ report("IFF Animated Bitmap"); return;
+        case "ANIM": /*ANIM*/ report("IFF CEL Animation"); return;
+        case "FAXX": /*FAXX*/ report("IFF Facsimile Image"); return;
+        case "FTXT": /*FTXT*/ report("IFF Formatted Text"); return;
+        case "SMUS": /*SMUS*/ report("IFF Simple Musical Score"); return;
+        case "CMUS": /*CMUS*/ report("IFF Musical Score"); return;
+        case "YUVN": /*YUVN*/ report("IFF YUV Image"); return;
+        case "FANT": /*FANT*/ report("Amiga Fantavision Movie"); return;
+        case "AIFF": /*AIFF*/ report("Audio Interchange File Format"); return;
         default: report_unknown(); return;
         }
     }
@@ -490,7 +490,7 @@ void scan() {
         scan_elf();
         return;
 
-    case 0x010E70FA: // FatELF - 0x1F0E70FA
+    case 0x010E70FA: // FatELF
         scan_fatelf();
         return;
 
@@ -598,11 +598,11 @@ void scan() {
             if (More) {
                 printf("MD5: ");
                 print_array(&h.md5[0], h.md5.length);
-                writeln();
+                printf("\n");
             }
         }
         else
-            writeln();
+            printf("\n");
     }
         return;
 
