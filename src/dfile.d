@@ -20,7 +20,7 @@ __gshared bool More, /// -m : More flag
      ShowName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
 __gshared FILE* fp; /// Current file handle.
-__gshared string filename; /// Current filename.
+__gshared string filename; /// Current filename, null-terminated.
 
 /**
  * Prints debugging message with a FILE@LINE: MSG formatting.

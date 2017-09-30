@@ -35,8 +35,7 @@ string isostr(char[] str) pure
 {
     if (str[0] == ' ') return null;
     size_t p = str.length;
-    if (str[--p] != ' ') return str.idup;
-    while (str[p] == ' ') --p;
+    while (str[--p] == ' ') {}
     return str[0 .. p + 1].idup;
 }
 
