@@ -7,10 +7,6 @@ module utils;
 import dfile : Base10, fp;
 
 /*
- * File utilities.
- */
-
-/*
  * String utilities.
  */
 
@@ -103,7 +99,8 @@ string formatsize(ulong size)
  * Params: num = 2-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) ushort bswap16(ushort num)
+pragma(inline, false)
+ushort bswap16(ushort num)
 {
     version (X86) asm { naked;
         xchg AH, AL;
@@ -131,7 +128,8 @@ pragma(inline, false) ushort bswap16(ushort num)
  * Params: num = 4-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) uint bswap32(uint num)
+pragma(inline, false)
+uint bswap32(uint num)
 {
     version (X86) asm { naked;
         bswap EAX;
@@ -159,34 +157,23 @@ pragma(inline, false) uint bswap32(uint num)
  * Params: num = 8-byte number to swap.
  * Returns: Byte swapped number.
  */
-pragma(inline, false) ulong bswap64(ulong num)
+pragma(inline, false)
+ulong bswap64(ulong num)
 {
     version (X86) {
         version (Windows) {
-            if (num) { // Temporary
-                ubyte* p = cast(ubyte*)&num;
-                ubyte c = *p;
-                *p = *(p + 7);
-                *(p + 7) = c;
-
-                c = *(p + 1);
-                *(p + 1) = *(p + 6);
-                *(p + 6) = c;
-
-                c = *(p + 2);
-                *(p + 2) = *(p + 5);
-                *(p + 5) = c;
-
-                c = *(p + 3);
-                *(p + 3) = *(p + 4);
-                *(p + 4) = c;
+            asm { // Optimized temporary solution
+            // Likely due to a PUSH/POP argument handling, was this broken in DMD 2.074.0?
+                lea EDI, num;
+                mov EAX, [EDI];
+                mov EDX, [EDI+4];
+                bswap EAX;
+                bswap EDX;
+                xchg EAX, EDX;
+                mov [EDI], EAX;
+                mov [EDI+4], EDX;
             }
             return num;
-//TODO: Fix bswap64 asm on Windows x86
-            /*xchg EAX, EDX;
-            bswap EAX;
-            bswap EDX;
-            ret;*/
         } else asm { naked; // System V
             xchg EAX, EDX;
             bswap EDX;

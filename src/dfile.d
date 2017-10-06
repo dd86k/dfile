@@ -1833,8 +1833,8 @@ void scan() {
 void report_unknown()
 {
     if (ShowName)
-        write(filename, ": ");
-    writeln("Unknown type");
+        printf("%s: ", &filename[0]);
+    printf("Unknown type\n");
 }
 
 /// Report a text file.
@@ -1845,16 +1845,16 @@ void report_text()
 }
 
 version (Windows) {
-    version (Symlink) {
+    version (Symlink) { // define version in dub.sdl
     /**
-    * Some Microsoft thing used for DeviceIoCtl.
-    * Params:
-    *   t = Device type
-    *   f = Function
-    *   m = Method
-    *   a = Access
-    * Returns: BOOL
-    */
+     * Some Microsoft thing used for DeviceIoCtl.
+     * Params:
+     *   t = Device type
+     *   f = Function
+     *   m = Method
+     *   a = Access
+     * Returns: BOOL
+     */
     BOOL CTL_CODE(uint d, uint f, uint m, uint a) {
         return ((d) << 16) | ((a) << 14) | ((f) << 2) | (m);
     }
@@ -1888,18 +1888,17 @@ void report_link()
     version (Windows)
     { 
         report(LINK);
-        // Works half the time, see the Wiki post.
-        version (Symlink)
+        version (Symlink) // Works half the time, see the Wiki post.
         {
             HANDLE hFile;
             DWORD returnedLength;
             WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
 
             const char* p = &linkname[0];
-            SECURITY_ATTRIBUTES* sa; // Default
+            SECURITY_ATTRIBUTES sa; // Default
 
             hFile = CreateFileA(p, GENERIC_READ, 0u,
-                sa, OPEN_EXISTING,
+                &sa, OPEN_EXISTING,
                 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, cast(void*)0);
             if (hFile == INVALID_HANDLE_VALUE) { //TODO: Check why LDC2 fails here.
                 /* Error creating directory */
@@ -1944,11 +1943,11 @@ void report_link()
     } // version (Windows)
     version (Posix)
     {
-        import core.stdc.stdio : printf;
         import core.sys.posix.stdlib : realpath;
-        report(LINK, false);
         char* p = realpath(&filename[0], cast(char*)0);
-        if (p) printf(" to %s\n", p);
+        report(LINK, false);
+        if (p) printf(" to %s", p);
+        printf("\n");
     }
 }
 

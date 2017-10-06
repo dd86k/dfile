@@ -4,7 +4,7 @@
 
 module s_pe;
 
-import std.stdio;
+import core.stdc.stdio;
 import dfile : report, More, fp;
 
 private struct PE_HEADER { align(1):
@@ -162,170 +162,170 @@ void scan_pe() {
 
     switch (peoh.magic) {
     case PE_FORMAT.ROM: // HDR
-        write("-ROM ");
+        printf("-ROM ");
         break;
     case PE_FORMAT.HDR32:
-        write(" ");
+        printf(" ");
         break;
     case PE_FORMAT.HDR64:
-        write("+ ");
+        printf("+ ");
         break;
     default:
-        write(" (Magic?) ");
+        printf(" (Magic?) ");
         break;
     }
 
     switch (peoh.Subsystem) {
     default:
-        write("Unknown");
+        printf("Unknown");
         break;
     case PE_SUBSYSTEM.NATIVE:
-        write("Native Windows");
+        printf("Native Windows");
         break;
     case PE_SUBSYSTEM.WINDOWS_GUI:
-        write("Windows GUI");
+        printf("Windows GUI");
         break;
     case PE_SUBSYSTEM.WINDOWS_CUI:
-        write("Windows Console");
+        printf("Windows Console");
         break;
     case PE_SUBSYSTEM.POSIX_CUI:
-        write("Posix Console");
+        printf("Posix Console");
         break;
     case PE_SUBSYSTEM.WINDOWS_CE_GUI:
-        write("Windows CE GUI");
+        printf("Windows CE GUI");
         break;
     case PE_SUBSYSTEM.EFI_APPLICATION :
-        write("EFI");
+        printf("EFI");
         break;
     case PE_SUBSYSTEM.EFI_BOOT_SERVICE_DRIVER :
-        write("EFI Boot Service driver");
+        printf("EFI Boot Service driver");
         break;
     case PE_SUBSYSTEM.EFI_RUNTIME_DRIVER:
-        write("EFI Runtime driver");
+        printf("EFI Runtime driver");
         break;
     case PE_SUBSYSTEM.EFI_ROM:
-        write("EFI ROM");
+        printf("EFI ROM");
         break;
     case PE_SUBSYSTEM.XBOX:
-        write("XBOX");
+        printf("XBOX");
         break;
     case PE_SUBSYSTEM.WINDOWS_BOOT_APPLICATION:
-        write("Windows Boot Application");
+        printf("Windows Boot Application");
         break;
     }
 
     if (dirs.CLRHeader)
-        write(" .NET");
+        printf(" .NET");
 
     if (peh.Characteristics & PE_CHARACTERISTIC.DLL)
-        write(" Library");
+        printf(" Library");
     else if (peh.Characteristics & PE_CHARACTERISTIC.EXECUTABLE_IMAGE)
-        write(" Executable");
+        printf(" Executable");
     else
-        write(" Unknown Type");
+        printf(" Unknown Type");
 
-    write(" for ");
+    printf(" for ");
 
     switch (peh.Machine) {
     default: // PE_MACHINE.UNKNOWN
-        write("Unknown");
+        printf("Unknown");
         break;
     case PE_MACHINE.I386:
-        write("x86");
+        printf("x86");
         break;
     case PE_MACHINE.AMD64:
-        write("x86-64");
+        printf("x86-64");
         break;
     case PE_MACHINE.IA64:
-        write("IA64");
+        printf("IA64");
         break;
     case PE_MACHINE.EBC:
-        write("EFI (Byte Code)");
+        printf("EFI (Byte Code)");
         break;
     case PE_MACHINE.CLR:
-        write("Common Language Runtime");
+        printf("Common Language Runtime");
         break;
     case PE_MACHINE.ARM:
-        write("ARM (Little Endian)");
+        printf("ARM (Little Endian)");
         break;
     case PE_MACHINE.ARMNT:
-        write("ARMv7+ (Thumb)");
+        printf("ARMv7+ (Thumb)");
         break;
     case PE_MACHINE.ARM64:
-        write("ARMv8 (64-bit)");
+        printf("ARMv8 (64-bit)");
         break;
     case PE_MACHINE.M32R:
-        write("Mitsubishi M32R (Little endian)");
+        printf("Mitsubishi M32R (Little endian)");
         break;
     case PE_MACHINE.AM33:
-        write("Matsushita AM33");
+        printf("Matsushita AM33");
         break;
     case PE_MACHINE.MIPS16:
-        write("MIPS16");
+        printf("MIPS16");
         break;
     case PE_MACHINE.MIPSFPU:
-        write("MIPS (w/FPU)");
+        printf("MIPS (w/FPU)");
         break;
     case PE_MACHINE.MIPSFPU16:
-        write("MIPS16 (w/FPU)");
+        printf("MIPS16 (w/FPU)");
         break;
     case PE_MACHINE.POWERPC:
-        write("PowerPC");
+        printf("PowerPC");
         break;
     case PE_MACHINE.POWERPCFP:
-        write("PowerPC (w/FPU)");
+        printf("PowerPC (w/FPU)");
         break;
     case PE_MACHINE.R4000:
-        write("MIPS (Little endian)");
+        printf("MIPS (Little endian)");
         break;
     case PE_MACHINE.SH3:
-        write("Hitachi SH3");
+        printf("Hitachi SH3");
         break;
     case PE_MACHINE.SH3DSP:
-        write("Hitachi SH3 DSP");
+        printf("Hitachi SH3 DSP");
         break;
     case PE_MACHINE.SH4:
-        write("Hitachi SH4");
+        printf("Hitachi SH4");
         break;
     case PE_MACHINE.SH5:
-        write("Hitachi SH5");
+        printf("Hitachi SH5");
         break;
     case PE_MACHINE.THUMB:
-        write(`ARM or Thumb ("Interworking")`);
+        printf(`ARM or Thumb ("Interworking")`);
         break;
     case PE_MACHINE.WCEMIPSV2:
-        write("MIPS WCE v2 (Little Endian)");
+        printf("MIPS WCE v2 (Little Endian)");
         break;
     }
 
-    write(" machines");
+    printf(" machines");
 
     if (peh.Characteristics) {
         if (peh.Characteristics & PE_CHARACTERISTIC.RELOCS_STRIPPED)
-            write(", RELOCS_STRIPPED");
+            printf(", RELOCS_STRIPPED");
         if (peh.Characteristics & PE_CHARACTERISTIC.LINE_NUMS_STRIPPED)
-            write(", LINE_NUMS_STRIPPED");
+            printf(", LINE_NUMS_STRIPPED");
         if (peh.Characteristics & PE_CHARACTERISTIC.LOCAL_SYMS_STRIPPED)
-            write(", LOCAL_SYMS_STRIPPED");
+            printf(", LOCAL_SYMS_STRIPPED");
         if (peh.Characteristics & PE_CHARACTERISTIC.LARGE_ADDRESS_AWARE)
-            write(", LARGE_ADDRESS_AWARE");
+            printf(", LARGE_ADDRESS_AWARE");
         if (peh.Characteristics & PE_CHARACTERISTIC._16BIT_MACHINE)
-            write(", 16BIT_MACHINE");
+            printf(", 16BIT_MACHINE");
         if (peh.Characteristics & PE_CHARACTERISTIC._32BIT_MACHINE)
-            write(", 32BIT_MACHINE");
+            printf(", 32BIT_MACHINE");
         if (peh.Characteristics & PE_CHARACTERISTIC.DEBUG_STRIPPED)
-            write(", DEBUG_STRIPPED");
+            printf(", DEBUG_STRIPPED");
         if (peh.Characteristics & PE_CHARACTERISTIC.REMOVABLE_RUN_FROM_SWAP)
-            write(", REMOVABLE_RUN_FROM_SWAP");
+            printf(", REMOVABLE_RUN_FROM_SWAP");
         if (peh.Characteristics & PE_CHARACTERISTIC.NET_RUN_FROM_SWAP)
-            write(", NET_RUN_FROM_SWAP");
+            printf(", NET_RUN_FROM_SWAP");
         if (peh.Characteristics & PE_CHARACTERISTIC.SYSTEM)
-            write(", SYSTEM");
+            printf(", SYSTEM");
         if (peh.Characteristics & PE_CHARACTERISTIC.UP_SYSTEM_ONLY)
-            write(", UP_SYSTEM_ONLY");
+            printf(", UP_SYSTEM_ONLY");
     }
 
-    writeln();
+    printf("\n");
 
     if (More) {
         printf("Machine type : %Xh\n", peh.Machine);
