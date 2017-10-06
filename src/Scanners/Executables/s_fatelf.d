@@ -4,10 +4,9 @@
 
 module s_fatelf;
 
-import std.stdio;
-import dfile;
+import core.stdc.stdio;
+import dfile, utils;
 import s_elf;
-import utils;
 
 private struct fat_header
 {
@@ -41,7 +40,7 @@ void scan_fatelf()
     switch (fh.version_)
     {
         default:
-            write(" with invalid version");
+            printf(" with invalid version");
             break;
         case 1: {
             fat_subheader_v1 fhv1;
@@ -50,12 +49,12 @@ void scan_fatelf()
             elf_print_class(fhv1.word_size);
             elf_print_data(fhv1.byte_order);
             elf_print_osabi(fhv1.osabi);
-            write(" binary for ");
+            printf(" binary for ");
             elf_print_machine(fhv1.machine);
-            write(" machines");
+            printf(" machines");
         }
             break;
     }
     
-    writeln();
+    printf("\n");
 }

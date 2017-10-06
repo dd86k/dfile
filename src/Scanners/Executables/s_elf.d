@@ -4,11 +4,11 @@
 
 module s_elf;
 
-import std.stdio;
+import core.stdc.stdio;
 import dfile;
 
 private struct Elf32_Ehdr {
-    ubyte[EI_NIDENT] e_ident;
+    ubyte[EI_NIDENT-4] e_ident;
     ushort e_type;
     ushort e_machine;
     uint e_version;
@@ -65,7 +65,7 @@ void scan_elf()
     debug dbg("Started scanning ELF file");
 
     Elf32_Ehdr h;
-    rewind(fp);
+    //rewind(fp);
     fread(&h, h.sizeof, 1, fp);
 
     debug
@@ -73,34 +73,34 @@ void scan_elf()
         import utils : print_array;
         dbgl("e_ident: ");
         print_array(&h.e_ident, h.e_ident.length);
-        writeln();
+        printf("\n");
     }
 
     report("ELF", false);
-    elf_print_class(h.e_ident[EI_CLASS]);
-    elf_print_data(h.e_ident[EI_DATA]);
-    elf_print_osabi(h.e_ident[EI_OSABI]);
-    write(" ");
+    elf_print_class(h.e_ident[EI_CLASS-4]);
+    elf_print_data(h.e_ident[EI_DATA-4]);
+    elf_print_osabi(h.e_ident[EI_OSABI-4]);
+    printf(" ");
     elf_print_type(h.e_type);
-    write(" for ");
+    printf(" for ");
     elf_print_machine(h.e_machine);
-    writeln(" machines");
+    printf(" machines\n");
 
     if (More)
     {
-        writeln("e_type: ", h.e_type);
-        writeln("e_machine: ", h.e_machine);
-        writeln("e_version: ", h.e_version);
-        writeln("e_entry: ", h.e_entry);
-        writeln("e_phoff: ", h.e_phoff);
-        writeln("e_shoff: ", h.e_shoff);
-        writeln("e_flags: ", h.e_flags);
-        writeln("e_ehsize: ", h.e_ehsize);
-        writeln("e_phentsize: ", h.e_phentsize);
-        writeln("e_phnum: ", h.e_phnum);
-        writeln("e_shentsize: ", h.e_shentsize);
-        writeln("e_shnum: ", h.e_shnum);
-        writeln("e_shstrndx: ", h.e_shstrndx);
+        printf("e_type: %X\n", h.e_type);
+        printf("e_machine: %X\n", h.e_machine);
+        printf("e_version: %X\n", h.e_version);
+        printf("e_entry: %X\n", h.e_entry);
+        printf("e_phoff: %X\n", h.e_phoff);
+        printf("e_shoff: %X\n", h.e_shoff);
+        printf("e_flags: %X\n", h.e_flags);
+        printf("e_ehsize: %X\n", h.e_ehsize);
+        printf("e_phentsize: %X\n", h.e_phentsize);
+        printf("e_phnum: %X\n", h.e_phnum);
+        printf("e_shentsize: %X\n", h.e_shentsize);
+        printf("e_shnum: %X\n", h.e_shnum);
+        printf("e_shstrndx: %X\n", h.e_shstrndx);
     }
 }
 
@@ -113,9 +113,9 @@ void scan_elf()
 void elf_print_class(ubyte c)
 {
     switch (c) {
-    case 1: write("32 "); break;
-    case 2: write("64 "); break;
-    default: write(" (Invalid class) ");  break;
+    case 1: printf("32 "); break;
+    case 2: printf("64 "); break;
+    default: printf(" (Invalid class) ");  break;
     }
 }
 
@@ -126,9 +126,9 @@ void elf_print_class(ubyte c)
 void elf_print_data(ubyte c)
 {
     switch (c) {
-    case 1: write("LE "); break;
-    case 2: write("BE "); break;
-    default: write("(Invalid encoding) ");  break;
+    case 1: printf("LE "); break;
+    case 2: printf("BE "); break;
+    default: printf("(Invalid encoding) ");  break;
     }
 }
 
@@ -139,22 +139,22 @@ void elf_print_data(ubyte c)
 void elf_print_osabi(ubyte c)
 {
     switch (c) {
-    default:   write("Unknown DECL"); break;
-    case 0x00: write("System V"); break;
-    case 0x01: write("HP-UX"); break;
-    case 0x02: write("NetBSD"); break;
-    case 0x03: write("Linux"); break;
-    case 0x06: write("Solaris"); break; 
-    case 0x07: write("AIX"); break;
-    case 0x08: write("IRIX"); break;
-    case 0x09: write("FreeBSD"); break;
-    case 0x0C: write("OpenBSD"); break;
-    case 0x0D: write("OpenVMS"); break;
-    case 0x0E: write("NonStop Kernel"); break;
-    case 0x0F: write("AROS"); break;
-    case 0x10: write("Fenix OS"); break;
-    case 0x11: write("CloudABI"); break;
-    case 0x53: write("Sortix"); break;
+    default:   printf("Unknown DECL"); break;
+    case 0x00: printf("System V"); break;
+    case 0x01: printf("HP-UX"); break;
+    case 0x02: printf("NetBSD"); break;
+    case 0x03: printf("Linux"); break;
+    case 0x06: printf("Solaris"); break; 
+    case 0x07: printf("AIX"); break;
+    case 0x08: printf("IRIX"); break;
+    case 0x09: printf("FreeBSD"); break;
+    case 0x0C: printf("OpenBSD"); break;
+    case 0x0D: printf("OpenVMS"); break;
+    case 0x0E: printf("NonStop Kernel"); break;
+    case 0x0F: printf("AROS"); break;
+    case 0x10: printf("Fenix OS"); break;
+    case 0x11: printf("CloudABI"); break;
+    case 0x53: printf("Sortix"); break;
     }
 }
 
@@ -165,14 +165,14 @@ void elf_print_osabi(ubyte c)
 void elf_print_type(ushort c)
 {
     switch (c) {
-    default:        write("Unknown Type"); break;
-    case ET_NONE:   write("(No file type)"); break;
-    case ET_REL:    write("Relocatable"); break;
-    case ET_EXEC:   write("Executable"); break;
-    case ET_DYN:    write("Shared object"); break;
-    case ET_CORE:   write("Core"); break;
-    case ET_LOPROC: write("Professor-specific (LO)"); break;
-    case ET_HIPROC: write("Professor-specific (HI)"); break;
+    default:        printf("Unknown Type"); break;
+    case ET_NONE:   printf("(No file type)"); break;
+    case ET_REL:    printf("Relocatable"); break;
+    case ET_EXEC:   printf("Executable"); break;
+    case ET_DYN:    printf("Shared object"); break;
+    case ET_CORE:   printf("Core"); break;
+    case ET_LOPROC: printf("Professor-specific (LO)"); break;
+    case ET_HIPROC: printf("Professor-specific (HI)"); break;
     }
 }
 
@@ -183,20 +183,20 @@ void elf_print_type(ushort c)
 void elf_print_machine(ushort c)
 {
     switch (c) {
-    case EM_NONE:    write("no"); break;
-    case EM_M32:     write("AT&T WE 32100 (M32)"); break;
-    case EM_SPARC:   write("SPARC"); break;
-    case EM_860:     write("Intel 80860"); break;
-    case EM_386:     write("x86"); break;
-    case EM_IA64:    write("IA64"); break;
-    case EM_AMD64:   write("x86-64"); break;
-    case EM_68K:     write("Motorola 68000"); break;
-    case EM_88K:     write("Motorola 88000"); break;
-    case EM_MIPS:    write("MIPS RS3000"); break;
-    case EM_POWERPC: write("PowerPC"); break;
-    case EM_ARM:     write("ARM"); break;
-    case EM_SUPERH:  write("SuperH"); break;
-    case EM_AARCH64: write("ARM (64-bit)"); break;
-    default:         write("Unknown Machine"); break;
+    case EM_NONE:    printf("no"); break;
+    case EM_M32:     printf("AT&T WE 32100 (M32)"); break;
+    case EM_SPARC:   printf("SPARC"); break;
+    case EM_860:     printf("Intel 80860"); break;
+    case EM_386:     printf("x86"); break;
+    case EM_IA64:    printf("IA64"); break;
+    case EM_AMD64:   printf("x86-64"); break;
+    case EM_68K:     printf("Motorola 68000"); break;
+    case EM_88K:     printf("Motorola 88000"); break;
+    case EM_MIPS:    printf("MIPS RS3000"); break;
+    case EM_POWERPC: printf("PowerPC"); break;
+    case EM_ARM:     printf("ARM"); break;
+    case EM_SUPERH:  printf("SuperH"); break;
+    case EM_AARCH64: printf("ARM (64-bit)"); break;
+    default:         printf("Unknown Machine"); break;
     }
 }

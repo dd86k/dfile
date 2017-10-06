@@ -5,8 +5,8 @@
 
 module s_pst;
 
-import std.stdio, dfile, utils;
 import core.stdc.stdio;
+import dfile, utils;
 
 enum PST_MAGIC = 0x4E444221; /// PST magic, "!BDN"
 private enum ushort CLIENT_MAGIC = 0x4D53;
@@ -91,7 +91,7 @@ void scan_pst() {
             default: printf("Unencrypted");
         }
 
-        writeln;
+        printf("\n");
 
         if (More) {
             printf("crc: %08X\n", crc);

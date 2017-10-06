@@ -46,9 +46,9 @@ void scan_palmdoc() {
     report("Palm Document", false);
 
     if (h.Compression == 0x0100) // Big Endian
-        write(", PalmDOC compressed");
+        printf(", PalmDOC compressed");
     else if (h.Compression == 0x4844) // 17480
-        write(", HUFF/CDIC compressed");
+        printf(", HUFF/CDIC compressed");
 
     palmdb_name();
 }
@@ -65,60 +65,60 @@ void scan_mobi() { // Big endian
 
     switch (mh.Type) {
         case 0xE800_0000, 0x0200_0000: // 232, 2
-            write("ebook");
+            printf("ebook");
             break;
         case 0x0300_0000: // 3
-            write("PalmDoc ebook");
+            printf("PalmDoc ebook");
             break;
         case 0x0400_0000: // 4
-            write("audio");
+            printf("audio");
             break;
         case 0xF800_0000: // 248
-            write("KF8");
+            printf("KF8");
             break;
         case 0x0101_0000: // 257
-            write("News");
+            printf("News");
             break;
         case 0x0201_0000: // 258
-            write("News feed");
+            printf("News feed");
             break;
         case 0x0301_0000: // 259
-            write("News magazine");
+            printf("News magazine");
             break;
         case 0x0102_0000: // 513
-            write("PICS");
+            printf("PICS");
             break;
         case 0x0202_0000: // 514
-            write("WORD");
+            printf("WORD");
             break;
         case 0x0302_0000: // 515
-            write("XLS");
+            printf("XLS");
             break;
         case 0x0402_0000: // 516
-            write("PPT");
+            printf("PPT");
             break;
         case 0x0502_0000: // 517
-            write("TEXT");
+            printf("TEXT");
             break;
         case 0x0602_0000: // 518
-            write("HTML");
+            printf("HTML");
             break;
         default:
-            write("Unknown");
+            printf("Unknown");
             break;
     }
 
-    write(" file");
+    printf(" file");
 
     if (h.Compression == 0x0100)
-        write(", PalmDOC compressed");
+        printf(", PalmDOC compressed");
     else if (h.Compression == 0x4844)
-        write(", HUFF/CDIC compressed");
+        printf(", HUFF/CDIC compressed");
 
     if (h.Encryption == 0x0100)
-        write(", Legacy Mobipocket encryption");
+        printf(", Legacy Mobipocket encryption");
     else if (h.Encryption == 0x0200)
-        write(", Mobipocket encryption");
+        printf(", Mobipocket encryption");
 
     palmdb_name();
 }

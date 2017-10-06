@@ -4,9 +4,8 @@
 
 module s_ne;
 
-import std.stdio;
-import dfile;
-import utils;
+import core.stdc.stdio;
+import dfile, utils;
 
 // New .EXE header, found in newexe.h in the Word 1.1a source.
 private struct ne_hdr
@@ -60,11 +59,11 @@ void scan_ne() {
     report("NE ", false);
 
     if (h.ne_flags & NENOTP)
-        write("DLL or driver");
+        printf("DLL or driver");
     else
-        write("Executable");
+        printf("Executable");
 
-    write(" file");
+    printf(" file");
 
     if (h.ne_expver[0])
         printf(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
@@ -72,20 +71,20 @@ void scan_ne() {
     if (h.ne_flags)
     {
         if (h.ne_flags & NENONC)
-            write(", non-conforming program");
+            printf(", non-conforming program");
         if (h.ne_flags & NEIERR)
-            write(", errors in image");
+            printf(", errors in image");
         if (h.ne_flags & NEPROT)
-            write(", runs in protected mode");
+            printf(", runs in protected mode");
         if (h.ne_flags & NEREAL)
-            write(", runs in real mode");
+            printf(", runs in real mode");
         if (h.ne_flags & NEINST)
-            write(", instance data");
+            printf(", instance data");
         if (h.ne_flags & NESOLO)
-            write(", solo data");
+            printf(", solo data");
     }
 
-    writeln;
+    printf("\n");
 
     if (More) {
         printf("ne_magic       : %s\n", &h.ne_magic[0]);
@@ -117,6 +116,6 @@ void scan_ne() {
         printf("ne_psegrefbytes: %Xh\n", h.ne_psegrefbytes);
         printf("ne_swaparea    : %Xh\n", h.ne_swaparea);
         printf("%X %X\n", h.ne_expver[0], h.ne_expver[1]);
-        writeln;
+        printf("\n");
     }
 }

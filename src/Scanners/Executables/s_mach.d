@@ -356,45 +356,45 @@ void scan_mach(uint sig) {
     }
 
     if (!fat)
-        write(' ');
+        printf(" ");
 
     switch (filetype) {
         default: // Fat files have no filetypes.
             if (!fat)
-                write("Unknown type");
+                printf("Unknown type");
             break;
         case filetype_t.MH_OBJECT:
-            write("Object");
+            printf("Object");
             break;
         case filetype_t.MH_EXECUTE:
-            write("Executable");
+            printf("Executable");
             break;
         case filetype_t.MH_FVMLIB:
-            write("Fixed VM Library");
+            printf("Fixed VM Library");
             break;
         case filetype_t.MH_CORE:
-            write("Core");
+            printf("Core");
             break;
         case filetype_t.MH_PRELOAD:
-            write("Preload");
+            printf("Preload");
             break;
         case filetype_t.MH_DYLIB:
-            write("Dynamic library");
+            printf("Dynamic library");
             break;
         case filetype_t.MH_DYLINKER:
-            write("Dynamic linker");
+            printf("Dynamic linker");
             break;
         case filetype_t.MH_BUNDLE:
-            write("Bundle");
+            printf("Bundle");
             break;
         case filetype_t.MH_DYLIB_STUB:
-            write("Dynamic library stub");
+            printf("Dynamic library stub");
             break;
         case filetype_t.MH_DSYM:
-            write("Companion file (w/ debug sections)");
+            printf("Companion file (w/ debug sections)");
             break;
         case filetype_t.MH_KEXT_BUNDLE:
-            write("Kext bundle");
+            printf("Kext bundle");
             break;
     }
 
@@ -402,7 +402,7 @@ void scan_mach(uint sig) {
 
     switch (cpu_type) {
     default:
-        write("any");
+        printf("any");
         break;
     case cpu_type_t.VAX:
         if (cpu_subtype)

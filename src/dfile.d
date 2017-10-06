@@ -402,8 +402,6 @@ void scan() {
         pkzip_hdr h;
         fread(&h, h.sizeof, 1, fp);
 
-        debug writeln("FNLENGTH: ", formatsize(h.fnlength));
-
         report("PKWare ZIP ", false); // JAR, ODF, OOXML, EPUB
 
         switch (h.compression) {
@@ -452,20 +450,19 @@ void scan() {
         if (h.flag & ENHANCED_DEFLATION)
             printf(", Enhanced deflation");
 
-        writeln;
+        printf("\n");
 
         if (More) {
-            //writeln("magic      : ", h.magic);
-            writeln("Version    : ", h.version_);
-            writeln("Flag       : ", h.flag);
-            writeln("Compression: ", h.compression);
-            writeln("Time       : ", h.time);
-            writeln("Date       : ", h.date);
-            writeln("CRC32      : ", h.crc32);
-            writeln("Size (Uncompressed): ", h.usize);
-            writeln("Size (Compressed)  : ", h.csize);
-            writeln("Filename Size      : ", h.fnlength);
-            writeln("Extra field Size   : ", h.eflength);
+            printf("Version    : %X\n", h.version_);
+            printf("Flag       : %X\n", h.flag);
+            printf("Compression: %X\n", h.compression);
+            printf("Time       : %X\n", h.time);
+            printf("Date       : %X\n", h.date);
+            printf("CRC32      : %X\n", h.crc32);
+            printf("Size (Uncompressed): %d\n", h.usize);
+            printf("Size (Compressed)  : %d\n", h.csize);
+            printf("Filename Size      : %d\n", h.fnlength);
+            printf("Extra field Size   : %d\n", h.eflength);
         }
     }
         return;
@@ -693,9 +690,9 @@ void scan() {
             printf(") %d Hz, %d kbps, %d-bit, ", // MP2 will show 0-bit
                 h.samplerate, h.datarate / 1024 * 8, h.samplebits);
             switch (h.channels) {
-                case 1: writeln("Mono"); break;
-                case 2: writeln("Stereo"); break;
-                default: writeln(h.channels, " channels"); break;
+                case 1: printf("Mono\n"); break;
+                case 2: printf("Stereo\n"); break;
+                default: printf("%d channels\n", h.channels); break;
             }
             if (More) {
                 char[16] guid;
@@ -907,7 +904,7 @@ void scan() {
         case v2_20_905: printf(" v2.20.905"); break;
         case v3_00_065: printf(" v3.00.065"); break;
         case v5_00_000: printf(" v5.00.000"); break;
-        default: writef(" (Version: 0x%08X)", h.version_); break;
+        default: printf(" (Version: 0x%08X)", h.version_); break;
         }
         printf(" at %Xh\n", h.desc_offset);
     }
@@ -1032,7 +1029,7 @@ void scan() {
             case 0x100: printf("linux"); break;
             default: printf("other"); break;
         }
-        writeln(" platforms");
+        printf(" platforms\n");
     }
         return;
 
@@ -1126,7 +1123,7 @@ void scan() {
                     putchar(c);
         }
 
-        writeln();
+        printf("\n");
     }
         break;
 
@@ -1251,7 +1248,7 @@ void scan() {
         if (h.uncleanShutdown)
             printf(", unclean shutdown");
 
-        writeln();
+        printf("\n");
 
         if (More) {
             printf("Capacity: %d Sectors\n", h.capacity);
@@ -1311,7 +1308,6 @@ void scan() {
             printf("Cylinders: %d\n", h.root.cylinders);
             printf("Heads: %d\n", h.root.heads);
             printf("Sectors: %d\n", h.root.sectors);
-            //writeln("Child filename: ", asciz(h.u.child.parentFileName));
         }
     }
         return;
@@ -1398,7 +1394,7 @@ void scan() {
         if (h.savedState)
             printf(", Saved State");
 
-        writeln();
+        printf("\n");
 
         if (More) {
             printf("UUID: ");
@@ -1506,12 +1502,12 @@ void scan() {
             if (h.majorv >= 1) {
                 printf("ParentModify UUID: ");
                 print_array(&sh.uuidParentModify[0], 16);
-                writeln("Header size: ", sh.cbHeader);
+                printf("Header size: ", sh.cbHeader);
             }
-            writeln("Cylinders (Legacy): ", sh.LegacyGeometry.cCylinders);
-            writeln("Heads (Legacy): ", sh.LegacyGeometry.cHeads);
-            writeln("Sectors (Legacy): ", sh.LegacyGeometry.cSectors);
-            writeln("Sector size (Legacy): ", sh.LegacyGeometry.cbSector);
+            printf("Cylinders (Legacy): %d\n", sh.LegacyGeometry.cCylinders);
+            printf("Heads (Legacy): %d\n", sh.LegacyGeometry.cHeads);
+            printf("Sectors (Legacy): %d\n", sh.LegacyGeometry.cSectors);
+            printf("Sector size (Legacy): %d\n", sh.LegacyGeometry.cbSector);
         }
     }
         return;
@@ -1547,7 +1543,7 @@ void scan() {
             default: break;
         }
 
-        writeln();
+        printf("\n");
 
         if (More) {
             printf("Number of snapshots: %d\n", bswap32(h.nb_snapshots));
@@ -1594,7 +1590,7 @@ void scan() {
         if (h.features & QED_F_NEED_CHECK)
             printf(", check needed");
 
-        writeln();
+        printf("\n");
     }
         return;
 
@@ -1717,7 +1713,7 @@ void scan() {
                 struct LinkInfo {}
             }*/
 
-            writeln;
+            printf("\n");
 
             if (More) {
                 printf("LinkCLSID: ");

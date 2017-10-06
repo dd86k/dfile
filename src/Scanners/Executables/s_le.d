@@ -63,39 +63,39 @@ void scan_le() {
     report(cast(immutable)h.e32_magic, false);
 
     switch (h.e32_os) {
-    default: write(" Unknown "); break;
-    case OS2: write(" OS/2 "); break;
-    case Windows: write(" Windows "); break;
-    case DOS4: write(" DOS 4.x "); break;
-    case Windows386: write(" Windows 386 "); break;
+    default: printf(" Unknown "); break;
+    case OS2: printf(" OS/2 "); break;
+    case Windows: printf(" Windows "); break;
+    case DOS4: printf(" DOS 4.x "); break;
+    case Windows386: printf(" Windows 386 "); break;
     }
 
     if (h.e32_mflags & Library)
-        write("Libary module");
+        printf("Libary module");
     else if (h.e32_mflags & ProtectedMemoryLibrary)
-        write("Protected Memory Library module");
+        printf("Protected Memory Library module");
     else if (h.e32_mflags & PhysicalDeviceDriver)
-        write("Physical Device Driver module");
+        printf("Physical Device Driver module");
     else if (h.e32_mflags & VirtualDeiveDriver)
-        write("Virtual Device Driver module");
+        printf("Virtual Device Driver module");
     else
-        write("Executable"); // Program module
+        printf("Executable"); // Program module
 
-    write(" for ");
+    printf(" for ");
 
     switch (h.e32_cpu) {
-    default: write("Unknown"); break;
-    case i286: write("i286"); break;
-    case i386: write("i386"); break;
-    case i486: write("i486"); break;
+    default: printf("Unknown"); break;
+    case i286: printf("i286"); break;
+    case i386: printf("i386"); break;
+    case i486: printf("i486"); break;
     }
 
-    write(" machines, ");
+    printf(" machines, ");
 
-    write(h.e32_border ? "BE" : "LE");
-    write(" Byte order, ");
-    write(h.e32_worder ? "BE" : "LE");
-    write(" Word order");
+    printf(h.e32_border ? "BE" : "LE");
+    printf(" Byte order, ");
+    printf(h.e32_worder ? "BE" : "LE");
+    printf(" Word order");
 
-    writeln();
+    printf("\n");
 }
