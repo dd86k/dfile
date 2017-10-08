@@ -163,7 +163,7 @@ ulong bswap64(ulong num)
     version (X86) {
         version (Windows) {
             asm { // Optimized temporary solution
-            // Likely due to a PUSH/POP argument handling, was this broken in DMD 2.074.0?
+            // Likely due to a PUSH/POP argument handling, broken in DMD 2.074.0?
                 lea EDI, num;
                 mov EAX, [EDI];
                 mov EDX, [EDI+4];

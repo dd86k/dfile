@@ -9,7 +9,7 @@ import std.stdio : writeln, writefln;
 import std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.9.1", /// Project version.
+enum PROJECT_VERSION = "0.10.0", /// Project version.
      PROJECT_NAME = "dfile";    /// Project name, usually executable name.
 
 debug { } else
@@ -27,8 +27,7 @@ private int main(string[] args)
         return 0;
     }
 
-    __gshared bool cont,      // Continue with symlinks
-         glob,      // Use glob file matching
+    bool cont,      // Continue with symlinks
          recursive; // GLOB - Recursive (default: shallow)
 
     GetoptResult r;
@@ -43,9 +42,7 @@ private int main(string[] args)
             config.bundling, config.caseSensitive,
 			"s|showname", "Prepend filename to result.", &ShowName,
             config.bundling, config.caseSensitive,
-            "g|glob", "Use file match globbing.", &glob,
-            config.bundling, config.caseSensitive,
-			"r|recursive", "Recursive (useful with --glob).", &recursive,
+			"r|recursive", "Recursive (depth-first pre-order).", &recursive,
             "v|version", "Print version information.", &PrintVersion
         );
 	} catch (GetOptException ex) {
@@ -66,36 +63,25 @@ private int main(string[] args)
         return 0;
 	}
 
-    if (glob) {
-        import std.path : globMatch, dirName;
-        int found; // Number of files
-        foreach (string filename; args[1..$]) {
-            try {
-                foreach (DirEntry e; dirEntries(dirName(filename),
-                    recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
-                    immutable char[] s = e.name;
-                    if (globMatch(s, filename)) {
-                        ++found;
-                        prescan(s, cont);
-                    }
+    import std.path : globMatch, dirName;
+    int found; // Number of files
+    foreach (string filename; args[1..$]) {
+        try {
+            foreach (DirEntry e; dirEntries(dirName(filename),
+                recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
+                if (globMatch(e.name, filename)) { // Somehow e.name generates less machine code
+                    ++found;
+                    prescan(e.name, cont);
                 }
-            } catch (FileException ex) { // dirEntries may throw
-                stderr.writeln(ex.msg);
-                return 1;
             }
-        }
-        if (!found) { // "Not found"-case if 0 files.
-            printf("No files were found.\n");
+        } catch (FileException ex) { // dirEntries may throw (on what?)
+            stderr.writeln(ex.msg);
             return 1;
         }
-    } else {
-        foreach (string filename; args[1..$]) {
-            if (exists(filename)) {
-                prescan(filename, cont);
-            } else {
-                report("Entry not found.");
-            }
-        }
+    }
+    if (!found) { // "Not found"-case if 0 files.
+        printf("No files were found.\n");
+        return 1;
     }
 
     return 0;
@@ -109,8 +95,10 @@ private int main(string[] args)
  */
 void prescan(string path, bool cont)
 {
-    version (Windows) uint a = getAttributes(path);
-    else const uint a = getAttributes(path);
+    version (Windows)
+        uint a = getAttributes(path);
+    else
+        const uint a = getAttributes(path);
     filename = path ~ '\0';
     version (Posix) { // Linux, BSD, UNIX, etc.
         import core.sys.posix.sys.stat :
@@ -186,10 +174,8 @@ void PrintHelp()
 void PrintVersion()
 {
     import core.stdc.stdlib : exit;
-    printf("dfile %s (%s)\n",
-        &PROJECT_VERSION[0], &__TIMESTAMP__[0]);
-    printf("Compiled %s with %s v%d\n\n",
-        &__FILE__[0], &__VENDOR__[0], __VERSION__);
+    printf("dfile %s (%s)\n", &PROJECT_VERSION[0], &__TIMESTAMP__[0]);
+    printf("Compiled at %s with %s v%d\n", &__FILE__[0], &__VENDOR__[0], __VERSION__);
     printf("MIT License: Copyright (c) 2016-2017 dd86k\n");
     printf("Project page: <https://github.com/dd86k/dfile>\n");
     exit(0); // getopt hack

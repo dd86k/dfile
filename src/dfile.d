@@ -474,11 +474,11 @@ void scan() {
         case x"1A 07 01": //TODO: http://www.rarlab.com/technote.htm
             report("RAR archive v5.0+");
             return;
+        case x"1A 07 00":
+            report("RAR archive v1.5+");
+            return;
         default:
-            if (b == x"1A 07 00")
-                report("RAR archive v1.5+");
-            else
-                report_unknown();
+            report_unknown();
             return;
         }
     }
@@ -1634,11 +1634,11 @@ void scan() {
     }*/
 
     case 0x20584D50: // "PMX "
-        scan_pmx();
+        scan_pmx;
         return;
 
     case 0x46494C46: // "FLIF"
-        scan_flif();
+        scan_flif;
         return;
 
     case 0x0000004C: {
@@ -1667,8 +1667,6 @@ void scan() {
         ShellLinkHeader h;
         fread(&h, h.sizeof, 1, fp);
         report("Microsoft Shortcut link (MS-SHLLINK)", false);
-
-        //TODO: Finish MS-SHLLINK
 
         with (h) {
             if (show_command)
@@ -1705,6 +1703,7 @@ void scan() {
                 printf(")");
             }
 
+            //TODO: Get target
             /*if (flags & SW_A && flags & SW_B) {
                 writeln;
                 ushort l;
@@ -1742,33 +1741,33 @@ void scan() {
 
     default:
         switch (s & 0xFF_FFFF) {
-            case 0x464947: // "GIF"
-                scan_gif();
-                break;
+        case 0x464947: // "GIF"
+            scan_gif();
+            break;
 
-            case 0x685A42: // "BZh"
-                report("Bzip2 compressed file (bzip2)");
-                return;
+        case 0x685A42: // "BZh"
+            report("Bzip2 compressed file (bzip2)");
+            return;
 
-            case 0xBFBBEF:
-                report("UTF-8 text file with BOM");
-                return;
+        case 0xBFBBEF:
+            report("UTF-8 text file with BOM");
+            return;
 
-            case 0x324449: // "ID3"
-                report("MPEG-2 Audio Layer III audio file with ID3v2 (MP3)");
-                return;
+        case 0x324449: // "ID3"
+            report("MPEG-2 Audio Layer III audio file with ID3v2 (MP3)");
+            return;
 
-            case 0x53454E: // "NES"
-                report("Nintendo Entertainment System ROM file (nes)");
-                return;
+        case 0x53454E: // "NES"
+            report("Nintendo Entertainment System ROM file (nes)");
+            return;
 
-            case 0x0184CF:
-                report("Lepton compressed JPEG image (lep)");
-                return;
+        case 0x0184CF:
+            report("Lepton compressed JPEG image (lep)");
+            return;
 
-            case 0x010100:
-                report("OpenFlight 3D file");
-                return;
+        case 0x010100:
+            report("OpenFlight 3D file");
+            return;
 
         default:
             switch (cast(ushort)s) { // Uses MOVZX and avoids an AND instruction
