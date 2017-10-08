@@ -1641,7 +1641,7 @@ void scan() {
         scan_flif;
         return;
 
-    case 0x0000004C: {
+    case 0x0000004C: { // See [MS-SHLLINK].pdf from Microsoft.
         struct ShellLinkHeader { align(1):
             //uint magic; // HeaderSize
             ubyte[16] clsid; /// Class identifier. MUST be 00021401-0000-0000-C000-000000000046.
@@ -1654,13 +1654,13 @@ void scan() {
             uint icon_index;
             uint show_command;
             ushort hotkey;
-            /*ushort res1;
-            uint res2, res3;*/
+            ushort res1;
+            uint res2, res3;
         }
         enum SW_SHOWNORMAL = 1, SW_SHOWMAXIMIZED = 3, SW_SHOWMINNOACTIVE = 7;
-        /*enum SW_A = 1, /// HasLinkTargetIDList
-             SW_B = 1 << 1, /// HasLinkInfo
-             SW_F = 1 << 5, /// HasArguments
+        enum SW_A = 1, /// HasLinkTargetIDList
+             SW_B = 1 << 1; /// HasLinkInfo
+             /*SW_F = 1 << 5, /// HasArguments
              SW_H = 1 << 7, /// IsUnicode
              SW_Z = 1 << 24; /// PreferEnvironmentPath*/
 
@@ -1703,14 +1703,14 @@ void scan() {
                 printf(")");
             }
 
-            //TODO: Get target
-            /*if (flags & SW_A && flags & SW_B) {
-                writeln;
+            if (flags & SW_A && flags & SW_B) {
                 ushort l;
-                fread(&l, 2, 1, fp);
-                fseek(fp, l, SEEK_CUR);
-                struct LinkInfo {}
-            }*/
+                fread(&l, 2, 1, fp); // Read IDListSize
+                fseek(fp, l + 47, SEEK_CUR); // Skip LinkTargetIDList to LinkInfo->LocalBasePath
+                char[255] t;
+                fread(&t, 255, 1, fp);
+                printf(", to %s", &t[0]);
+            }
 
             printf("\n");
 
@@ -1742,7 +1742,7 @@ void scan() {
     default:
         switch (s & 0xFF_FFFF) {
         case 0x464947: // "GIF"
-            scan_gif();
+            scan_gif;
             break;
 
         case 0x685A42: // "BZh"
