@@ -10,19 +10,20 @@ import std.file, std.getopt;
 import dfile;
 
 enum PROJECT_VERSION = "0.10.0", /// Project version.
-     PROJECT_NAME = "dfile";    /// Project name, usually executable name.
+     PROJECT_NAME = "dfile";     /// Project name, usually executable name.
 
 debug { } else
 { // --DRT-gcopt  related
-    private extern(C) __gshared bool
+    extern(C) __gshared bool
         rt_envvars_enabled = false, /// Disables runtime environment variables
         rt_cmdline_enabled = false; /// Disables runtime CLI
 }
 
 private int main(string[] args)
 {
-    if (args.length <= 1)
-    {
+    import std.path : globMatch, dirName;
+
+    if (args.length <= 1) {
         PrintHelp;
         return 0;
     }
@@ -63,13 +64,13 @@ private int main(string[] args)
         return 0;
 	}
 
-    import std.path : globMatch, dirName;
-    int found; // Number of files
-    foreach (string filename; args[1..$]) {
+    int found; // Number of files found
+    foreach (string fn; args[1..$]) { // `fn` to avoid shadowing variable `filename`
         try {
-            foreach (DirEntry e; dirEntries(dirName(filename),
+            foreach (DirEntry e; dirEntries(dirName(fn),
                 recursive ? SpanMode.breadth : SpanMode.shallow, cont)) {
-                if (globMatch(e.name, filename)) { // Somehow e.name generates less machine code
+                // Somehow using e.name directly generates less machine code
+                if (globMatch(e.name, fn)) {
                     ++found;
                     prescan(e.name, cont);
                 }
