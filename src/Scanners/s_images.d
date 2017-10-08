@@ -158,7 +158,7 @@ void scan_gif() { // http://www.fileformat.info/format/gif/egff.htm
     } // with
 }
 
-/// Scan a BPG image
+/// Scan a BPG image, https://bellard.org/bpg/bpg_spec.txt
 void scan_bpg() { // Big Endian
     struct heic_hdr { align(1):
         //uint magic;
@@ -178,19 +178,6 @@ void scan_bpg() { // Big Endian
 
     heic_hdr h;
     fread(&h, h.sizeof, 1, fp);
-
-    uint fread_l() {
-        uint r; // result
-        ubyte b; // buffer
-        uint s; // Shift
-        do {
-            fread(&b, 1, 1, fp);
-            r |= b & 0b111_1111;
-            if ((b & 0b1000_0000) == 0) return r;
-            s += 7;
-            r <<= s;
-        } while (true);
-    }
 
     const uint width = fread_l;
     const uint height = fread_l;
@@ -213,18 +200,16 @@ void scan_bpg() { // Big Endian
     printf("\n");
 
     if (More) {
-        printf("Color space: ");
         switch (h.color >>> 4) {
-            default: printf("Unknown color\n"); break;
-            case 0: printf("YCbCr (BT 709)\n"); break;
-            case 0b0001: printf("RGB\n"); break;
-            case 0b0010: printf("YCgCo\n"); break;
-            case 0b0011: printf("YCbCr (BT 709)\n"); break;
-            case 0b0100: printf("YCbCr (BT 2020)\n"); break;
-            case 0b0101: printf("YCbCr (BT 2020, constant)\n"); break;
+            default: printf("Unknown color "); break;
+            case 0: printf("YCbCr (BT 709) "); break;
+            case 0b0001: printf("RGB "); break;
+            case 0b0010: printf("YCgCo "); break;
+            case 0b0011: printf("YCbCr (BT 709) "); break;
+            case 0b0100: printf("YCbCr (BT 2020) "); break;
+            case 0b0101: printf("YCbCr (BT 2020, constant) "); break;
         }
 
-        printf("Color format: ");
         switch (h.format >>> 5) {
             default: printf("Unknown format\n"); break;
             case 0: printf("Grayscale\n"); break;
@@ -237,23 +222,55 @@ void scan_bpg() { // Big Endian
     }
 }
 
-/// Scan a FLIF image
-void scan_flif()
-{
-    report("Free Lossless Image Format image");
+/// Scan a FLIF image, http://flif.info/spec.html
+void scan_flif() {
+    struct flif_hdr { align(1):
+        //uint magic;
+        ubyte type; // interlacing+animation[8:4], channels[3:0]
+        ubyte channelbytes; // bytes per channel
+    }
 
-    //TODO: Continue FLIF
-    /*if (More)
-    {
-        struct flif_hdr { align(1):
-            uint magic;
-            ubyte type;
-            ubyte channelbytes;
+    flif_hdr h;
+    fread(&h, h.sizeof, 1, fp);
+
+    const int width = fread_l + 1;
+    const int height = fread_l + 1;
+    ubyte animf; fread(&animf, 1, 1, fp);
+    //const int animf = fread_l + 1; // animation frames
+
+    report("Free Lossless Image Format image, ", false);
+
+    printf("%d x %d, ", width, height);
+
+    switch (h.type >>> 4) {
+        case 3: printf("\n"); break; // Still image
+        case 4: printf("interlaced\n"); break;
+        case 5: printf("animated\n"); break;
+        case 6: printf("interlaced, animated\n"); break;
+        default: printf("Unknown type\n");
+    }
+
+    if (More) {
+        switch (h.type & 0b1111) {
+            case 1: printf("Grayscale\n"); break;
+            case 3: printf("RGB\n"); break;
+            case 4: printf("RGBA\n"); break;
+            default: printf("%d channels\n", h.type & 0b1111);
         }
+    }
+}
 
-        flif_hdr h;
-        fread(&h, h.sizeof, 1, fp);
-
-        //1 byte determines the variable's length in bytes, first bit is set
-    }*/
+// Used in: BPG, FLIF
+/// Private function used to read varint/ue7
+private uint fread_l() {
+    uint r; // result
+    ubyte b; // buffer
+    uint s; // Shift
+    do {
+        fread(&b, 1, 1, fp);
+        r |= b & 0b111_1111;
+        if ((b & 0b1000_0000) == 0) return r;
+        s += 7;
+        r <<= s;
+    } while (true);
 }
