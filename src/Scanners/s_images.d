@@ -159,68 +159,82 @@ void scan_gif() { // http://www.fileformat.info/format/gif/egff.htm
 }
 
 /// Scan a BPG image
-void scan_bpg()
-{ // Big Endian
-    report("Better Portable Graphics image");
+void scan_bpg() { // Big Endian
+    struct heic_hdr { align(1):
+        //uint magic;
+        ubyte format; // format[8:5], alpha1[4], bit-depth-8[3:0]
+        ubyte color; // space[8:4], extension[3], alpha2[2], limited[1], animation[0]
+        //uint width;  // ue7(32), exp-golomb
+        //uint height; // ue7(32), exp-golomb
+        //uint length; // ue7(32), exp-golomb, size?
+    }
+    enum // FORMAT
+        ALPHA = 0b1_0000;
+    enum // COLOR
+        ANIMATION = 1,
+        LIMITED = 0b10, // RANGE
+        ALPHA2 = 0b100;
+        /*EXTENSION = 0b1000;*/
 
-    //TODO: Continue BPG
-    /*if (More)
-    {
-        struct heic_hdr { align(1):
-            uint magic;
-            ubyte format;
-            ubyte color;
-            uint width;
-            uint height;
-            uint length;
+    heic_hdr h;
+    fread(&h, h.sizeof, 1, fp);
+
+    uint fread_l() {
+        uint r; // result
+        ubyte b; // buffer
+        uint s; // Shift
+        do {
+            fread(&b, 1, 1, fp);
+            r |= b & 0b111_1111;
+            if ((b & 0b1000_0000) == 0) return r;
+            s += 7;
+            r <<= s;
+        } while (true);
+    }
+
+    const uint width = fread_l;
+    const uint height = fread_l;
+
+    report("Better Portable Graphics image, ", false);
+
+    printf("%d x %d", width, height);
+
+    if (h.format & ALPHA)
+        printf(", alpha1");
+    if (h.color & ALPHA2) // ?
+        printf(", alpha2");
+    if (h.color & ANIMATION)
+        printf(", animated");
+    if (h.color & LIMITED)
+        printf(", limited range");
+    /*if (h.color & EXTENSION)
+        printf(", data extension");*/
+
+    printf("\n");
+
+    if (More) {
+        printf("Color space: ");
+        switch (h.color >>> 4) {
+            default: printf("Unknown color\n"); break;
+            case 0: printf("YCbCr (BT 709)\n"); break;
+            case 0b0001: printf("RGB\n"); break;
+            case 0b0010: printf("YCgCo\n"); break;
+            case 0b0011: printf("YCbCr (BT 709)\n"); break;
+            case 0b0100: printf("YCbCr (BT 2020)\n"); break;
+            case 0b0101: printf("YCbCr (BT 2020, constant)\n"); break;
         }
-        enum // FORMAT
-            ALPHA = 0b1_0000;
-        enum // COLOR
-            ANIMATION = 1,
-            LIMITED = 0b10, // RANGE
-            ALPHA2 = 0b100,
-            EXTENSION = 0b1000;
 
-        heic_hdr h;
-        fread(&h, h.sizeof, 1, fp);
-        write(expgol(h.width), " x ", h.height, ", ");
-
-        switch (h.color & 0b1111_0000)
-        {
-            default: write("Unknown color "); break;
-            case 0: write("YCbCr (BT 709) "); break;
-            case 0b0001_0000: write("RGB"); break;
-            case 0b0010_0000: write("YCgCo "); break;
-            case 0b0011_0000: write("YCbCr (BT 709) "); break;
-            case 0b0100_0000: write("YCbCr (BT 2020) "); break;
-            case 0b0101_0000: write("YCbCr (BT 2020, constant) "); break;
+        printf("Color format: ");
+        switch (h.format >>> 5) {
+            default: printf("Unknown format\n"); break;
+            case 0: printf("Grayscale\n"); break;
+            case 0b001: printf("4:2:0 (JPEG)\n"); break;
+            case 0b010: printf("4:2:2 (JPEG)\n"); break;
+            case 0b011: printf("4:4:4\n"); break;
+            case 0b100: printf("4:2:0 (MPEG2)\n"); break;
+            case 0b101: printf("4:2:2 (MPEG2)\n"); break;
         }
-
-        switch (h.format & 0b1110_0000)
-        {
-            default: write("Unknown format"); break;
-            case 0: write("Grayscale"); break;
-            case 0b0010_0000: write("4:2:0 (JPEG)"); break;
-            case 0b0100_0000: write("4:2:2 (JPEG)"); break;
-            case 0b0110_0000: write("4:4:4"); break;
-            case 0b1000_0000: write("4:2:0 (MPEG2)"); break;
-            case 0b1010_0000: write("4:2:2 (MPEG2)"); break;
-        }
-
-        if (h.format & ALPHA)
-            write(", Alpha");
-        if (h.color & ALPHA2)
-            write(", Alpha2");
-        if (h.color & ANIMATION)
-            write(", Animated");
-        if (h.color & LIMITED)
-            write(", Limited range");
-        if (h.color & EXTENSION)
-            write(", Data extension");
-        
-        writeln();
-    }*/
+    }
 }
 
 /// Scan a FLIF image
