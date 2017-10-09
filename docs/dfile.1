@@ -1,0 +1,75 @@
+." Hi! This manual (man page) was written by dd86k.
+." Please read man-pages(7) and groff_man(7) about the manual page format.
+."
+.TH dfile 1 "October 2017" dd86k "User manual"
+.SH NAME
+.B dfile
+- Determine the file type via pre-determined magic.
+
+.SH SYNOPSIS
+.SY dfile
+.OP -bcmsrvh
+.I file
+.I ...
+.YS
+.SY dfile
+.OP --help
+.YS
+
+.SH DESCRIPTION
+.B dfile
+is a fast, simple, and cross-platform binary file scanner that is very similar to and inspired by the UNIX/BSD file(1) utility.
+
+It opens the file and scans for parts of the file where it can be identified, and ouputs the type of file it seems to be. Sometimes some additional information can be brought by using the
+.B -m
+switch.
+
+.SH OPTIONS
+.IP -b
+Use Base-10 decimal formating.
+
+.IP -c
+Continue on symlink.
+
+.IP -m
+Show more information if available.
+
+.IP -s
+Prepend filename to result, useful while globbing.
+
+.IP -r
+Recursive searching while globbing.
+
+.IP -v
+Show program version and exit.
+
+.IP -h
+Show the help screen and exit.
+
+.I
+.IP ...
+File(s) to scan.
+
+.SH USAGE
+
+
+.SH EXAMPLES
+
+
+.SH WARNINGS
+dfile is still a work in progress and may report wrong file types and/or information.
+
+.SH NOTES
+None.
+
+.SH BUGS
+None.
+
+.SH AUTHOR
+Program and man-gage written by dd86k
+.MT devddstuff@gmail.com
+.ME .
+
+.UR https://github.com/dd86k/dfile
+Homepage:
+.UE
