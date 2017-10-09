@@ -35,18 +35,6 @@ string isostr(char[] str) pure
     return str[0 .. p + 1].idup;
 }
 
-/*
- * Number utilities.
- */
-
-//TODO: EXP-GOLOMB UTIL for BPG and FLIF
-// https://en.wikipedia.org/wiki/Exponential-Golomb_coding
-/// Get a Exp-Golomb-Encoded number
-/*ulong expgol(uint n)
-{
-    return 0;
-}*/
-
 /**
  * Get a byte-formatted size.
  * Params: size = Size to format.
