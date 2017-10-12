@@ -21,6 +21,7 @@ __gshared bool More, /// -m : More flag
      Base10; /// -b : Base 10 flag
 __gshared FILE* fp; /// Current file handle.
 __gshared string filename; /// Current filename, null-terminated.
+private __gshared uint s; /// File signature, global for report_text
 
 /**
  * Prints debugging message with a FILE@LINE: MSG formatting.
@@ -49,7 +50,6 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
 
 /// Scanner entry point.
 void scan() {
-    uint s;
     if (fread(&s, 4, 1, fp) != 1) {
         report("Empty file");
         return;
@@ -1598,10 +1598,9 @@ void scan() {
         report("Apple Disk Image file (dmg)");
         return;
 
-    case 0x6B6F6C79: { // "koly", Apple DMG disk image
+    case 0x6B6F6C79: { // "koly", Apple DMG disk image, big endian
 //TODO: Continue Apple DMG
 //https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Storage/DMG.cpp
-// At the end of the file?!
         /*struct dmg_header { align(1):
             //uint magic;
             uint version_;
@@ -1614,7 +1613,6 @@ void scan() {
             uint segmentnum;
             uint nbsegment;
             uint segmentid;
-
         }
         dmg_header h;
         fread(&h, h.sizeof, 1, fp);*/

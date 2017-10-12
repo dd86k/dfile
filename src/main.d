@@ -4,9 +4,10 @@
 
 module main;
 
-import core.stdc.stdio;
-import std.stdio : writeln, writefln;
+import core.stdc.stdio : printf, fclose, stderr, fopen;
+import std.stdio : writeln, writefln, _wfopen;
 import std.file, std.getopt;
+import std.encoding : transcode;
 import dfile;
 
 enum PROJECT_VERSION = "0.10.0", /// Project version.
@@ -144,7 +145,9 @@ FILE:
         else if ((a = a & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 FILE:
             debug dbg("Opening file...");
-            fp = fopen(&filename[0], "r");
+            wstring ws;
+            transcode(filename, ws);
+            fp = _wfopen(&ws[0], "r");
             if (!fp) {
                 printf("There was an error opening the file.\n");
                 return;
