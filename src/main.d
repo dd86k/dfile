@@ -7,7 +7,6 @@ module main;
 import core.stdc.stdio : printf, fclose, stderr, fopen;
 import std.stdio : writeln, writefln, _wfopen;
 import std.file, std.getopt;
-import std.encoding : transcode;
 import dfile;
 
 enum PROJECT_VERSION = "0.10.0", /// Project version.
@@ -97,11 +96,15 @@ private int main(string[] args)
  */
 void prescan(string path, bool cont)
 {
+    import std.encoding : transcode;
+
     version (Windows)
         uint a = getAttributes(path);
     else
         const uint a = getAttributes(path);
-    filename = path ~ '\0';
+
+    filename = path ~ '\0'; // Ensures filename is 0-terminated for printf calls
+
     version (Posix) { // Linux, BSD, UNIX, etc.
         import core.sys.posix.sys.stat :
             S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK, S_IFMT;
@@ -141,7 +144,7 @@ FILE:
             if (cont)
                 goto FILE;
             else
-                report_link();
+                report_link;
         else if ((a = a & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 FILE:
             debug dbg("Opening file...");
@@ -160,7 +163,7 @@ FILE:
         } else if (a) // "a" already set with FILE_ATTRIBUTE_DIRECTORY earlier
             report("Directory");
         else
-            report_unknown();
+            report_unknown;
     } else {
         static assert(0, "Implement prescan");
     }
