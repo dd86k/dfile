@@ -66,8 +66,7 @@ void scan_ne() {
     if (h.ne_expver[0])
         printf(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
 
-    if (h.ne_flags)
-    {
+    if (h.ne_flags) {
         if (h.ne_flags & NENONC)
             printf(", non-conforming program");
         if (h.ne_flags & NEIERR)
