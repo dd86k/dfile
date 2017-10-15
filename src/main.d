@@ -110,7 +110,7 @@ void prescan(string path, bool cont)
                 report_link;
         else if (a & S_IFREG) {
 FILE:
-            fp = fopen(&filename[0], "r");
+            fp = fopen(&filename[0], "r"); //TODO: Use fopen_s (where?)
             if (!fp) {
                 printf("There was an error opening the file.\n");
                 return;
@@ -149,7 +149,7 @@ FILE:
         else if ((a = a & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 FILE:
             debug dbg("Opening file...");
-            fp = _wfopen(&filename[0], "r"); //TODO: use _wfopen_s
+            fp = _wfopen(&filename[0], "r"); //TODO: use _wfopen_s (where?)
             if (!fp) {
                 printf("There was an error opening the file.\n");
                 return;

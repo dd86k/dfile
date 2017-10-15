@@ -16,3 +16,9 @@ buildType "unittest" {
   sourcePaths "tests/"
   importPaths "tests/"
 }
+
+buildType "Symlink" {
+  targetType "executable"
+  version "Symlink"
+  dflags "-version=Symlink"
+}

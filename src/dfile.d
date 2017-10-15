@@ -1630,7 +1630,7 @@ void scan() {
 
         return;*/
 
-    //TODO: Parallels HDD (Lacks verification/documentation)
+    //TODO: Parallels HDD (Lacks samples/documentation)
     /*case "With": { // WithoutFreeSpace -- Parallels HDD
         char[12]
         report("Parallels HDD disk image");
@@ -1896,60 +1896,60 @@ void report_link()
 {
     enum LINK = "Soft symbolic link";
     version (Windows)
-    { 
-        report(LINK);
+    {
         version (Symlink) // Works half the time, see the Wiki post.
         {
-            HANDLE hFile;
-            DWORD returnedLength;
-            WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
-
-            const char* p = &filename[0];
+            const wchar* p = &filename[0];
             SECURITY_ATTRIBUTES sa; // Default
+            report(LINK, false);
 
-            hFile = CreateFileA(p, GENERIC_READ, 0u,
-                &sa, OPEN_EXISTING,
+            HANDLE hFile = CreateFileW(p, GENERIC_READ, 0u, &sa, OPEN_EXISTING,
                 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, cast(void*)0);
             if (hFile == INVALID_HANDLE_VALUE) { //TODO: Check why LDC2 fails here.
                 /* Error creating directory */
                 /* TclWinConvertError(GetLastError()); */
+                debug printf("INVALID_HANDLE_VALUE");
                 return;
             }
-            /* Get the link */
+
+            DWORD returnedLength;
+            WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
             if (!DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, &buffer,
                     WIN32_SYMLINK_REPARSE_DATA_BUFFER.sizeof, &returnedLength, NULL)) {
-                    /* Error setting junction */
-                    /* TclWinConvertError(GetLastError()); */
-                    CloseHandle(hFile);
-                    return;
-                }
+                /* TclWinConvertError(GetLastError()); */
+                debug printf("Error getting junction");
+                CloseHandle(hFile);
+                return;
+            }
 
             CloseHandle(hFile);
 
             if (!IsReparseTagValid(buffer.ReparseTag)) {
                 /* Tcl_SetErrno(EINVAL); */
+                debug printf("Failed at IsReparseTagValid");
                 return;
             }
 
-            DWORD wstrlen(const(void)* p) {
+            /*DWORD wstrlen(const(void)* p) {
                 DWORD t;
                 wchar* wp = cast(wchar*)p;
-                while (*wp++ != wchar.init) ++s;
+                while (*wp++ != wchar.init) ++s; // was against wchar.init
                 return t;
-            }
+            }*/
 
-            printf(" to ");
-            stdout.flush; // on x86-dmd builds, used to move cursor
-            const(void)* wp = &buffer.ReparseTarget[2];
+            //stdout.flush; // on x86-dmd builds, used to move cursor
+            const(wchar)* wp = cast(wchar*)&buffer.ReparseTarget[2];
             DWORD c;
-            WriteConsoleW(
+            printf(" to ");
+            WriteConsoleA(
                 GetStdHandle(STD_OUTPUT_HANDLE),
                 wp,
-                wstrlen(wp) / 2,
+                lstrlen(wp) / 2,
                 &c,
                 cast(void*)0
             );
-        } // version (Symlink)
+        } else // version (Symlink)
+            report(LINK);
     } // version (Windows)
     version (Posix)
     {
