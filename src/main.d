@@ -5,7 +5,7 @@
 module main;
 
 import core.stdc.stdio : printf, fclose, stderr, fopen;
-import std.stdio : writeln, writefln, _wfopen;
+import std.stdio : writeln, writefln;
 import std.file, std.getopt;
 import dfile;
 
@@ -136,6 +136,7 @@ FILE:
         import core.sys.windows.winnt :
             FILE_ATTRIBUTE_DIRECTORY, FILE_ATTRIBUTE_REPARSE_POINT;
         import std.encoding : transcode;
+        import std.stdio : _wfopen;
 
         uint a = getAttributes(path);
         transcode(path ~ '\0', filename); // filename is a wstring under Windows

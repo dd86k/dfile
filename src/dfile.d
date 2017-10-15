@@ -148,7 +148,9 @@ void scan() {
                 printf("Sunsoft FME-07, ");
 
             printf("\"%s - %s\", (c) %s\n",
-                &h.song_artist[0], &h.song_name[0], &h.song_copyright[0]);
+                cast(char*)&h.song_artist,
+                cast(char*)&h.song_name,
+                cast(char*)&h.song_copyright);
             }
             return;
         default:
@@ -428,8 +430,9 @@ void scan() {
 
         if (h.fnlength > 0) {
             ubyte[] file = new ubyte[h.fnlength];
-            fread(&file[0], h.fnlength, 1, fp);
-            printf("%s, ", &file[0]);
+            ubyte* filep = &file[0];
+            fread(filep, h.fnlength, 1, fp);
+            printf("%s, ", filep);
         }
 
         write(formatsize(h.csize), "/", formatsize(h.usize));
@@ -597,7 +600,7 @@ void scan() {
             printf(", %d Hz, %d-bit, %d channels\n", rate, bits, chan);
             if (More) {
                 printf("MD5: ");
-                print_array(&h.md5[0], h.md5.length);
+                print_array(&h.md5, h.md5.length);
                 printf("\n");
             }
         }
@@ -701,7 +704,7 @@ void scan() {
                 fseek(fp, 8, SEEK_CUR);
                 fread(&guid, guid.sizeof, 1, fp);
                 printf("EXTENDED:");
-                print_array(&guid[0], guid.length);
+                print_array(&guid, guid.length);
             }
         }
             return;
@@ -1401,7 +1404,7 @@ void scan() {
 
         if (More) {
             printf("UUID: ");
-            print_array(&h.uuid[0], h.uuid.length);
+            print_array(&h.uuid, h.uuid.length);
             printf("Cylinders: %d\n", h.cylinders);
             printf("Heads: %d\n", h.heads);
             printf("Sectors: %d\n", h.sectors);
@@ -1497,14 +1500,14 @@ void scan() {
         writeln(", ", formatsize(sh.cbDisk), " capacity");
         if (More) {
             printf("Create UUID : ");
-            print_array(&sh.uuidCreate[0], 16);
+            print_array(&sh.uuidCreate, 16);
             printf("Modify UUID : ");
-            print_array(&sh.uuidModify[0], 16);
+            print_array(&sh.uuidModify, 16);
             printf("Link UUID   : ");
-            print_array(&sh.uuidLinkage[0], 16);
+            print_array(&sh.uuidLinkage, 16);
             if (h.majorv >= 1) {
                 printf("ParentModify UUID: ");
-                print_array(&sh.uuidParentModify[0], 16);
+                print_array(&sh.uuidParentModify, 16);
                 printf("Header size: ", sh.cbHeader);
             }
             printf("Cylinders (Legacy): %d\n", sh.LegacyGeometry.cCylinders);
@@ -1901,7 +1904,7 @@ void report_link()
             DWORD returnedLength;
             WIN32_SYMLINK_REPARSE_DATA_BUFFER buffer;
 
-            const char* p = &linkname[0];
+            const char* p = &filename[0];
             SECURITY_ATTRIBUTES sa; // Default
 
             hFile = CreateFileA(p, GENERIC_READ, 0u,

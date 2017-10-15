@@ -32,7 +32,7 @@ private struct mobi_hdr
 /// Get PalmDB name
 void palmdb_name() {
     char[32] name;
-    char* p = &name[0];
+    char* p = cast(char*)&name;
     rewind(fp);
     fread(p, 32, 1, fp);
     printf(" \"%s\"\n", p);
