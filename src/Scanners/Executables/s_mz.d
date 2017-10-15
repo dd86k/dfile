@@ -73,7 +73,7 @@ void scan_mz() {
     rewind(fp);
     fread(&h, h.sizeof, 1, fp);
 
-    report("MZ Executable for MS-DOS", false);
+    report("MZ executable for MS-DOS", false);
     if (h.e_ovno)
         printf(" (Overlay: %d)", h.e_ovno);
     printf("\n");

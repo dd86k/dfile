@@ -126,13 +126,14 @@ void scan_gif() { // http://www.fileformat.info/format/gif/egff.htm
     report("GIF", false);
 
     switch (h.version_[1]) { // 87a, 89a, lazy switch
-        case '7': printf("87a image"); break;
-        case '9': printf("89a image"); break;
+        case '7': printf("87a"); break;
+        case '9': printf("89a"); break;
         default: printf(" image, non-supported version\n"); return;
     }
 
     with (h) {
-        printf(", %d x %d pixels, %d-bit\n", width, height, ((packed >>> 4) & 3) + 1);
+        printf(" image , %d x %d pixels, %d-bit\n",
+            width, height, ((packed >>> 4) & 3) + 1);
 
         if (More) {
             enum {

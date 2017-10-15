@@ -36,8 +36,7 @@ void scan_tar()
     rewind(fp);
     fread(&h, h.sizeof, 1, fp);
 
-    switch (h.linkflag)
-    {
+    switch (h.linkflag) {
         case 0,'0': report("Normal", false); break;
         case '1': report("Link", false); break;
         case '2': report("Syslink", false); break;
@@ -46,13 +45,12 @@ void scan_tar()
         case '5': report("Directory", false); break;
         case '6': report("FIFO Special", false); break;
         case '7': report("Contiguous", false); break;
-        default:  report("Unknown type Tar archive"); return;
+        default:  report("Tar archive"); return;
     }
     printf(" Tar archive");
 
-    if (More)
-    {
-        write(", Reports ", tarstr(h.size), " Bytes");
+    if (More) {
+        write(", Reports ", tarstr(h.size), " bytes");
     }
 
     printf("\n");

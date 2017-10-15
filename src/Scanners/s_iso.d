@@ -85,7 +85,7 @@ void scan_iso()
     if (check_seek(0x9000, bufp)) goto ISO_DONE;
 
 ISO_DONE:
-    report("ISO-9660 CD/DVD image", false);
+    report("ISO-9660 CD/DVD disc", false);
     if (label) writef(" \"%s\"", label);
     if (volume_size) write(", ", formatsize(volume_size));
     if (bootable) printf(", Bootable");

@@ -64,8 +64,7 @@ void scan_pst() {
     fread(&h, h.sizeof, 1, fp);
     bool ansi, unicode;
 
-    with (uh)
-    with (h) {
+    with (uh) with (h) {
         if (version_ == 14 || version_ == 15) {
             ansi = true;
             pst_ansi ah;
@@ -76,8 +75,8 @@ void scan_pst() {
             fread(&uh, uh.sizeof, 1, fp);
         }
 
-        report("PST", false);
-        printf(" archive, v%d (client v%d), ",
+        report("PST archive, v", false);
+        printf("%d (client v%d), ",
             version_, client_version);
         if (ansi)
             printf("ANSI, ");
@@ -94,7 +93,7 @@ void scan_pst() {
         printf("\n");
 
         if (More) {
-            printf("crc: %08X\n", crc);
+            printf("CRC32: %08X\n", crc);
             if (unicode) printf("crc full: %08X\n", crcfull);
             printf("client_magic: %Xh\n", client);
             printf("file_version: %Xh\n", version_);

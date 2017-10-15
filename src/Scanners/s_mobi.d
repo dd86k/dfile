@@ -43,7 +43,7 @@ void scan_palmdoc() {
     palmdoc_hdr h;
     fread(&h, h.sizeof, 1, fp);
 
-    report("Palm Document", false);
+    report("Palm document", false);
 
     if (h.Compression == 0x0100) // Big Endian
         printf(", PalmDOC compressed");
@@ -108,7 +108,7 @@ void scan_mobi() { // Big endian
             break;
     }
 
-    printf(" file");
+    printf(" document");
 
     if (h.Compression == 0x0100)
         printf(", PalmDOC compressed");

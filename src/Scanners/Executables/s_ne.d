@@ -63,8 +63,6 @@ void scan_ne() {
     else
         printf("Executable");
 
-    printf(" file");
-
     if (h.ne_expver[0])
         printf(", Windows %d.%d expected", h.ne_expver[1], h.ne_expver[0]);
 

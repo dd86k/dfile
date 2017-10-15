@@ -391,7 +391,7 @@ void scan_mach(uint sig) {
             printf("Dynamic library stub");
             break;
         case filetype_t.MH_DSYM:
-            printf("Companion file (w/ debug sections)");
+            printf("Companion file (+ debug sections)");
             break;
         case filetype_t.MH_KEXT_BUNDLE:
             printf("Kext bundle");
@@ -472,7 +472,6 @@ void scan_mach(uint sig) {
             write(cast(SUBTYPE_PowerPC)cpu_subtype);
         else
             write("any");
-        
         if (cpu_type_t.POWERPC64)
             write(" (64bit)");
         break;

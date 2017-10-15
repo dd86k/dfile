@@ -86,8 +86,7 @@ void scan_elf()
     elf_print_machine(h.e_machine);
     printf(" machines\n");
 
-    if (More)
-    {
+    if (More) {
         printf("e_type: %X\n", h.e_type);
         printf("e_machine: %X\n", h.e_machine);
         printf("e_version: %X\n", h.e_version);

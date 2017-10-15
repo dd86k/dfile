@@ -50,7 +50,7 @@ void scan_le() {
     fread(&h, h.sizeof, 1, fp);
 
     if (More) {
-        printf("e32_magic : %s\n", &h.e32_magic[0]);
+        //printf("e32_magic : %s\n", &h.e32_magic[0]);
         printf("e32_border: %Xh\n", h.e32_border);
         printf("e32_worder: %Xh\n", h.e32_worder);
         printf("e32_level : %Xh\n", h.e32_level);
