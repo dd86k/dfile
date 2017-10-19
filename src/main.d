@@ -9,7 +9,7 @@ import std.stdio : writeln, writefln;
 import std.file, std.getopt;
 import dfile;
 
-enum PROJECT_VERSION = "0.10.0", /// Project version.
+enum PROJECT_VERSION = "0.10.1", /// Project version.
      PROJECT_NAME = "dfile";     /// Project name, usually executable name.
 
 debug { } else

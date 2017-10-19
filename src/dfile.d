@@ -1972,7 +1972,7 @@ void report(string type, bool nl = true)
     version (Windows) {
         if (ShowName) {
             //wprintf("%s: ", &filename[0]); // Won't work :-(
-            write(filename);
+            writef("%s: ", filename);
         }
     } else {
         if (ShowName)
