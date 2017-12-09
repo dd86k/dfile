@@ -8,7 +8,7 @@ import core.stdc.stdio;
 import dfile : report, More, fp;
 
 private struct PE_HEADER { align(1):
-    char[4] Signature; // "PE\0\0"
+    char[2] Signature; // "PE\0\0"
     PE_MACHINE Machine;
     ushort NumberOfSections;
     uint TimeDateStamp;

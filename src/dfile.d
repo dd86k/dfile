@@ -5,7 +5,6 @@
 module dfile;
 
 import std.stdio;
-version (Windows) import core.stdc.wchar_ : wprintf;
 import s_elf    : scan_elf;
 import s_fatelf : scan_fatelf;
 import s_mz     : scan_mz;
@@ -16,14 +15,17 @@ import s_pst    : scan_pst, PST_MAGIC;
 import Etc      : scan_etc;
 import s_images : scan_bpg, scan_png, scan_flif, scan_gif;
 import utils;
+version (Windows) {
+    import core.stdc.wchar_ : wprintf;
+    __gshared wstring filename; /// Filename
+} else {
+    __gshared string filename; /// Filename
+}
 
 __gshared bool More, /// -m : More flag
      ShowName, /// -s : Show name flag
      Base10; /// -b : Base 10 flag
 __gshared FILE* fp; /// Current file handle.
-version (Windows) __gshared wstring filename; /// Current filename, null-terminated.
-else __gshared string filename; /// Current filename, null-terminated.
-private __gshared uint s; /// File signature, global for report_text
 
 /**
  * Prints debugging message with a FILE@LINE: MSG formatting.
@@ -52,6 +54,7 @@ debug void dbgl(string msg, int line = __LINE__, string file = __FILE__) {
 
 /// Scanner entry point.
 void scan() {
+    uint s;
     if (fread(&s, 4, 1, fp) != 1) {
         report("Empty file");
         return;
@@ -983,7 +986,7 @@ void scan() {
         rewind(fp);
         fread(&h, h.sizeof, 1, fp);
         if (h.file_iden != DEBIANBIN) {
-            report_text();
+            report_text(s);
             return;
         }
         report("Debian package v", false);
@@ -1301,7 +1304,7 @@ void scan() {
         COWDisk_Header h;
         fread(&h, h.sizeof, 1, fp);
         if (h.flags != 3) {
-            report_text();
+            report_text(s);
             return;
         }
         const long size = h.numSectors * 512;
@@ -1354,14 +1357,14 @@ void scan() {
         }
         fread(&s, 4, 1, fp);
         if (s != 0x78697463) { // "ctix"
-            report_text();
+            report_text(s);
             return;
         }
         vhd_hdr h;
         fread(&h, h.sizeof, 1, fp);
         h.features = bswap32(h.features);
         if ((h.features & F_RES) == 0) {
-            report_text();
+            report_text(s);
             return;
         }
         report("Microsoft VHD disk v", false);
@@ -1467,7 +1470,7 @@ void scan() {
         vdi_hdr h;
         fread(&h, h.sizeof, 1, fp);
         if (h.magic != VDIMAGIC) {
-            report_text(); // Coincidence
+            report_text(s); // Coincidence
             return;
         }
         report("VirtualBox VDI disk v", false);
@@ -1848,8 +1851,8 @@ void report_unknown()
 }
 
 /// Report a text file.
-// A few functions relies on this.
-void report_text()
+/// Params: s = Signature
+void report_text(uint s)
 {
     report("text");
 }

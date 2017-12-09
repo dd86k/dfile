@@ -10,7 +10,7 @@ import dfile, utils;
 // New .EXE header, found in newexe.h in the Word 1.1a source.
 private struct ne_hdr
 {
-    char[2]  ne_magic;       /* Magic number NE_MAGIC */
+    //char[2]  ne_magic;       /* Magic number NE_MAGIC */
 	char     ne_ver;         /* Version number */
 	char     ne_rev;         /* Revision number */
 	ushort   ne_enttab;      /* Offset of Entry Table */
@@ -84,7 +84,7 @@ void scan_ne() {
     printf("\n");
 
     if (More) {
-        printf("ne_magic       : %s\n", &h.ne_magic[0]);
+        //printf("ne_magic       : %s\n", &h.ne_magic[0]);
         printf("ne_ver         : %Xh\n", h.ne_ver);
         printf("ne_rev         : %Xh\n", h.ne_rev);
         printf("ne_enttab      : %Xh\n", h.ne_enttab);

@@ -12,7 +12,7 @@ private enum ERESWDS = 0x10; /// Reserved words
 // DOS 1, 2, 3 .EXE header from newexe.h, Word 1.1a source.
 /// MZ Header
 private struct mz_hdr {
-	//ushort e_magic;        /// Magic number
+	ushort e_magic;        /// Magic number
 	ushort e_cblp;         /// Bytes on last page of file
 	ushort e_cp;           /// Pages in file
 	ushort e_crlc;         /// Relocations
@@ -54,16 +54,14 @@ void scan_mz() {
 
         switch (sig) {
         case 0x4550: // "PE"
-            fseek(fp, p, SEEK_SET);
-            scan_pe();
+            scan_pe;
             return;
         case 0x454E: // "NE"
-            fseek(fp, p, SEEK_SET);
-            scan_ne();
+            scan_ne;
             return;
         case 0x454C, 0x584C: // "LE", "LX"
-            fseek(fp, p, SEEK_SET);
-            scan_le();
+            fseek(fp, p, SEEK_SET); // for signature printing
+            scan_le;
             return;
         default:
         }

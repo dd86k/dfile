@@ -101,7 +101,7 @@ void prescan(string path, bool cont)
             S_IFBLK, S_IFCHR, S_IFIFO, S_IFREG, S_IFDIR, S_IFLNK, S_IFSOCK, S_IFMT;
 
         const uint a = getAttributes(path);
-        filename = path ~ '\0';
+        filename = path ~ '\0'; // lol
 
         if (a & S_IFLNK)
             if (cont)
@@ -110,7 +110,7 @@ void prescan(string path, bool cont)
                 report_link;
         else if (a & S_IFREG) {
 FILE:
-            fp = fopen(&filename[0], "r"); //TODO: Use fopen_s (where?)
+            fp = fopen(&filename[0], "r"); //TODO: Use fopen_s for better codes
             if (!fp) {
                 printf("There was an error opening the file.\n");
                 return;
@@ -149,7 +149,7 @@ FILE:
         else if ((a = a & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 FILE:
             debug dbg("Opening file...");
-            fp = _wfopen(&filename[0], "r"); //TODO: use _wfopen_s (where?)
+            fp = _wfopen(&filename[0], "r"); //TODO: use _wfopen_s for better codes
             if (!fp) {
                 printf("There was an error opening the file.\n");
                 return;
