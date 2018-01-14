@@ -1,5 +1,9 @@
 # dfile, Simple file scanner
 
+## dfile is not longer maintained
+WARNING: dfile is no longer maintained, a replacement is called [ff](https://github.com/dd86k/ff).
+
+
 ![Screenshot of ddhx](https://dd86k.github.io/imgs/dfile1.png)
 
 dfile is a fast, simple, and cross-platform binary file scanner that is very similar to and inspired by the UNIX/BSD [file](https://github.com/file/file) utility.
